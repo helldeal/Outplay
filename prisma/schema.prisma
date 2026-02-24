@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public"]
+}
+
+model User {
+  id        String   @id @db.Uuid
+  createdAt DateTime @default(now())
+  username  String?
+  pcBalance Int      @default(0) @map("pc_balance")
+
+  userCards       UserCard[]
+  boosterOpenings BoosterOpening[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Game {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  logoUrl   String
+  createdAt DateTime @default(now())
+  cards     Card[]
+
+  @@map("games")
+  @@schema("public")
+}
+
+model Team {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  logoUrl   String
+  createdAt DateTime @default(now())
+
+  cards Card[]
+
+  @@map("teams")
+  @@schema("public")
+}
+
+model Nationality {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  code      String   @unique
+  flagUrl   String
+  createdAt DateTime @default(now())
+
+  cards Card[]
+
+  @@map("nationalities")
+  @@schema("public")
+}
+
+model Role {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  iconUrl   String
+  createdAt DateTime @default(now())
+
+  cards Card[]
+
+  @@map("roles")
+  @@schema("public")
+}
+
+model Series {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  slug       String   @unique
+  code       String   @unique
+  coverImage String?
+  createdAt  DateTime @default(now())
+
+  cards           Card[]
+  boosters        Booster[]
+  boosterOpenings BoosterOpening[]
+
+  @@map("series")
+  @@schema("public")
+}
+
+model Card {
+  id           String  @id // S1-01, S1-70
+  name         String
+  rarity       Rarity
+  pcValue      Int     @default(0) @map("pc_value")
+  imageUrl     String
+  animationUrl String?
+
+  seriesId String @map("series_id") @db.Uuid
+  series   Series @relation(fields: [seriesId], references: [id])
+
+  gameId String @map("game_id") @db.Uuid
+  game   Game   @relation(fields: [gameId], references: [id])
+
+  teamId String? @map("team_id") @db.Uuid
+  team   Team?   @relation(fields: [teamId], references: [id])
+
+  nationalityId String      @map("nationality_id") @db.Uuid
+  nationality   Nationality @relation(fields: [nationalityId], references: [id])
+
+  roleId String? @map("role_id") @db.Uuid
+  role   Role?   @relation(fields: [roleId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userCards UserCard[]
+
+  @@index([seriesId])
+  @@index([rarity])
+  @@map("cards")
+  @@schema("public")
+}
+
+model Booster {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String
+  type        BoosterType
+  pricePc     Int         @default(0) @map("price_pc")
+  imageUrl    String      @map("image_url")
+  isDailyOnly Boolean     @default(false) @map("is_daily_only")
+  dropRates   Json        @map("drop_rates")
+
+  seriesId String @map("series_id") @db.Uuid
+  series   Series @relation(fields: [seriesId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  boosterOpenings BoosterOpening[]
+
+  @@unique([seriesId, type])
+  @@map("boosters")
+  @@schema("public")
+}
+
+model UserCard {
+  userId     String   @map("user_id") @db.Uuid
+  cardId     String   @map("card_id")
+  obtainedAt DateTime @default(now()) @map("obtained_at")
+
+  user User @relation(fields: [userId], references: [id])
+  card Card @relation(fields: [cardId], references: [id])
+
+  @@id([userId, cardId])
+  @@index([userId])
+  @@map("user_cards")
+  @@schema("public")
+}
+
+model BoosterOpening {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  boosterId String      @map("booster_id") @db.Uuid
+  seriesId  String      @map("series_id") @db.Uuid
+  cards     Json
+  pcGained  Int         @default(0) @map("pc_gained")
+  type      OpeningType @default(SHOP)
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  booster Booster @relation(fields: [boosterId], references: [id])
+  series  Series  @relation(fields: [seriesId], references: [id])
+
+  @@index([userId])
+  @@map("booster_openings")
+  @@schema("public")
+}
+
+enum Rarity {
+  ROOKIE
+  CHALLENGER
+  CHAMPION
+  WORLD_CLASS
+  LEGENDS
+
+  @@schema("public")
+}
+
+enum BoosterType {
+  NORMAL
+  LUCK
+  PREMIUM
+  GODPACK
+
+  @@schema("public")
+}
+
+enum OpeningType {
+  SHOP
+  DAILY
+
+  @@schema("public")
+}

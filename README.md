@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# OUTPLAY – Prisma + Supabase Setup
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Stack ciblée
+- Supabase PostgreSQL
+- Prisma ORM (schema + seed)
+- Auth Supabase via Discord uniquement
+- RLS sur `users`, `user_cards`, `booster_openings`
+- Assets images via Supabase Storage (`assets`)
 
-Currently, two official plugins are available:
+## 1) Préparer Supabase
+1. Créer le projet Supabase
+2. Dans Auth → Providers, activer **Discord** et configurer `Client ID`, `Client Secret`, redirect URL
+3. Récupérer les URLs DB et les mettre dans `.env`:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 2) Installer et migrer Prisma
+```bash
+npm install
+npx prisma generate
+npx prisma migrate dev --name init_outplay
 ```
+
+## 3) Seed initial OUTPLAY
+Ce seed crée:
+- Games
+- Teams
+- Nationalities
+- Roles
+- Series `S1`
+- 70 Cards (`S1-01` à `S1-70`, avec 1 seule `LEGENDS`)
+- 4 boosters (`NORMAL`, `LUCK`, `PREMIUM`, `GODPACK` daily)
+
+```bash
+npx prisma db seed
+```
+
+## 4) Appliquer le hardening Supabase
+Exécuter le SQL de [prisma/supabase-hardening.sql](prisma/supabase-hardening.sql) dans SQL Editor Supabase.
+
+Ce script ajoute:
+- FK `public.users(id)` -> `auth.users(id)` (`ON DELETE CASCADE`)
+- Règle métier: max 1 carte `LEGENDS` par série
+- Trigger d’immutabilité `boosters.drop_rates`
+- Activation RLS + policies utilisateur
+- Fonction RPC `public.open_booster(...)` (logique random serveur)
+- Création du bucket storage `assets` (si absent)
+
+## 5) Règle produit importante
+- Ne jamais calculer la logique économique booster côté client.
+- Utiliser uniquement l’appel RPC serveur (`open_booster`) depuis le front.
