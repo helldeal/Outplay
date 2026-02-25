@@ -371,7 +371,49 @@ REVOKE ALL ON FUNCTION public.open_daily_booster(text, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.open_booster(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.open_daily_booster(text, uuid) TO authenticated;
 
--- 7) Optional helper: create storage bucket for assets
+-- 7) Read-only leaderboard aggregation for authenticated users
+CREATE OR REPLACE FUNCTION public.get_leaderboard()
+RETURNS TABLE (
+  user_id uuid,
+  username text,
+  total_cards int,
+  weighted_score int,
+  pc_balance int
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT
+    u.id AS user_id,
+    COALESCE(u.username, concat('Player-', left(u.id::text, 6))) AS username,
+    COUNT(uc.card_id)::int AS total_cards,
+    COALESCE(
+      SUM(
+        CASE c.rarity
+          WHEN 'ROOKIE'::public."Rarity" THEN 1
+          WHEN 'CHALLENGER'::public."Rarity" THEN 3
+          WHEN 'CHAMPION'::public."Rarity" THEN 8
+          WHEN 'WORLD_CLASS'::public."Rarity" THEN 20
+          WHEN 'LEGENDS'::public."Rarity" THEN 70
+          ELSE 0
+        END
+      ),
+      0
+    )::int AS weighted_score,
+    u.pc_balance::int AS pc_balance
+  FROM public.users u
+  LEFT JOIN public.user_cards uc ON uc.user_id = u.id
+  LEFT JOIN public.cards c ON c.id = uc.card_id
+  GROUP BY u.id, u.username, u.pc_balance
+  ORDER BY weighted_score DESC, total_cards DESC, username ASC;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_leaderboard() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO authenticated;
+
+-- 8) Optional helper: create storage bucket for assets
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('assets', 'assets', true)
 ON CONFLICT (id) DO NOTHING;

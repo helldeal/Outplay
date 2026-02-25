@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import type { ReactNode } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "./auth/AuthProvider";
+import { AppLayout } from "./components/AppLayout";
+import { BoosterPage } from "./pages/BoosterPage";
+import { CollectionPage } from "./pages/CollectionPage";
+import { HomePage } from "./pages/HomePage";
+import { LeaderboardPage } from "./pages/LeaderboardPage";
+import { LegendexPage } from "./pages/LegendexPage";
+import { LoginPage } from "./pages/LoginPage";
+import { SeriesPage } from "./pages/SeriesPage";
 
-function App() {
-  const [count, setCount] = useState(0)
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { loading, user } = useAuth();
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  if (loading) {
+    return <p className="text-sm text-slate-400">Initialisation session...</p>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/collection"
+          element={
+            <RequireAuth>
+              <CollectionPage />
+            </RequireAuth>
+          }
+        />
+        <Route path="/series/:slug" element={<SeriesPage />} />
+        <Route
+          path="/booster/:series"
+          element={
+            <RequireAuth>
+              <BoosterPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <RequireAuth>
+              <LeaderboardPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/legendex"
+          element={
+            <RequireAuth>
+              <LegendexPage />
+            </RequireAuth>
+          }
+        />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
