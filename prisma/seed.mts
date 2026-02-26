@@ -1,6 +1,7 @@
 /// <reference types="node" />
 
-import { PrismaClient, BoosterType, Rarity } from "@prisma/client";
+import { BoosterType, PrismaClient, Rarity } from "@prisma/client";
+import { s1Cards, s1Series } from "./series/s1.mjs";
 
 const prisma = new PrismaClient();
 
@@ -8,77 +9,35 @@ function logStep(message: string) {
   console.log(`[seed] ${message}`);
 }
 
-const games = [
-  {
-    name: "League of Legends",
-    slug: "league-of-legends",
-    logoUrl: "https://example.com/games/lol.webp",
-  },
-  {
-    name: "VALORANT",
-    slug: "valorant",
-    logoUrl: "https://example.com/games/valorant.webp",
-  },
-  {
-    name: "Rocket League",
-    slug: "rocket-league",
-    logoUrl: "https://example.com/games/rocket-league.webp",
-  },
-];
+function slugify(input: string): string {
+  return input
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-const teams = [
-  { name: "T1", slug: "t1", logoUrl: "https://example.com/teams/t1.webp" },
-  {
-    name: "G2 Esports",
-    slug: "g2-esports",
-    logoUrl: "https://example.com/teams/g2.webp",
-  },
-  {
-    name: "Fnatic",
-    slug: "fnatic",
-    logoUrl: "https://example.com/teams/fnatic.webp",
-  },
-  {
-    name: "Karmine Corp",
-    slug: "karmine-corp",
-    logoUrl: "https://example.com/teams/karmine.webp",
-  },
-  {
-    name: "Team Vitality",
-    slug: "team-vitality",
-    logoUrl: "https://example.com/teams/vitality.webp",
-  },
-];
+const nationalityCodeByName: Record<string, string> = {
+  Turquie: "TR",
+  "Corée du Sud": "KR",
+  Chine: "CN",
+  Lituanie: "LT",
+  France: "FR",
+  Pologne: "PL",
+  USA: "US",
+  Canada: "CA",
+  "Rép. Tchèque": "CZ",
+  Espagne: "ES",
+  Allemagne: "DE",
+  Suède: "SE",
+  Bulgarie: "BG",
+  Slovénie: "SI",
+  Croatie: "HR",
+  Danemark: "DK",
+};
 
-const nationalities = [
-  { name: "France", code: "FR", flagUrl: "https://example.com/flags/fr.webp" },
-  { name: "Korea", code: "KR", flagUrl: "https://example.com/flags/kr.webp" },
-  {
-    name: "United States",
-    code: "US",
-    flagUrl: "https://example.com/flags/us.webp",
-  },
-  { name: "Germany", code: "DE", flagUrl: "https://example.com/flags/de.webp" },
-  { name: "Spain", code: "ES", flagUrl: "https://example.com/flags/es.webp" },
-];
-
-const roles = [
-  { name: "Top", slug: "top", iconUrl: "https://example.com/roles/top.webp" },
-  {
-    name: "Jungle",
-    slug: "jungle",
-    iconUrl: "https://example.com/roles/jungle.webp",
-  },
-  { name: "Mid", slug: "mid", iconUrl: "https://example.com/roles/mid.webp" },
-  { name: "ADC", slug: "adc", iconUrl: "https://example.com/roles/adc.webp" },
-  {
-    name: "Support",
-    slug: "support",
-    iconUrl: "https://example.com/roles/support.webp",
-  },
-];
-
-const rarityPcValues = {
+const rarityPcValues: Record<Rarity, number> = {
   ROOKIE: 100,
   CHALLENGER: 300,
   CHAMPION: 1000,
@@ -86,176 +45,230 @@ const rarityPcValues = {
   LEGENDS: 20000,
 };
 
-function getRarity(number: number): Rarity {
-  if (number <= 32) return Rarity.ROOKIE;
-  if (number <= 52) return Rarity.CHALLENGER;
-  if (number <= 62) return Rarity.CHAMPION;
-  if (number <= 69) return Rarity.WORLD_CLASS;
-  if (number === 70) return Rarity.LEGENDS;
-  return Rarity.ROOKIE;
+const roleIconByName: Record<string, string> = {
+  Toplaner: "/src/assets/roles/toplaner.png",
+  Jungler: "/src/assets/roles/jungler.png",
+  Midlaner: "/src/assets/roles/midlaner.png",
+  ADC: "/src/assets/roles/adc.png",
+  Support: "/src/assets/roles/support.png",
+  "Mid / ADC": "/src/assets/roles/mid-adc.png",
+};
+
+const gameByName: Record<
+  string,
+  { name: string; slug: string; logoUrl: string }
+> = {
+  LoL: {
+    name: "League of Legends",
+    slug: "league-of-legends",
+    logoUrl: "/src/assets/games/league-of-legends.png",
+  },
+};
+
+const teamLogoByName: Record<string, string> = {
+  "100 Thieves": "/src/assets/teams/100-thieves.png",
+  BLG: "/src/assets/teams/blg.png",
+  Cloud9: "/src/assets/teams/cloud9.png",
+  "Damwon Gaming": "/src/assets/teams/damwon-gaming.png",
+  "Dplus KIA": "/src/assets/teams/dplus-kia.png",
+  DRX: "/src/assets/teams/drx.png",
+  EDG: "/src/assets/teams/edg.png",
+  "Evil Geniuses": "/src/assets/teams/evil-geniuses.png",
+  FlyQuest: "/src/assets/teams/flyquest.png",
+  Fnatic: "/src/assets/teams/fnatic.png",
+  FPX: "/src/assets/teams/fpx.png",
+  "G2 Esports": "/src/assets/teams/g2-esports.png",
+  GameWard: "/src/assets/teams/gameward.png",
+  "Gen.G": "/src/assets/teams/gen-g.png",
+  GiantX: "/src/assets/teams/giantx.png",
+  "Hanwha Life": "/src/assets/teams/hanwha-life.png",
+  "Invictus Gaming": "/src/assets/teams/invictus-gaming.png",
+  JDG: "/src/assets/teams/jdg.png",
+  "Karmine Corp": "/src/assets/teams/karmine-corp.png",
+  Kwangdong: "/src/assets/teams/kwangdong.png",
+  "KT Rolster": "/src/assets/teams/kt-rolster.png",
+  "MAD Lions": "/src/assets/teams/mad-lions.png",
+  "MAD Lions KOI": "/src/assets/teams/mad-lions-koi.png",
+  "Misfits Gaming": "/src/assets/teams/misfits-gaming.png",
+  OMG: "/src/assets/teams/omg.png",
+  RNG: "/src/assets/teams/rng.png",
+  "Samsung Galaxy": "/src/assets/teams/samsung-galaxy.png",
+  "SK Gaming": "/src/assets/teams/sk-gaming.png",
+  "SKT T1 Academy": "/src/assets/teams/skt-t1-academy.png",
+  SuperMassive: "/src/assets/teams/supermassive.png",
+  T1: "/src/assets/teams/t1.png",
+  "Team BDS": "/src/assets/teams/team-bds.png",
+  "Team Liquid": "/src/assets/teams/team-liquid.png",
+  "Team WE": "/src/assets/teams/team-we.png",
+  Vitality: "/src/assets/teams/vitality.png",
+};
+
+const cardImageById: Record<string, string> = {
+  "S1-01": "/src/assets/cards/S1/S1-01.webp",
+  "S1-02": "/src/assets/cards/S1/S1-02.jpg",
+  "S1-03": "/src/assets/cards/S1/S1-03.webp",
+  "S1-05": "/src/assets/cards/S1/S1-05.jpg",
+  "S1-63": "/src/assets/cards/S1/S1-63.jpg",
+  "S1-64": "/src/assets/cards/S1/S1-64.jpg",
+  "S1-65": "/src/assets/cards/S1/S1-65.avif",
+  "S1-66": "/src/assets/cards/S1/S1-66.webp",
+  "S1-67": "/src/assets/cards/S1/S1-67.jpeg",
+  "S1-68": "/src/assets/cards/S1/S1-68.jpg",
+  "S1-69": "/src/assets/cards/S1/S1-69.avif",
+  "S1-70": "/src/assets/cards/S1/S1-70.webp",
+};
+
+const cardFallbackImage = "/src/assets/cards/S1/S1-01.webp";
+
+async function clearDatabase() {
+  logStep("clearing existing seeded data...");
+
+  await prisma.userCard.deleteMany();
+  await prisma.boosterOpening.deleteMany();
+  await prisma.booster.deleteMany();
+  await prisma.card.deleteMany();
+  await prisma.series.deleteMany();
+  await prisma.role.deleteMany();
+  await prisma.team.deleteMany();
+  await prisma.nationality.deleteMany();
+  await prisma.game.deleteMany();
+
+  logStep("database cleared");
 }
 
-async function logDatabaseContext() {
-  const context = await prisma.$queryRaw<
-    Array<{
-      database: string;
-      schema: string;
-      db_user: string;
-      host: string;
-    }>
-  >`
-    SELECT
-      current_database()::text AS database,
-      current_schema()::text AS schema,
-      current_user::text AS db_user,
-      inet_server_addr()::text AS host
-  `;
+async function seedCollections() {
+  logStep("seeding games...");
+  const gameRows = await Promise.all(
+    Array.from(new Set(s1Cards.map((card) => card.game))).map((gameName) => {
+      const game = gameByName[gameName] ?? {
+        name: gameName,
+        slug: slugify(gameName),
+        logoUrl: `/src/assets/games/${slugify(gameName)}.png`,
+      };
 
-  const row = context?.[0];
-  if (row) {
-    logStep(
-      `connected to db=${row.database} schema=${row.schema} user=${row.db_user} host=${row.host}`,
-    );
-  }
+      return prisma.game.create({ data: game });
+    }),
+  );
+
+  const gameIdByName = new Map(gameRows.map((game) => [game.name, game.id]));
+  gameIdByName.set("LoL", gameRows[0]?.id ?? "");
+
+  logStep("seeding teams...");
+  const teamRows = await Promise.all(
+    Array.from(new Set(s1Cards.map((card) => card.team))).map((teamName) =>
+      prisma.team.create({
+        data: {
+          name: teamName,
+          slug: slugify(teamName),
+          logoUrl:
+            teamLogoByName[teamName] ??
+            `/src/assets/teams/${slugify(teamName)}.png`,
+        },
+      }),
+    ),
+  );
+
+  const teamIdByName = new Map(teamRows.map((team) => [team.name, team.id]));
+
+  logStep("seeding nationalities with FlagCDN...");
+  const nationalityRows = await Promise.all(
+    Array.from(new Set(s1Cards.map((card) => card.nationality))).map(
+      (nationalityName) => {
+        const code = nationalityCodeByName[nationalityName];
+        if (!code) {
+          throw new Error(
+            `Missing ISO code mapping for nationality: ${nationalityName}`,
+          );
+        }
+
+        return prisma.nationality.create({
+          data: {
+            name: nationalityName,
+            code,
+            flagUrl: `https://flagcdn.com/w80/${code.toLowerCase()}.png`,
+          },
+        });
+      },
+    ),
+  );
+
+  const nationalityIdByName = new Map(
+    nationalityRows.map((nationality) => [nationality.name, nationality.id]),
+  );
+
+  logStep("seeding roles...");
+  const roleRows = await Promise.all(
+    Array.from(new Set(s1Cards.map((card) => card.role))).map((roleName) =>
+      prisma.role.create({
+        data: {
+          name: roleName,
+          slug: slugify(roleName),
+          iconUrl:
+            roleIconByName[roleName] ??
+            `/src/assets/roles/${slugify(roleName)}.png`,
+        },
+      }),
+    ),
+  );
+
+  const roleIdByName = new Map(roleRows.map((role) => [role.name, role.id]));
+
+  return { gameIdByName, teamIdByName, nationalityIdByName, roleIdByName };
 }
 
-async function upsertCollections() {
-  logStep("upserting games...");
-  await Promise.all(
-    games.map((game) =>
-      prisma.game.upsert({
-        where: { slug: game.slug },
-        update: game,
-        create: game,
-      }),
-    ),
-  );
-
-  logStep("upserting teams...");
-  await Promise.all(
-    teams.map((team) =>
-      prisma.team.upsert({
-        where: { slug: team.slug },
-        update: team,
-        create: team,
-      }),
-    ),
-  );
-
-  logStep("upserting nationalities...");
-  await Promise.all(
-    nationalities.map((nationality) =>
-      prisma.nationality.upsert({
-        where: { code: nationality.code },
-        update: nationality,
-        create: nationality,
-      }),
-    ),
-  );
-
-  logStep("upserting roles...");
-  await Promise.all(
-    roles.map((role) =>
-      prisma.role.upsert({
-        where: { slug: role.slug },
-        update: role,
-        create: role,
-      }),
-    ),
-  );
-
-  logStep("collections upsert complete");
-}
-
-async function seedSeriesAndCards() {
-  logStep("loading collections for card generation...");
-  const [allGames, allTeams, allNationalities, allRoles] = await Promise.all([
-    prisma.game.findMany({ orderBy: { slug: "asc" } }),
-    prisma.team.findMany({ orderBy: { slug: "asc" } }),
-    prisma.nationality.findMany({ orderBy: { code: "asc" } }),
-    prisma.role.findMany({ orderBy: { slug: "asc" } }),
-  ]);
-
-  logStep(
-    `loaded games=${allGames.length}, teams=${allTeams.length}, nationalities=${allNationalities.length}, roles=${allRoles.length}`,
-  );
-
-  const series = await prisma.series.upsert({
-    where: { code: "S1" },
-    update: {
-      name: "Season 1",
-      slug: "season-1",
-      code: "S1",
-      coverImage: "https://example.com/series/S1-cover.webp",
-    },
-    create: {
-      name: "Season 1",
-      slug: "season-1",
-      code: "S1",
-      coverImage: "https://example.com/series/S1-cover.webp",
+async function seedSeriesAndCards(ids: {
+  gameIdByName: Map<string, string>;
+  teamIdByName: Map<string, string>;
+  nationalityIdByName: Map<string, string>;
+  roleIdByName: Map<string, string>;
+}) {
+  logStep(`seeding series ${s1Series.code}...`);
+  const series = await prisma.series.create({
+    data: {
+      name: s1Series.name,
+      slug: s1Series.slug,
+      code: s1Series.code,
+      coverImage: s1Series.coverImage,
     },
   });
 
-  logStep(`series ready: ${series.code} (${series.id})`);
+  logStep(`seeding ${s1Cards.length} cards...`);
+  for (const card of s1Cards) {
+    const gameId =
+      ids.gameIdByName.get("League of Legends") ??
+      ids.gameIdByName.get(card.game);
+    const teamId = ids.teamIdByName.get(card.team);
+    const nationalityId = ids.nationalityIdByName.get(card.nationality);
+    const roleId = ids.roleIdByName.get(card.role);
 
-  logStep("upserting 70 cards...");
+    if (!gameId || !teamId || !nationalityId || !roleId) {
+      throw new Error(`Missing relation id(s) for card ${card.id}`);
+    }
 
-  for (let number = 1; number <= 70; number += 1) {
-    const cardId = `S1-${String(number).padStart(2, "0")}`;
-    const game = allGames[(number - 1) % allGames.length];
-    const team =
-      number % 5 === 0 ? null : allTeams[(number - 1) % allTeams.length];
-    const nationality =
-      allNationalities[(number - 1) % allNationalities.length];
-    const role =
-      number % 6 === 0 ? null : allRoles[(number - 1) % allRoles.length];
-
-    await prisma.card.upsert({
-      where: { id: cardId },
-      update: {
-        name: `Player ${number}`,
-        rarity: getRarity(number),
-        pcValue: rarityPcValues[getRarity(number)],
-        imageUrl: `https://example.com/cards/S1/${cardId}.webp`,
-        animationUrl:
-          number % 10 === 0
-            ? `https://example.com/cards/S1/${cardId}.webm`
-            : null,
+    const rarity = card.rarity as Rarity;
+    await prisma.card.create({
+      data: {
+        id: card.id,
+        name: card.name,
+        rarity,
+        pcValue: rarityPcValues[rarity],
+        imageUrl: cardImageById[card.id] ?? cardFallbackImage,
+        animationUrl: null,
         seriesId: series.id,
-        gameId: game.id,
-        teamId: team?.id ?? null,
-        nationalityId: nationality.id,
-        roleId: role?.id ?? null,
-      },
-      create: {
-        id: cardId,
-        name: `Player ${number}`,
-        rarity: getRarity(number),
-        pcValue: rarityPcValues[getRarity(number)],
-        imageUrl: `https://example.com/cards/S1/${cardId}.webp`,
-        animationUrl:
-          number % 10 === 0
-            ? `https://example.com/cards/S1/${cardId}.webm`
-            : null,
-        seriesId: series.id,
-        gameId: game.id,
-        teamId: team?.id ?? null,
-        nationalityId: nationality.id,
-        roleId: role?.id ?? null,
+        gameId,
+        teamId,
+        nationalityId,
+        roleId,
       },
     });
-
-    if (number % 10 === 0 || number === 70) {
-      logStep(`cards progress: ${number}/70`);
-    }
   }
 
   const boosters = [
     {
-      name: "S1 Normal Booster",
+      name: `${s1Series.code} Normal Booster`,
       type: BoosterType.NORMAL,
       pricePc: 1200,
-      imageUrl: "https://example.com/boosters/S1-normal.webp",
+      imageUrl: "/src/assets/series/rift-champions.jpg",
       isDailyOnly: false,
       dropRates: {
         ROOKIE: 70,
@@ -266,10 +279,10 @@ async function seedSeriesAndCards() {
       },
     },
     {
-      name: "S1 Luck Booster",
+      name: `${s1Series.code} Luck Booster`,
       type: BoosterType.LUCK,
       pricePc: 2600,
-      imageUrl: "https://example.com/boosters/S1-luck.webp",
+      imageUrl: "/src/assets/series/rift-champions.jpg",
       isDailyOnly: false,
       dropRates: {
         ROOKIE: 45,
@@ -280,10 +293,10 @@ async function seedSeriesAndCards() {
       },
     },
     {
-      name: "S1 Premium Booster",
+      name: `${s1Series.code} Premium Booster`,
       type: BoosterType.PREMIUM,
       pricePc: 5000,
-      imageUrl: "https://example.com/boosters/S1-premium.webp",
+      imageUrl: "/src/assets/series/rift-champions.jpg",
       isDailyOnly: false,
       dropRates: {
         ROOKIE: 25,
@@ -294,7 +307,7 @@ async function seedSeriesAndCards() {
       },
     },
     {
-      name: "S1 Godpack Daily",
+      name: `${s1Series.code} Godpack Daily`,
       type: BoosterType.GODPACK,
       pricePc: 0,
       imageUrl: null,
@@ -311,21 +324,8 @@ async function seedSeriesAndCards() {
 
   await Promise.all(
     boosters.map((booster) =>
-      prisma.booster.upsert({
-        where: {
-          seriesId_type: {
-            seriesId: series.id,
-            type: booster.type,
-          },
-        },
-        update: {
-          name: booster.name,
-          pricePc: booster.pricePc,
-          imageUrl: booster.imageUrl,
-          isDailyOnly: booster.isDailyOnly,
-          dropRates: booster.dropRates,
-        },
-        create: {
+      prisma.booster.create({
+        data: {
           name: booster.name,
           type: booster.type,
           pricePc: booster.pricePc,
@@ -338,7 +338,7 @@ async function seedSeriesAndCards() {
     ),
   );
 
-  logStep("boosters upsert complete");
+  logStep("series, cards and boosters seeded");
 }
 
 async function logFinalCounts() {
@@ -368,9 +368,9 @@ async function logFinalCounts() {
 async function main() {
   console.time("seed_duration");
   logStep("start");
-  await logDatabaseContext();
-  await upsertCollections();
-  await seedSeriesAndCards();
+  await clearDatabase();
+  const ids = await seedCollections();
+  await seedSeriesAndCards(ids);
   await logFinalCounts();
   logStep("done");
   console.timeEnd("seed_duration");
