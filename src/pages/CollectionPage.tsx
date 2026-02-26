@@ -1,45 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { LibraryBig, LoaderCircle } from "lucide-react";
 import { CardTile } from "../components/CardTile";
 import { useAuth } from "../auth/AuthProvider";
-import { rarityRank } from "../lib/rarity";
-import { supabase } from "../lib/supabase";
-import { normalizeUserCardRow } from "../lib/normalize";
+import { useCollectionQuery } from "../query/collection";
 
 export function CollectionPage() {
   const { user } = useAuth();
-
-  const collectionQuery = useQuery({
-    queryKey: ["collection", user?.id],
-    enabled: Boolean(user),
-    queryFn: async () => {
-      const { data, error } = await supabase.from("user_cards").select(`
-          card_id,
-          obtained_at,
-          card:cards!inner(
-            id,
-            name,
-            rarity,
-            imageUrl,
-            pc_value,
-            game:games(name, logoUrl),
-            team:teams(name, logoUrl),
-            nationality:nationalities(code, flagUrl),
-            role:roles(name, iconUrl)
-          )
-        `);
-
-      if (error) {
-        throw error;
-      }
-
-      const rows = (data ?? []).map((row) =>
-        normalizeUserCardRow(row as never),
-      );
-      return rows.sort(
-        (a, b) => rarityRank(b.card.rarity) - rarityRank(a.card.rarity),
-      );
-    },
-  });
+  const collectionQuery = useCollectionQuery(user?.id);
 
   if (!user) {
     return (
@@ -51,7 +17,10 @@ export function CollectionPage() {
 
   if (collectionQuery.isLoading) {
     return (
-      <p className="text-sm text-slate-400">Chargement de la collection...</p>
+      <p className="flex items-center gap-2 text-sm text-slate-400">
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+        Chargement de la collection...
+      </p>
     );
   }
 
@@ -68,7 +37,10 @@ export function CollectionPage() {
   return (
     <section className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Collection</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
+          <LibraryBig className="h-6 w-6 text-cyan-300" />
+          Collection
+        </h1>
         <p className="text-sm text-slate-400">
           Triée par rareté: Legends, World Class, Champion, Challenger, Rookie.
         </p>

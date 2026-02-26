@@ -1,36 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { BookMarked, Gauge } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
-import { rarityRank } from "../lib/rarity";
-import { supabase } from "../lib/supabase";
-import type { Rarity, Series } from "../types";
-
-interface LegendexCard {
-  id: string;
-  name: string;
-  rarity: Rarity;
-  imageUrl: string;
-  pc_value: number;
-  series_id: string;
-}
+import {
+  useLegendexCardsQuery,
+  useLegendexOwnedCardsQuery,
+  useLegendexSeriesQuery,
+} from "../query/legendex";
 
 export function LegendexPage() {
   const { user } = useAuth();
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
-
-  const seriesQuery = useQuery({
-    queryKey: ["legendex-series"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("series")
-        .select("id, name, slug, code")
-        .order("name");
-      if (error) {
-        throw error;
-      }
-      return (data ?? []) as Series[];
-    },
-  });
+  const seriesQuery = useLegendexSeriesQuery();
 
   useEffect(() => {
     if (!selectedSeriesId && seriesQuery.data && seriesQuery.data.length > 0) {
@@ -38,42 +18,10 @@ export function LegendexPage() {
     }
   }, [selectedSeriesId, seriesQuery.data]);
 
-  const cardsQuery = useQuery({
-    queryKey: ["legendex-cards", selectedSeriesId],
-    enabled: Boolean(selectedSeriesId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cards")
-        .select("id, name, rarity, imageUrl, pc_value, series_id")
-        .eq("series_id", selectedSeriesId);
+  const cardsQuery = useLegendexCardsQuery(selectedSeriesId);
+  const ownedQuery = useLegendexOwnedCardsQuery(user?.id, selectedSeriesId);
 
-      if (error) {
-        throw error;
-      }
-
-      const rows = (data ?? []) as LegendexCard[];
-      return rows.sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity));
-    },
-  });
-
-  const ownedQuery = useQuery({
-    queryKey: ["legendex-owned", user?.id, selectedSeriesId],
-    enabled: Boolean(user && selectedSeriesId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_cards")
-        .select("card_id, card:cards!inner(series_id)")
-        .eq("card.series_id", selectedSeriesId);
-
-      if (error) {
-        throw error;
-      }
-
-      return new Set((data ?? []).map((entry) => entry.card_id as string));
-    },
-  });
-
-  const cards = cardsQuery.data ?? [];
+  const cards = cardsQuery.data?.sort((a, b) => b.id.localeCompare(a.id)) ?? [];
   const owned = ownedQuery.data ?? new Set<string>();
 
   const completion = useMemo(() => {
@@ -87,7 +35,10 @@ export function LegendexPage() {
   return (
     <section className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Legendex</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
+          <BookMarked className="h-6 w-6 text-cyan-300" />
+          Legendex
+        </h1>
         <p className="text-sm text-slate-400">
           Index des cartes avec visibilité de la progression par série.
         </p>
@@ -110,7 +61,8 @@ export function LegendexPage() {
           ))}
         </select>
 
-        <span className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-200">
+        <span className="inline-flex items-center gap-1 rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-200">
+          <Gauge className="h-4 w-4" />
           {completion}% completion
         </span>
       </div>
@@ -132,7 +84,7 @@ export function LegendexPage() {
               </div>
               <div className="p-2 text-xs">
                 <p className="line-clamp-1 font-medium text-slate-100">
-                  {isOwned ? card.name : "Unknown Card"}
+                  {card.name}
                 </p>
                 <p className="text-slate-400">{card.rarity}</p>
               </div>

@@ -1,5 +1,5 @@
 import { Shield } from "lucide-react";
-import { rarityTone } from "../lib/rarity";
+import { rarityTone } from "../utils/rarity";
 import type { CardWithRelations } from "../types";
 
 interface CardTileProps {

@@ -1,36 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import {
+  BarChart3,
+  Coins,
+  LoaderCircle,
+  Package,
+  Trophy,
+  UserRound,
+} from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
-import { supabase } from "../lib/supabase";
-
-interface LeaderboardRpcRow {
-  user_id: string;
-  username: string;
-  total_cards: number;
-  weighted_score: number;
-  pc_balance: number;
-}
+import { useLeaderboardQuery } from "../query/leaderboard";
 
 export function LeaderboardPage() {
   const { user } = useAuth();
-
-  const leaderboardQuery = useQuery({
-    queryKey: ["leaderboard"],
-    enabled: Boolean(user),
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_leaderboard");
-      if (error) {
-        throw error;
-      }
-
-      return ((data ?? []) as LeaderboardRpcRow[]).map((row) => ({
-        userId: row.user_id,
-        username: row.username,
-        totalCards: row.total_cards,
-        weightedScore: row.weighted_score,
-        pcBalance: row.pc_balance,
-      }));
-    },
-  });
+  const leaderboardQuery = useLeaderboardQuery(Boolean(user));
 
   if (!user) {
     return (
@@ -42,7 +23,10 @@ export function LeaderboardPage() {
 
   if (leaderboardQuery.isLoading) {
     return (
-      <p className="text-sm text-slate-400">Chargement du leaderboard...</p>
+      <p className="flex items-center gap-2 text-sm text-slate-400">
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+        Chargement du leaderboard...
+      </p>
     );
   }
 
@@ -59,7 +43,10 @@ export function LeaderboardPage() {
   return (
     <section className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Leaderboard</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
+          <Trophy className="h-6 w-6 text-amber-300" />
+          Leaderboard
+        </h1>
         <p className="text-sm text-slate-400">
           Classement par score pondéré de rareté puis nombre total de cartes.
         </p>
@@ -70,10 +57,30 @@ export function LeaderboardPage() {
           <thead className="bg-slate-900">
             <tr className="text-left text-slate-300">
               <th className="px-4 py-3">#</th>
-              <th className="px-4 py-3">Joueur</th>
-              <th className="px-4 py-3">Score</th>
-              <th className="px-4 py-3">Cartes</th>
-              <th className="px-4 py-3">PC</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  <UserRound className="h-4 w-4" />
+                  Joueur
+                </span>
+              </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  <BarChart3 className="h-4 w-4" />
+                  Score
+                </span>
+              </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  <Package className="h-4 w-4" />
+                  Cartes
+                </span>
+              </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  <Coins className="h-4 w-4" />
+                  PC
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800 bg-slate-950/70">

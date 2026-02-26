@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { MessageCircle } from "lucide-react";
+import { AlertTriangle, MessageCircle, ShieldCheck } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { isSupabaseConfigured } from "../lib/supabase";
 
@@ -27,13 +27,21 @@ export function LoginPage() {
 
   return (
     <section className="mx-auto max-w-md space-y-4 rounded-xl border border-slate-800 bg-slate-900/70 p-6">
-      <h1 className="text-2xl font-semibold text-white">Login</h1>
+      <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
+        <ShieldCheck className="h-6 w-6 text-cyan-300" />
+        Login
+      </h1>
       <p className="text-sm text-slate-300">
         Authentification OAuth Discord via Supabase.
       </p>
 
       {!isSupabaseConfigured ? (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+          <span className="mb-1 inline-flex items-center gap-1 font-medium">
+            <AlertTriangle className="h-4 w-4" />
+            Configuration requise
+          </span>
+          <br />
           Configure `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans ton
           `.env`.
         </div>

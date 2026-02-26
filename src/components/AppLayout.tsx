@@ -1,5 +1,13 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Coins, Trophy, UserCircle2 } from "lucide-react";
+import {
+  BookMarked,
+  Coins,
+  LibraryBig,
+  LogIn,
+  LogOut,
+  Trophy,
+  UserCircle2,
+} from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
@@ -25,13 +33,22 @@ export function AppLayout() {
 
           <nav className="hidden items-center gap-2 md:flex">
             <NavLink to="/collection" className={navItemClass}>
-              Collection
+              <span className="inline-flex items-center gap-1">
+                <LibraryBig className="h-4 w-4" />
+                Collection
+              </span>
             </NavLink>
             <NavLink to="/legendex" className={navItemClass}>
-              Legendex
+              <span className="inline-flex items-center gap-1">
+                <BookMarked className="h-4 w-4" />
+                Legendex
+              </span>
             </NavLink>
             <NavLink to="/leaderboard" className={navItemClass}>
-              Leaderboard
+              <span className="inline-flex items-center gap-1">
+                <Trophy className="h-4 w-4" />
+                Leaderboard
+              </span>
             </NavLink>
           </nav>
 
@@ -44,16 +61,18 @@ export function AppLayout() {
                 </div>
                 <button
                   onClick={() => void logout()}
-                  className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white"
+                  className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white"
                 >
+                  <LogOut className="h-4 w-4" />
                   Logout
                 </button>
               </>
             ) : (
               <Link
                 to="/login"
-                className="rounded-md bg-cyan-500 px-3 py-1.5 text-sm font-medium text-slate-950 transition hover:bg-cyan-400"
+                className="inline-flex items-center gap-1 rounded-md bg-cyan-500 px-3 py-1.5 text-sm font-medium text-slate-950 transition hover:bg-cyan-400"
               >
+                <LogIn className="h-4 w-4" />
                 Login
               </Link>
             )}

@@ -1,48 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { CalendarClock, Gift, LoaderCircle, Sparkles } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-import type { Booster, Series } from "../types";
+import { useSeriesBoostersQuery, useSeriesBySlugQuery } from "../query/series";
 
 export function SeriesPage() {
   const { slug = "" } = useParams();
-
-  const seriesQuery = useQuery({
-    queryKey: ["series", slug],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("series")
-        .select("id, name, slug, code, coverImage")
-        .or(`slug.eq.${slug},code.eq.${slug}`)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data as Series;
-    },
-  });
-
-  const boostersQuery = useQuery({
-    queryKey: ["series-boosters", seriesQuery.data?.id],
-    enabled: Boolean(seriesQuery.data?.id),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("boosters")
-        .select("id, name, type, price_pc, image_url, is_daily_only")
-        .eq("series_id", seriesQuery.data!.id)
-        .order("price_pc", { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      return (data ?? []) as Booster[];
-    },
-  });
+  const seriesQuery = useSeriesBySlugQuery(slug);
+  const boostersQuery = useSeriesBoostersQuery(seriesQuery.data?.id);
 
   if (seriesQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Chargement de la série...</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-slate-400">
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+        Chargement de la série...
+      </p>
+    );
   }
 
   if (seriesQuery.error) {
@@ -76,11 +47,15 @@ export function SeriesPage() {
           <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">
             Series {series.code}
           </p>
-          <h1 className="text-2xl font-semibold">{series.name}</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold">
+            <Sparkles className="h-6 w-6 text-cyan-300" />
+            {series.name}
+          </h1>
           <Link
             to={`/booster/${series.slug}`}
-            className="inline-block rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
+            className="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
           >
+            <Gift className="h-4 w-4" />
             Ouvrir un booster
           </Link>
         </div>
@@ -93,7 +68,7 @@ export function SeriesPage() {
             className="rounded-xl border border-slate-800 bg-slate-900/80 p-4"
           >
             <img
-              src={booster.image_url ?? series.coverImage}
+              src={booster.image_url ?? series.coverImage ?? ""}
               alt={booster.name}
               className="h-28 w-full rounded-md object-cover"
             />
@@ -103,7 +78,10 @@ export function SeriesPage() {
             <p className="text-sm text-slate-400">{booster.type}</p>
             <p className="mt-1 text-sm text-amber-300">{booster.price_pc} PC</p>
             {booster.is_daily_only ? (
-              <p className="mt-1 text-xs text-slate-500">Daily only</p>
+              <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
+                <CalendarClock className="h-3.5 w-3.5" />
+                Daily only
+              </p>
             ) : null}
           </div>
         ))}

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LogIn, Library, Trophy } from "lucide-react";
 
 export function HomePage() {
   return (
@@ -18,20 +19,23 @@ export function HomePage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             to="/login"
-            className="rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
+            className="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
           >
+            <LogIn className="h-4 w-4" />
             Login
           </Link>
           <Link
             to="/collection"
-            className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500"
           >
+            <Library className="h-4 w-4" />
             Voir ma collection
           </Link>
           <Link
             to="/leaderboard"
-            className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500"
           >
+            <Trophy className="h-4 w-4" />
             Leaderboard
           </Link>
         </div>
