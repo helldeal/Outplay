@@ -24,6 +24,12 @@ npx prisma generate
 npx prisma migrate dev --name init_outplay
 ```
 
+En développement, si tu veux repartir proprement avec les nouvelles migrations :
+
+```bash
+npx prisma migrate reset
+```
+
 ## 3) Seed initial OUTPLAY
 Ce seed crée:
 - Games
@@ -38,10 +44,10 @@ Ce seed crée:
 npx prisma db seed
 ```
 
-## 4) Appliquer le hardening Supabase
-Exécuter le SQL de [prisma/supabase-hardening.sql](prisma/supabase-hardening.sql) dans SQL Editor Supabase.
+## 4) Hardening via migrations Prisma
+Le hardening est maintenant inclus directement dans les migrations Prisma.
 
-Ce script ajoute:
+Ces migrations ajoutent:
 - FK `public.users(id)` -> `auth.users(id)` (`ON DELETE CASCADE`)
 - Règle métier: max 1 carte `LEGENDS` par série
 - Trigger d’immutabilité `boosters.drop_rates`
@@ -52,3 +58,5 @@ Ce script ajoute:
 ## 5) Règle produit importante
 - Ne jamais calculer la logique économique booster côté client.
 - Utiliser uniquement l’appel RPC serveur (`open_booster`) depuis le front.
+- `series.coverImage` est obligatoire.
+- `boosters.image_url` est optionnelle ; si absente, le front utilise l’image de la série.

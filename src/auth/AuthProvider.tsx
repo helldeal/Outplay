@@ -28,23 +28,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-async function upsertCurrentUserProfile(currentUser: User): Promise<void> {
-  const username =
-    (typeof currentUser.user_metadata?.global_name === "string" &&
-      currentUser.user_metadata.global_name) ||
-    (typeof currentUser.user_metadata?.preferred_username === "string" &&
-      currentUser.user_metadata.preferred_username) ||
-    (typeof currentUser.user_metadata?.name === "string" &&
-      currentUser.user_metadata.name) ||
-    null;
-
-  const { error } = await supabase.from("users").upsert(
-    {
-      id: currentUser.id,
-      username,
-    },
-    { onConflict: "id" },
-  );
+async function ensureCurrentUserProfile(currentUser: User): Promise<void> {
+  const { error } = await supabase.rpc("ensure_current_user_profile", {
+    p_user_id: currentUser.id,
+  });
 
   if (error) {
     throw error;
@@ -126,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const syncProfile = async () => {
-      await upsertCurrentUserProfile(user);
+      await ensureCurrentUserProfile(user);
       await refreshProfile();
     };
 

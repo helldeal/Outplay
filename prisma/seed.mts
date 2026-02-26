@@ -1,8 +1,10 @@
+/// <reference types="node" />
+
 import { PrismaClient, BoosterType, Rarity } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-function logStep(message) {
+function logStep(message: string) {
   console.log(`[seed] ${message}`);
 }
 
@@ -84,7 +86,7 @@ const rarityPcValues = {
   LEGENDS: 20000,
 };
 
-function getRarity(number) {
+function getRarity(number: number): Rarity {
   if (number <= 32) return Rarity.ROOKIE;
   if (number <= 52) return Rarity.CHALLENGER;
   if (number <= 62) return Rarity.CHAMPION;
@@ -94,7 +96,14 @@ function getRarity(number) {
 }
 
 async function logDatabaseContext() {
-  const context = await prisma.$queryRaw`
+  const context = await prisma.$queryRaw<
+    Array<{
+      database: string;
+      schema: string;
+      db_user: string;
+      host: string;
+    }>
+  >`
     SELECT
       current_database()::text AS database,
       current_schema()::text AS schema,
@@ -288,7 +297,7 @@ async function seedSeriesAndCards() {
       name: "S1 Godpack Daily",
       type: BoosterType.GODPACK,
       pricePc: 0,
-      imageUrl: "https://example.com/boosters/S1-godpack.webp",
+      imageUrl: null,
       isDailyOnly: true,
       dropRates: {
         ROOKIE: 0,

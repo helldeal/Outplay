@@ -1,7 +1,6 @@
--- OUTPLAY Supabase hardening
--- Run after: prisma migrate dev
+-- Security rules, RLS and RPC functions migrated from manual hardening script.
 
--- 0) Compatibility patch for existing Supabase projects
+-- Ensure enum exists in public schema (compatibility).
 DO $$
 BEGIN
   CREATE TYPE public."OpeningType" AS ENUM ('SHOP', 'DAILY');
@@ -10,28 +9,7 @@ EXCEPTION
 END;
 $$;
 
-ALTER TABLE public.users
-ADD COLUMN IF NOT EXISTS pc_balance integer NOT NULL DEFAULT 0;
-
-ALTER TABLE public.cards
-ADD COLUMN IF NOT EXISTS pc_value integer NOT NULL DEFAULT 0;
-
-ALTER TABLE public.boosters
-ADD COLUMN IF NOT EXISTS price_pc integer NOT NULL DEFAULT 0;
-
-ALTER TABLE public.booster_openings
-ADD COLUMN IF NOT EXISTS pc_gained integer NOT NULL DEFAULT 0;
-
-ALTER TABLE public.booster_openings
-ADD COLUMN IF NOT EXISTS type public."OpeningType" NOT NULL DEFAULT 'SHOP';
-
-ALTER TABLE public.user_cards
-ADD COLUMN IF NOT EXISTS obtained_at timestamptz NOT NULL DEFAULT now();
-
-ALTER TABLE public.cards
-DROP COLUMN IF EXISTS number;
-
--- 1) Link public.users to auth.users (Discord Auth via Supabase Auth)
+-- Link public users to auth users.
 ALTER TABLE public.users
 DROP CONSTRAINT IF EXISTS users_id_fkey;
 
@@ -41,12 +19,12 @@ FOREIGN KEY (id)
 REFERENCES auth.users(id)
 ON DELETE CASCADE;
 
--- 2) Business rule: one LEGENDS card max per series
+-- Business rule: one LEGENDS card max per series.
 CREATE UNIQUE INDEX IF NOT EXISTS cards_one_legends_per_series_idx
 ON public.cards (series_id)
 WHERE rarity = 'LEGENDS';
 
--- 3) Booster drop rates are immutable after creation
+-- Booster drop rates are immutable after creation.
 CREATE OR REPLACE FUNCTION public.prevent_booster_drop_rates_update()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -65,12 +43,12 @@ BEFORE UPDATE ON public.boosters
 FOR EACH ROW
 EXECUTE FUNCTION public.prevent_booster_drop_rates_update();
 
--- 4) RLS required tables
+-- RLS required tables.
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booster_openings ENABLE ROW LEVEL SECURITY;
 
--- 5) Policies: user can only access own records
+-- Policies: user can only access own records.
 DROP POLICY IF EXISTS users_select_own ON public.users;
 CREATE POLICY users_select_own
 ON public.users
@@ -121,8 +99,7 @@ ON public.booster_openings
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
--- 6) Server-side opening logic (economy + duplicates conversion)
--- IMPORTANT: keep economic randomness server-side only.
+-- Server-side opening logic (economy + duplicates conversion).
 CREATE OR REPLACE FUNCTION public._resolve_booster_opening(
   p_booster_id uuid,
   p_user_id uuid,
@@ -364,14 +341,13 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public._resolve_booster_opening(uuid, uuid, public."OpeningType", boolean) FROM PUBLIC;
-
 REVOKE ALL ON FUNCTION public.open_booster(uuid, uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.open_daily_booster(text, uuid) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION public.open_booster(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.open_daily_booster(text, uuid) TO authenticated;
 
--- 7) Read-only leaderboard aggregation for authenticated users
+-- Read-only leaderboard aggregation for authenticated users.
 CREATE OR REPLACE FUNCTION public.get_leaderboard()
 RETURNS TABLE (
   user_id uuid,
@@ -413,7 +389,7 @@ $$;
 REVOKE ALL ON FUNCTION public.get_leaderboard() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO authenticated;
 
--- 8) Optional helper: create storage bucket for assets
+-- Optional helper: create storage bucket for assets.
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('assets', 'assets', true)
 ON CONFLICT (id) DO NOTHING;

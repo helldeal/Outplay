@@ -36,7 +36,7 @@ export interface Booster {
   name: string;
   type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK";
   price_pc: number;
-  image_url: string;
+  image_url: string | null;
   is_daily_only: boolean;
 }
 

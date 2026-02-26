@@ -93,7 +93,7 @@ export function SeriesPage() {
             className="rounded-xl border border-slate-800 bg-slate-900/80 p-4"
           >
             <img
-              src={booster.image_url}
+              src={booster.image_url ?? series.coverImage}
               alt={booster.name}
               className="h-28 w-full rounded-md object-cover"
             />

@@ -13,6 +13,7 @@ model User {
   id        String   @id @db.Uuid
   createdAt DateTime @default(now())
   username  String?
+  avatarUrl String?  @map("avatar_url")
   pcBalance Int      @default(0) @map("pc_balance")
 
   userCards       UserCard[]
@@ -78,7 +79,7 @@ model Series {
   name       String
   slug       String   @unique
   code       String   @unique
-  coverImage String?
+  coverImage String
   createdAt  DateTime @default(now())
 
   cards           Card[]
@@ -127,7 +128,7 @@ model Booster {
   name        String
   type        BoosterType
   pricePc     Int         @default(0) @map("price_pc")
-  imageUrl    String      @map("image_url")
+  imageUrl    String?     @map("image_url")
   isDailyOnly Boolean     @default(false) @map("is_daily_only")
   dropRates   Json        @map("drop_rates")
 
