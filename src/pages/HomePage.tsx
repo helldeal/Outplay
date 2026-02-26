@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LogIn, Library, Trophy } from "lucide-react";
+import { LogIn, Library, ShoppingBag, Trophy } from "lucide-react";
 
 export function HomePage() {
   return (
@@ -30,6 +30,13 @@ export function HomePage() {
           >
             <Library className="h-4 w-4" />
             Voir ma collection
+          </Link>
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Boutique
           </Link>
           <Link
             to="/leaderboard"

@@ -1,0 +1,1 @@
+{"root":["./prisma/seed.mts","./prisma/series/s1.mts","./prisma.config.ts"],"version":"5.9.3"}

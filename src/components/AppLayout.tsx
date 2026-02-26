@@ -5,6 +5,7 @@ import {
   LibraryBig,
   LogIn,
   LogOut,
+  ShoppingBag,
   Trophy,
   UserCircle2,
 } from "lucide-react";
@@ -32,6 +33,12 @@ export function AppLayout() {
           </Link>
 
           <nav className="hidden items-center gap-2 md:flex">
+            <NavLink to="/shop" className={navItemClass}>
+              <span className="inline-flex items-center gap-1">
+                <ShoppingBag className="h-4 w-4" />
+                Boutique
+              </span>
+            </NavLink>
             <NavLink to="/collection" className={navItemClass}>
               <span className="inline-flex items-center gap-1">
                 <LibraryBig className="h-4 w-4" />
@@ -81,6 +88,9 @@ export function AppLayout() {
 
         <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pb-3 text-xs text-slate-400 md:hidden">
           <Trophy className="h-4 w-4" />
+          <NavLink to="/shop" className={navItemClass}>
+            Boutique
+          </NavLink>
           <NavLink to="/collection" className={navItemClass}>
             Collection
           </NavLink>

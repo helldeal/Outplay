@@ -2,6 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import type { Booster, Series } from "../types";
 
+async function fetchSeriesList(): Promise<Series[]> {
+  const { data, error } = await supabase
+    .from("series")
+    .select("id, name, slug, code, coverImage")
+    .order("name");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as Series[];
+}
+
 async function fetchSeriesBySlug(slug: string): Promise<Series> {
   const { data, error } = await supabase
     .from("series")
@@ -44,6 +57,13 @@ export function useSeriesBySlugQuery(slug: string) {
     queryKey: ["series", slug],
     enabled: Boolean(slug),
     queryFn: () => fetchSeriesBySlug(slug),
+  });
+}
+
+export function useSeriesListQuery() {
+  return useQuery({
+    queryKey: ["series-list"],
+    queryFn: fetchSeriesList,
   });
 }
 

@@ -25,6 +25,19 @@ export async function openBoosterRpc(boosterId: string, userId: string) {
   return data as OpenBoosterResponse;
 }
 
+export async function openDailyBoosterRpc(seriesCode: string, userId: string) {
+  const { data, error } = await supabase.rpc("open_daily_booster", {
+    p_series_code: seriesCode,
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as OpenBoosterResponse;
+}
+
 export async function fetchCardsByIds(cardIds: string[]) {
   const { data: cardRows, error } = await supabase
     .from("cards")

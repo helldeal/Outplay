@@ -8,6 +8,7 @@ import { HomePage } from "./pages/HomePage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ShopPage } from "./pages/ShopPage";
 import { SeriesPage } from "./pages/SeriesPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -31,6 +32,14 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
+          path="/shop"
+          element={
+            <RequireAuth>
+              <ShopPage />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="/collection"
           element={
             <RequireAuth>
@@ -38,7 +47,14 @@ export default function App() {
             </RequireAuth>
           }
         />
-        <Route path="/series/:slug" element={<SeriesPage />} />
+        <Route
+          path="/series/:slug"
+          element={
+            <RequireAuth>
+              <SeriesPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/booster/:series"
           element={

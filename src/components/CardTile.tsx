@@ -50,7 +50,7 @@ export function CardTile({ card, obtainedAt }: CardTileProps) {
             <img
               src={card.team.logoUrl}
               alt={card.team.name}
-              className="ml-auto h-4 w-4 rounded-sm object-cover"
+              className="ml-auto h-6 w-6 rounded-sm object-contain"
             />
           ) : null}
 
@@ -58,7 +58,7 @@ export function CardTile({ card, obtainedAt }: CardTileProps) {
             <img
               src={card.role.iconUrl}
               alt={card.role.name}
-              className="h-4 w-4 rounded-sm object-cover"
+              className="h-5 w-5 rounded-sm object-cover"
             />
           ) : (
             <Shield className="h-4 w-4 text-slate-500" />

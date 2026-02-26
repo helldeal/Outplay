@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
@@ -39,10 +40,41 @@ async function ensureCurrentUserProfile(currentUser: User): Promise<void> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const userId = user?.id;
+
+  const invalidateUserQueries = useCallback(async () => {
+    if (!userId) {
+      return;
+    }
+
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["collection", userId],
+        refetchType: "active",
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["leaderboard"],
+        refetchType: "active",
+      }),
+      queryClient.invalidateQueries({
+        refetchType: "active",
+        predicate: (query) => {
+          const rootKey = query.queryKey[0];
+          return (
+            rootKey === "legendex-owned" ||
+            rootKey === "legendex-cards" ||
+            rootKey === "booster-list" ||
+            rootKey === "series-boosters"
+          );
+        },
+      }),
+    ]);
+  }, [queryClient, userId]);
 
   const refreshProfile = useCallback(async () => {
     if (!isSupabaseConfigured || !user) {
@@ -94,6 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
+        setProfile(null);
+      }
     });
 
     return () => {
@@ -119,6 +155,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void syncProfile();
   }, [refreshProfile, user]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !userId) {
+      return;
+    }
+
+    const channel = supabase
+      .channel(`realtime-user-sync-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "users",
+          filter: `id=eq.${userId}`,
+        },
+        async () => {
+          await refreshProfile();
+          await invalidateUserQueries();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "user_cards",
+          filter: `user_id=eq.${userId}`,
+        },
+        async () => {
+          await invalidateUserQueries();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "user_cards",
+          filter: `user_id=eq.${userId}`,
+        },
+        async () => {
+          await invalidateUserQueries();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "booster_openings",
+          filter: `user_id=eq.${userId}`,
+        },
+        async () => {
+          await invalidateUserQueries();
+          await refreshProfile();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [invalidateUserQueries, refreshProfile, userId]);
 
   const loginWithDiscord = useCallback(async () => {
     if (!isSupabaseConfigured) {

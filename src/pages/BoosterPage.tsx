@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  CalendarClock,
   Coins,
   Gift,
   LoaderCircle,
@@ -13,13 +14,17 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
 import { useSequentialReveal } from "../hooks/useSequentialReveal";
-import { fetchCardsByIds, openBoosterRpc } from "../query/booster";
-import { useBoosterListQuery, useBoosterSeriesQuery } from "../query/series";
+import {
+  fetchCardsByIds,
+  openBoosterRpc,
+  openDailyBoosterRpc,
+} from "../query/booster";
+import { useBoosterSeriesQuery, useSeriesBoostersQuery } from "../query/series";
 import type { Booster, CardWithRelations } from "../types";
 
 export function BoosterPage() {
   const { series: seriesSlug = "" } = useParams();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
   const [openingError, setOpeningError] = useState<string | null>(null);
   const [openedCards, setOpenedCards] = useState<CardWithRelations[]>([]);
@@ -27,7 +32,7 @@ export function BoosterPage() {
   const [chargedPc, setChargedPc] = useState(0);
   const [openingBoosterId, setOpeningBoosterId] = useState<string | null>(null);
   const seriesQuery = useBoosterSeriesQuery(seriesSlug);
-  const boostersQuery = useBoosterListQuery(seriesQuery.data?.id);
+  const boostersQuery = useSeriesBoostersQuery(seriesQuery.data?.id);
   const revealedCount = useSequentialReveal(
     openedCards.length,
     openedCards.map((card) => card.id).join("|"),
@@ -43,11 +48,16 @@ export function BoosterPage() {
     setOpeningBoosterId(booster.id);
 
     try {
-      const result = await openBoosterRpc(booster.id, user.id);
+      const result = booster.is_daily_only
+        ? await openDailyBoosterRpc(
+            (seriesQuery.data?.code ?? seriesSlug).toUpperCase(),
+            user.id,
+          )
+        : await openBoosterRpc(booster.id, user.id);
       const cardIds = result.cards ?? [];
       const ordered = await fetchCardsByIds(cardIds);
 
-      setOpenedCards(ordered);
+      setOpenedCards(ordered.sort((a, b) => a.id.localeCompare(b.id)));
       setPcGained(result.pcGained ?? 0);
       setChargedPc(result.chargedPc ?? 0);
 
@@ -61,7 +71,7 @@ export function BoosterPage() {
       );
     } finally {
       setOpeningBoosterId(null);
-      await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      await refreshProfile();
     }
   };
 
@@ -84,6 +94,8 @@ export function BoosterPage() {
 
   const series = seriesQuery.data;
   const boosters = boostersQuery.data ?? [];
+  const dailyBoosters = boosters.filter((booster) => booster.is_daily_only);
+  const shopBoosters = boosters.filter((booster) => !booster.is_daily_only);
 
   return (
     <section className="space-y-6">
@@ -93,8 +105,8 @@ export function BoosterPage() {
           Booster Opening • {series?.name}
         </h1>
         <p className="mt-2 text-sm text-slate-400">
-          Flow: Open → RPC `open_booster` → reveal animé (fade + flip) carte par
-          carte.
+          Flow: Open → RPC `open_booster` / `open_daily_booster` → reveal animé
+          (fade + flip) carte par carte.
         </p>
       </div>
 
@@ -104,44 +116,95 @@ export function BoosterPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {boosters.map((booster) => (
-          <div
-            key={booster.id}
-            className="rounded-xl border border-slate-800 bg-slate-900/80 p-4"
-          >
-            <img
-              src={booster.image_url ?? series?.coverImage ?? ""}
-              alt={booster.name}
-              className="h-28 w-full rounded-md object-cover"
-            />
-            <h2 className="mt-3 text-lg font-semibold text-white">
-              {booster.name}
-            </h2>
-            <p className="text-sm text-slate-400">{booster.type}</p>
-            <div className="mt-2 flex items-center gap-1 text-sm text-amber-300">
-              <Coins className="h-4 w-4" />
-              {booster.price_pc} PC
-            </div>
-            <button
-              onClick={() => void openBooster(booster)}
-              disabled={!user || openingBoosterId !== null}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium uppercase tracking-[0.15em] text-slate-300">
+          Boutique
+        </h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {shopBoosters.map((booster) => (
+            <div
+              key={booster.id}
+              className="rounded-xl border border-slate-800 bg-slate-900/80 p-4"
             >
-              {openingBoosterId === booster.id ? (
-                <>
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Opening...
-                </>
-              ) : (
-                <>
-                  <Gift className="h-4 w-4" />
-                  Open
-                </>
-              )}
-            </button>
-          </div>
-        ))}
+              <img
+                src={booster.image_url ?? series?.coverImage ?? ""}
+                alt={booster.name}
+                className="h-28 w-full rounded-md object-cover"
+              />
+              <h2 className="mt-3 text-lg font-semibold text-white">
+                {booster.name}
+              </h2>
+              <p className="text-sm text-slate-400">{booster.type}</p>
+              <div className="mt-2 flex items-center gap-1 text-sm text-amber-300">
+                <Coins className="h-4 w-4" />
+                {booster.price_pc} PC
+              </div>
+              <button
+                onClick={() => void openBooster(booster)}
+                disabled={!user || openingBoosterId !== null}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {openingBoosterId === booster.id ? (
+                  <>
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    <Gift className="h-4 w-4" />
+                    Open
+                  </>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-[0.15em] text-slate-300">
+          <CalendarClock className="h-4 w-4" />
+          Daily Booster
+        </h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {dailyBoosters.map((booster) => (
+            <div
+              key={booster.id}
+              className="rounded-xl border border-slate-800 bg-slate-900/80 p-4"
+            >
+              <img
+                src={booster.image_url ?? series?.coverImage ?? ""}
+                alt={booster.name}
+                className="h-28 w-full rounded-md object-cover"
+              />
+              <h2 className="mt-3 text-lg font-semibold text-white">
+                {booster.name}
+              </h2>
+              <p className="text-sm text-slate-400">{booster.type}</p>
+              <div className="mt-2 inline-flex items-center gap-1 text-sm text-emerald-300">
+                <CalendarClock className="h-4 w-4" />
+                Ouverture quotidienne
+              </div>
+              <button
+                onClick={() => void openBooster(booster)}
+                disabled={!user || openingBoosterId !== null}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {openingBoosterId === booster.id ? (
+                  <>
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    <CalendarClock className="h-4 w-4" />
+                    Open Daily
+                  </>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {openedCards.length > 0 ? (
