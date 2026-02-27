@@ -18,3 +18,68 @@ body {
 #root {
   min-height: 100vh;
 }
+
+@keyframes holographic {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.holographic-border {
+  background: linear-gradient(
+    45deg,
+    #ff0080,
+    #ff8c00,
+    #40e0d0,
+    #7b68ee,
+    #ff1493,
+    #00ff00,
+    #ff0080
+  );
+  background-size: 400% 400%;
+  animation: holographic 3s ease infinite;
+}
+
+.holographic-foil::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.3) 25%,
+    rgba(255, 0, 255, 0.3) 30%,
+    rgba(0, 255, 255, 0.3) 35%,
+    rgba(255, 255, 0, 0.3) 40%,
+    transparent 50%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 2s linear infinite;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.holographic-foil:hover::before {
+  opacity: 1;
+}

@@ -35,14 +35,20 @@ export function useLegendexCardsQuery(selectedSeriesId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cards")
-        .select("id, name, rarity, imageUrl, pc_value, series_id")
+        .select(
+          `id, name, rarity, imageUrl, pc_value, series_id,
+           game:games(*),
+           nationality:nationalities(*),
+           team:teams(*),
+           role:roles(*)`,
+        )
         .eq("series_id", selectedSeriesId!);
 
       if (error) {
         throw error;
       }
 
-      const rows = (data ?? []) as LegendexCard[];
+      const rows = data ?? [];
       return rows.sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity));
     },
   });
@@ -58,14 +64,20 @@ export function useLegendexOwnedCardsQuery(
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_cards")
-        .select("card_id, card:cards!inner(series_id)")
+        .select("card_id, obtained_at, card:cards!inner(series_id)")
+        .eq("user_id", userId!)
         .eq("card.series_id", selectedSeriesId!);
 
       if (error) {
         throw error;
       }
 
-      return new Set((data ?? []).map((entry) => entry.card_id as string));
+      return new Map(
+        (data ?? []).map((entry) => [
+          entry.card_id as string,
+          entry.obtained_at as string,
+        ]),
+      );
     },
   });
 }

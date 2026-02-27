@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookMarked, Gauge } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
+import { CardTile } from "../components/CardTile";
 import {
   useLegendexCardsQuery,
   useLegendexOwnedCardsQuery,
@@ -22,7 +23,8 @@ export function LegendexPage() {
   const ownedQuery = useLegendexOwnedCardsQuery(user?.id, selectedSeriesId);
 
   const cards = cardsQuery.data?.sort((a, b) => b.id.localeCompare(a.id)) ?? [];
-  const owned = ownedQuery.data ?? new Set<string>();
+  const ownedData = ownedQuery.data;
+  const owned = ownedData instanceof Map ? ownedData : new Map<string, string>();
 
   const completion = useMemo(() => {
     if (cards.length === 0) {
@@ -70,25 +72,14 @@ export function LegendexPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {cards.map((card) => {
           const isOwned = owned.has(card.id);
+          const obtainedAt = owned.get(card.id);
           return (
-            <article
+            <CardTile
               key={card.id}
-              className={`overflow-hidden rounded-lg border ${isOwned ? "border-slate-700 bg-slate-900" : "border-slate-800 bg-slate-950"}`}
-            >
-              <div className="aspect-[3/4] overflow-hidden bg-slate-900">
-                <img
-                  src={card.imageUrl}
-                  alt={card.name}
-                  className={`h-full w-full object-cover transition ${isOwned ? "opacity-100" : "grayscale opacity-30"}`}
-                />
-              </div>
-              <div className="p-2 text-xs">
-                <p className="line-clamp-1 font-medium text-slate-100">
-                  {card.name}
-                </p>
-                <p className="text-slate-400">{card.rarity}</p>
-              </div>
-            </article>
+              card={card}
+              isOwned={isOwned}
+              obtainedAt={obtainedAt}
+            />
           );
         })}
       </div>

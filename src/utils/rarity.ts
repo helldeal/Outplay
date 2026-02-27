@@ -35,14 +35,14 @@ export function rarityWeight(rarity: Rarity): number {
 export function rarityTone(rarity: Rarity): string {
   switch (rarity) {
     case "LEGENDS":
-      return "border-amber-400/60 hover:shadow-amber-400/30";
+      return ""; // Géré par holographic-border dans CardTile
     case "WORLD_CLASS":
-      return "border-fuchsia-400/60 hover:shadow-fuchsia-400/30";
+      return "border-orange-500 border-4 shadow-orange-500/60 hover:shadow-orange-500/80";
     case "CHAMPION":
-      return "border-cyan-400/60 hover:shadow-cyan-400/30";
+      return "border-purple-500 border-4 shadow-purple-500/60 hover:shadow-purple-500/80";
     case "CHALLENGER":
-      return "border-violet-400/60 hover:shadow-violet-400/30";
+      return "border-blue-500 border-4 shadow-blue-500/60 hover:shadow-blue-500/80";
     default:
-      return "border-slate-600 hover:shadow-slate-500/30";
+      return "border-gray-400 border-4 shadow-gray-400/40 hover:shadow-gray-400/60";
   }
 }
