@@ -69,7 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             rootKey === "legendex-owned" ||
             rootKey === "legendex-cards" ||
             rootKey === "booster-list" ||
-            rootKey === "series-boosters"
+            rootKey === "series-boosters" ||
+            rootKey === "daily-booster-opened-today"
           );
         },
       }),

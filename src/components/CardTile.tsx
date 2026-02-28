@@ -1,5 +1,4 @@
 import { Shield } from "lucide-react";
-import { rarityTone } from "../utils/rarity";
 import type { CardWithRelations } from "../types";
 
 interface CardTileProps {
@@ -8,43 +7,44 @@ interface CardTileProps {
   isOwned?: boolean;
 }
 
-export function CardTile({ card, obtainedAt, isOwned = true }: CardTileProps) {
-  const isLegends = card.rarity === "LEGENDS";
+function rarityNameGradient(rarity: CardWithRelations["rarity"]) {
+  switch (rarity) {
+    case "LEGENDS":
+      return "bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-400";
+    case "WORLD_CLASS":
+      return "bg-gradient-to-r from-orange-400 to-orange-600";
+    case "CHAMPION":
+      return "bg-gradient-to-r from-purple-400 to-purple-600";
+    case "CHALLENGER":
+      return "bg-gradient-to-r from-blue-400 to-blue-600";
+    default:
+      return "bg-gradient-to-r from-slate-200 to-slate-400";
+  }
+}
 
+export function CardTile({ card, obtainedAt, isOwned = true }: CardTileProps) {
   return (
-    <article
-      className={`group overflow-hidden rounded-xl bg-slate-900/80 shadow-lg transition hover:-translate-y-0.5 hover:shadow-2xl ${
-        isLegends ? "holographic-border p-1" : rarityTone(card.rarity)
-      }`}
-    >
-      <div
-        className={`relative rounded-lg overflow-hidden ${isLegends ? "bg-slate-900" : ""}`}
-      >
-        <div
-          className={`relative aspect-[3/4] overflow-hidden bg-slate-800 ${isLegends ? "holographic-foil" : ""}`}
-        >
+    <article className="relative overflow-hidden rounded-xl bg-slate-900/80">
+      <div className="relative overflow-hidden rounded-lg">
+        <div className="relative aspect-[3/4] overflow-hidden bg-slate-800">
           <img
             src={card.imageUrl}
-            alt={card.name}
-            className={`h-full w-full object-cover transition duration-300 group-hover:scale-[1.03] ${
+            className={`h-full w-full object-cover ${
               !isOwned ? "grayscale opacity-30" : ""
             }`}
             loading="lazy"
           />
-          {!isOwned && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 backdrop-blur-[2px]">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Not Owned
-              </span>
-            </div>
-          )}
+
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/55 to-transparent px-3 pb-2 pt-8">
+            <h3
+              className={`inline-block max-w-full truncate text-lg font-bold leading-tight text-transparent bg-clip-text ${rarityNameGradient(card.rarity)}`}
+            >
+              {card.name}
+            </h3>
+          </div>
         </div>
 
         <div className="space-y-2 p-3">
-          <h3 className="line-clamp-1 text-sm font-semibold text-slate-100">
-            {card.name}
-          </h3>
-
           {card.game && (
             <div className="flex items-center gap-2 text-xs text-slate-300">
               <img
@@ -91,10 +91,16 @@ export function CardTile({ card, obtainedAt, isOwned = true }: CardTileProps) {
             ) : (
               <span></span>
             )}
-            <span className="font-medium">{card.id}</span>
+            <span className={`font-medium`}>{card.id}</span>
           </div>
         </div>
       </div>
+
+      {!isOwned && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/60 backdrop-blur-[2px]">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider"></span>
+        </div>
+      )}
     </article>
   );
 }

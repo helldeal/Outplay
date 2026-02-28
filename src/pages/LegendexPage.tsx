@@ -24,7 +24,8 @@ export function LegendexPage() {
 
   const cards = cardsQuery.data?.sort((a, b) => b.id.localeCompare(a.id)) ?? [];
   const ownedData = ownedQuery.data;
-  const owned = ownedData instanceof Map ? ownedData : new Map<string, string>();
+  const owned =
+    ownedData instanceof Map ? ownedData : new Map<string, string>();
 
   const completion = useMemo(() => {
     if (cards.length === 0) {

@@ -9,7 +9,6 @@ import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ShopPage } from "./pages/ShopPage";
-import { SeriesPage } from "./pages/SeriesPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { loading, user } = useAuth();
@@ -48,20 +47,17 @@ export default function App() {
           }
         />
         <Route
-          path="/series/:slug"
-          element={
-            <RequireAuth>
-              <SeriesPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/booster/:series"
+          path="/booster-opening"
           element={
             <RequireAuth>
               <BoosterPage />
             </RequireAuth>
           }
+        />
+        <Route path="/series/:slug" element={<Navigate to="/shop" replace />} />
+        <Route
+          path="/booster/:series"
+          element={<Navigate to="/shop" replace />}
         />
         <Route
           path="/leaderboard"
