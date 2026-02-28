@@ -1,4 +1,3 @@
-import { Shield } from "lucide-react";
 import type { CardWithRelations } from "../types";
 
 interface CardTileProps {
@@ -35,6 +34,40 @@ export function CardTile({ card, obtainedAt, isOwned = true }: CardTileProps) {
             loading="lazy"
           />
 
+          <div className="absolute right-3 bottom-3 z-[1] flex flex-col items-center gap-1.5">
+            {card.game?.logoUrl ? (
+              <img
+                src={card.game.logoUrl}
+                alt={card.game.name}
+                className="h-4 w-4 rounded-sm object-contain"
+              />
+            ) : null}
+
+            {card.nationality?.flagUrl ? (
+              <img
+                src={card.nationality.flagUrl}
+                alt={card.nationality.code ?? "flag"}
+                className="h-4 w-4 rounded-full object-cover"
+              />
+            ) : null}
+
+            {card.team?.logoUrl ? (
+              <img
+                src={card.team.logoUrl}
+                alt={card.team.name}
+                className="h-5 w-5 rounded-sm object-contain"
+              />
+            ) : null}
+
+            {card.role?.iconUrl ? (
+              <img
+                src={card.role.iconUrl}
+                alt={card.role.name}
+                className="h-5 w-5 rounded-sm object-cover"
+              />
+            ) : null}
+          </div>
+
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/55 to-transparent px-3 pb-2 pt-8">
             <h3
               className={`inline-block max-w-full truncate text-lg font-bold leading-tight text-transparent bg-clip-text ${rarityNameGradient(card.rarity)}`}
@@ -44,47 +77,7 @@ export function CardTile({ card, obtainedAt, isOwned = true }: CardTileProps) {
           </div>
         </div>
 
-        <div className="space-y-2 p-3">
-          {card.game && (
-            <div className="flex items-center gap-2 text-xs text-slate-300">
-              <img
-                src={card.game.logoUrl}
-                alt={card.game.name}
-                className="h-4 w-4 rounded-sm object-cover"
-              />
-              <span className="line-clamp-1">{card.game.name}</span>
-            </div>
-          )}
-
-          {card.nationality && (
-            <div className="flex items-center gap-2 text-xs text-slate-300">
-              <img
-                src={card.nationality.flagUrl}
-                alt={card.nationality.code ?? "flag"}
-                className="h-4 w-4 rounded-full"
-              />
-              <span>{card.nationality.code}</span>
-
-              {card.team?.logoUrl ? (
-                <img
-                  src={card.team.logoUrl}
-                  alt={card.team.name}
-                  className="ml-auto h-6 w-6 rounded-sm object-contain"
-                />
-              ) : null}
-
-              {card.role?.iconUrl ? (
-                <img
-                  src={card.role.iconUrl}
-                  alt={card.role.name}
-                  className="h-5 w-5 rounded-sm object-cover"
-                />
-              ) : (
-                <Shield className="h-4 w-4 text-slate-500" />
-              )}
-            </div>
-          )}
-
+        <div className="p-1.5 px-3">
           <div className="flex items-center justify-between text-[11px] text-slate-500">
             {obtainedAt ? (
               <span>Obtained {new Date(obtainedAt).toLocaleDateString()}</span>
