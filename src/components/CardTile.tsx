@@ -63,6 +63,7 @@ function CardInner({
           <div className="relative aspect-[3/4] overflow-hidden bg-slate-800">
             <img
               src={card.imageUrl}
+              alt={card.id}
               className={`h-full w-full object-cover ${
                 !isOwned ? "grayscale opacity-30" : ""
               }`}
