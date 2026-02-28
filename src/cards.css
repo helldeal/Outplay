@@ -966,6 +966,60 @@
 }
 
 /********************************/
+/*  Outplay: active (expanded)   */
+/********************************/
+
+/* Dark backdrop behind the active card */
+.card-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+    animation: backdrop-in 0.4s ease forwards;
+    cursor: pointer;
+}
+
+.card-backdrop--closing {
+    animation: backdrop-out 0.35s ease forwards;
+}
+
+@keyframes backdrop-in {
+    to {
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+    }
+}
+
+@keyframes backdrop-out {
+    from {
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+    }
+    to {
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: blur(0px);
+    }
+}
+
+/* Active card: fixed center, scaled up — FLIP handles the animation */
+.card.active {
+    position: fixed !important;
+    z-index: 9999 !important;
+    top: 50% !important;
+    left: 50% !important;
+    margin: 0 !important;
+    width: min(80vw, 360px);
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+}
+
+/* Remove the translate from card__translater when active */
+.card.active .card__translater {
+    transform: none;
+}
+
+/********************************/
 /*  Outplay: base overlay styles */
 /********************************/
 
