@@ -1,16 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { rarityRank } from "../utils/rarity";
 import { supabase } from "../lib/supabase";
-import type { Rarity, Series } from "../types";
-
-interface LegendexCard {
-  id: string;
-  name: string;
-  rarity: Rarity;
-  imageUrl: string;
-  pc_value: number;
-  series_id: string;
-}
+import type { CardWithRelations, Series } from "../types";
 
 export function useLegendexSeriesQuery() {
   return useQuery({
@@ -48,7 +39,9 @@ export function useLegendexCardsQuery(selectedSeriesId?: string) {
         throw error;
       }
 
-      const rows = data ?? [];
+      const rows = (data ?? []) as unknown as (CardWithRelations & {
+        series_id: string;
+      })[];
       return rows.sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity));
     },
   });

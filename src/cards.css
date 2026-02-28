@@ -68,7 +68,8 @@
     box-shadow: 0px 10px 30px 3px black;
 }
 
-.card__rotator :global(*) {
+.card__rotator > *,
+.card__front > * {
     width: 100%;
     display: grid;
     grid-area: 1/1;
@@ -965,57 +966,45 @@
 }
 
 /********************************/
+/*  Outplay: base overlay styles */
+/********************************/
 
-html,
-body,
-iframe {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    background: #393c42;
+/* card__front is the stacking context for overlays */
+.card .card__front {
+    position: relative;
+    overflow: hidden;
 }
 
+/* Card content restores normal block flow inside the grid cell */
+.card__front > .card-content {
+    display: block !important;
+    grid-area: auto !important;
+}
 
-
-
-
-
-
-
-/**********/
-
-p.scroll {
-    position: fixed;
-    font-size: 0.875rem;
-    left: 50px;
-    bottom: 20px;
-    width: 300px;
-    text-align: left;
-    color: cyan;
-    font-weight: bold;
-    text-shadow: 0 1px 0 black;
+/* Shine and glare sit on top of card content as absolute overlays */
+.card .card__shine,
+.card .card__glare {
+    position: absolute !important;
+    inset: 0;
+    display: block !important;
+    grid-area: auto !important;
+    z-index: 2;
     pointer-events: none;
-    cursor: default;
-    user-select: none;
-}
-svg {
-    position: fixed;
-    left: 25px;
-    bottom: 35px;
-    width: 22px;
-    fill: cyan;
-    transform: translateX(-50%);
-    filter: drop-shadow(0 1px 0 black);
-    animation: bounce 1s ease infinite;
-    pointer-events: none;
-    cursor: default;
-    user-select: none;
+    opacity: var(--o, 0);
+    transition: opacity 0.25s ease-out;
 }
 
-@keyframes bounce {
-    50% {
-        transform: translateX(-50%) translateY(5px);
-    }
+.card .card__shine {
+    mix-blend-mode: color-dodge;
+}
+
+.card .card__glare {
+    z-index: 3;
+    background-image: radial-gradient(
+        farthest-corner circle at var(--mx) var(--my),
+        rgba(255, 255, 255, 0.35) 10%,
+        rgba(255, 255, 255, 0.15) 25%,
+        rgba(0, 0, 0, 0.5) 90%
+    );
+    mix-blend-mode: overlay;
 }
