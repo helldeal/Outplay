@@ -206,3 +206,34 @@ export function useShopBoostersQuery() {
     queryFn: fetchShopBoosters,
   });
 }
+
+/* ─── Duplicate detection helpers ─── */
+
+/** Snapshot the set of card IDs a user currently owns (call BEFORE opening). */
+export async function getOwnedCardIds(userId: string): Promise<Set<string>> {
+  const { data } = await supabase
+    .from("user_cards")
+    .select("card_id")
+    .eq("user_id", userId);
+  return new Set((data ?? []).map((row: { card_id: string }) => row.card_id));
+}
+
+/**
+ * Given the drawn card IDs and the set of cards owned before opening,
+ * return the indices (into drawnCardIds) that are duplicates.
+ */
+export function computeDuplicateIndices(
+  drawnCardIds: string[],
+  ownedBefore: Set<string>,
+): number[] {
+  const seen = new Set<string>();
+  const dupes: number[] = [];
+  for (let i = 0; i < drawnCardIds.length; i++) {
+    const id = drawnCardIds[i];
+    if (ownedBefore.has(id) || seen.has(id)) {
+      dupes.push(i);
+    }
+    seen.add(id);
+  }
+  return dupes;
+}

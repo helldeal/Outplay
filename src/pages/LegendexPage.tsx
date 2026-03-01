@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookMarked, Gauge } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
 import {
@@ -10,14 +11,30 @@ import {
 
 export function LegendexPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const requestedSeries = searchParams.get("series")?.trim().toLowerCase();
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
   const seriesQuery = useLegendexSeriesQuery();
 
   useEffect(() => {
-    if (!selectedSeriesId && seriesQuery.data && seriesQuery.data.length > 0) {
-      setSelectedSeriesId(seriesQuery.data[0].id);
+    if (!seriesQuery.data || seriesQuery.data.length === 0) {
+      return;
     }
-  }, [selectedSeriesId, seriesQuery.data]);
+
+    const targetSeries = requestedSeries
+      ? seriesQuery.data.find(
+          (series) =>
+            series.slug.toLowerCase() === requestedSeries ||
+            series.code.toLowerCase() === requestedSeries,
+        )
+      : null;
+
+    const nextSeriesId = targetSeries?.id ?? seriesQuery.data[0].id;
+
+    if (selectedSeriesId !== nextSeriesId) {
+      setSelectedSeriesId(nextSeriesId);
+    }
+  }, [requestedSeries, selectedSeriesId, seriesQuery.data]);
 
   const cardsQuery = useLegendexCardsQuery(selectedSeriesId);
   const ownedQuery = useLegendexOwnedCardsQuery(user?.id, selectedSeriesId);

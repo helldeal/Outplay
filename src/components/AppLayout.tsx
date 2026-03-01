@@ -3,7 +3,6 @@ import {
   BookMarked,
   CalendarClock,
   Coins,
-  LibraryBig,
   LogIn,
   LogOut,
   LoaderCircle,
@@ -14,7 +13,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthProvider";
 import {
+  computeDuplicateIndices,
   fetchCardsByIds,
+  getOwnedCardIds,
   openDailyBoosterRpc,
   useDailyBoosterTargetQuery,
   useHasOpenedDailyTodayQuery,
@@ -116,11 +117,17 @@ export function AppLayout() {
 
     setIsOpeningDaily(true);
     try {
+      const ownedBefore = await getOwnedCardIds(user.id);
       const result = await openDailyBoosterRpc(
         dailyTargetQuery.data.series.code,
         user.id,
       );
-      const openedCards = await fetchCardsByIds(result.cards ?? []);
+      const cardIds = result.cards ?? [];
+      const openedCards = await fetchCardsByIds(cardIds);
+      const duplicateCardIndices = computeDuplicateIndices(
+        cardIds,
+        ownedBefore,
+      );
 
       await Promise.all([
         queryClient.invalidateQueries({
@@ -135,10 +142,13 @@ export function AppLayout() {
       navigate("/booster-opening", {
         state: {
           openedCards,
+          duplicateCardIndices,
           pcGained: result.pcGained ?? 0,
           chargedPc: result.chargedPc ?? 0,
           boosterName: "Daily Booster",
           seriesName: dailyTargetQuery.data.series.name,
+          seriesSlug: dailyTargetQuery.data.series.slug,
+          seriesCode: dailyTargetQuery.data.series.code,
         },
       });
     } finally {
@@ -162,12 +172,6 @@ export function AppLayout() {
               <span className="inline-flex items-center gap-1">
                 <ShoppingBag className="h-4 w-4" />
                 Boutique
-              </span>
-            </NavLink>
-            <NavLink to="/collection" className={navItemClass}>
-              <span className="inline-flex items-center gap-1">
-                <LibraryBig className="h-4 w-4" />
-                Collection
               </span>
             </NavLink>
             <NavLink to="/legendex" className={navItemClass}>
@@ -238,9 +242,6 @@ export function AppLayout() {
           <Trophy className="h-4 w-4" />
           <NavLink to="/shop" className={navItemClass}>
             Boutique
-          </NavLink>
-          <NavLink to="/collection" className={navItemClass}>
-            Collection
           </NavLink>
           <NavLink to="/legendex" className={navItemClass}>
             Legendex

@@ -3,7 +3,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthProvider";
 import { AppLayout } from "./components/AppLayout";
 import { BoosterPage } from "./pages/BoosterPage";
-import { CollectionPage } from "./pages/CollectionPage";
 import { HomePage } from "./pages/HomePage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
@@ -27,6 +26,16 @@ function RequireAuth({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <Routes>
+      {/* Booster opening – standalone fullscreen, no AppLayout */}
+      <Route
+        path="/booster-opening"
+        element={
+          <RequireAuth>
+            <BoosterPage />
+          </RequireAuth>
+        }
+      />
+
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -42,15 +51,7 @@ export default function App() {
           path="/collection"
           element={
             <RequireAuth>
-              <CollectionPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/booster-opening"
-          element={
-            <RequireAuth>
-              <BoosterPage />
+              <Navigate to="/legendex" replace />
             </RequireAuth>
           }
         />

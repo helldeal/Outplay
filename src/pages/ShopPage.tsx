@@ -4,7 +4,9 @@ import { Coins, Gift, LoaderCircle, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import {
+  computeDuplicateIndices,
   fetchCardsByIds,
+  getOwnedCardIds,
   openBoosterRpc,
   useShopBoostersQuery,
 } from "../query/booster";
@@ -56,8 +58,14 @@ export function ShopPage() {
     setOpeningBoosterId(booster.id);
 
     try {
+      const ownedBefore = await getOwnedCardIds(user.id);
       const result = await openBoosterRpc(booster.id, user.id);
-      const openedCards = await fetchCardsByIds(result.cards ?? []);
+      const cardIds = result.cards ?? [];
+      const openedCards = await fetchCardsByIds(cardIds);
+      const duplicateCardIndices = computeDuplicateIndices(
+        cardIds,
+        ownedBefore,
+      );
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
@@ -69,10 +77,13 @@ export function ShopPage() {
       navigate("/booster-opening", {
         state: {
           openedCards,
+          duplicateCardIndices,
           pcGained: result.pcGained ?? 0,
           chargedPc: result.chargedPc ?? 0,
           boosterName: booster.name,
           seriesName: booster.series.name,
+          seriesSlug: booster.series.slug,
+          seriesCode: booster.series.code,
         },
       });
     } catch (error) {
