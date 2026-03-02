@@ -25,11 +25,11 @@ export const s1Series = {
 export const s1Cards: S1CardSeed[] = [
   {
     id: "S1-01",
-    name: "Vadius",
+    name: "Doggo",
     game: "LoL",
-    nationality: "France",
-    role: "Support",
-    team: "GameWard",
+    nationality: "Taïwan",
+    role: "ADC",
+    team: "CFO",
     rarity: "ROOKIE",
   },
   {
@@ -70,11 +70,11 @@ export const s1Cards: S1CardSeed[] = [
   },
   {
     id: "S1-06",
-    name: "Karis",
+    name: "HongQ",
     game: "LoL",
-    nationality: "Corée du Sud",
+    nationality: "Taïwan",
     role: "Midlaner",
-    team: "Kwangdong",
+    team: "CFO",
     rarity: "ROOKIE",
   },
   {

@@ -189,6 +189,7 @@ export function useCardHolo({ disabled = false }: { disabled?: boolean } = {}) {
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
+      if (disabled) return;
       e.stopPropagation();
       if (active) {
         collapse();
@@ -196,7 +197,7 @@ export function useCardHolo({ disabled = false }: { disabled?: boolean } = {}) {
         expand();
       }
     },
-    [active, expand, collapse],
+    [active, disabled, expand, collapse],
   );
 
   // Close on Escape

@@ -8,6 +8,7 @@ interface CardTileProps {
   card: CardWithRelations;
   obtainedAt?: string;
   isOwned?: boolean;
+  disableExpand?: boolean;
 }
 
 function rarityNameGradient(rarity: CardWithRelations["rarity"]) {
@@ -141,9 +142,14 @@ function CardInner({
   );
 }
 
-export function CardTile({ card, obtainedAt, isOwned = true }: CardTileProps) {
+export function CardTile({
+  card,
+  obtainedAt,
+  isOwned = true,
+  disableExpand = false,
+}: CardTileProps) {
   const { cardRef, interacting, active, closing, close, handlers } =
-    useCardHolo({ disabled: !isOwned });
+    useCardHolo({ disabled: !isOwned || disableExpand });
   const cssRarity = mapRarityToCSS(card.rarity);
   const hasHolo = card.rarity !== "ROOKIE";
   const showOverlay = active || closing;

@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronsUp, Coins, Sparkles } from "lucide-react";
 import { CardTile } from "../components/CardTile";
@@ -26,8 +26,8 @@ interface CardEntry {
 
 /* ─────────────────────── Constants ─────────────────────── */
 
-const CARD_W = 240;
-const CARD_H = Math.round((CARD_W * 4) / 3);
+const CARD_W_MAX = 240;
+const CARD_W_MIN = 140;
 const CARD_GAP = 14;
 
 /* ─────────────────────── Helpers ─────────────────────── */
@@ -103,20 +103,15 @@ function FutReveal({
   const hints = useMemo(() => buildHints(card), [card]);
   const [step, setStep] = useState(0);
   const glow = rarityGlowColor(card.rarity);
-  const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    const isLast = step >= hints.length;
-    if (isLast) {
-      const t = setTimeout(() => onCompleteRef.current(), 750);
-      return () => clearTimeout(t);
-    }
+    if (step >= hints.length) return;
     const t = setTimeout(() => setStep((s) => s + 1), 1700);
     return () => clearTimeout(t);
   }, [step, hints.length]);
 
-  const hint = step < hints.length ? hints[step] : null;
+  const showCard = step >= hints.length;
+  const hint = !showCard ? hints[step] : null;
 
   return (
     <motion.div
@@ -126,11 +121,15 @@ function FutReveal({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.35 }}
       onClick={() => {
-        if (step < hints.length) setStep((s) => s + 1);
+        if (!showCard) {
+          setStep((s) => s + 1);
+        } else {
+          onComplete();
+        }
       }}
     >
       {/* Dark backdrop */}
-      <div className="absolute inset-0 bg-black/95" />
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
 
       {/* Pulsing rarity glow */}
       <motion.div
@@ -144,7 +143,7 @@ function FutReveal({
         transition={{ duration: 1.6, repeat: Infinity, repeatType: "reverse" }}
       />
 
-      {/* Hint sequence */}
+      {/* Hint sequence → then card reveal */}
       <AnimatePresence mode="wait">
         {hint && (
           <motion.div
@@ -163,6 +162,18 @@ function FutReveal({
             <span className="text-sm font-medium tracking-[0.3em] uppercase text-white/40">
               {hint.label}
             </span>
+          </motion.div>
+        )}
+        {showCard && (
+          <motion.div
+            key="card-reveal"
+            className="relative z-10"
+            style={{ width: "min(80vw, 360px)" }}
+            initial={{ scale: 0.5, rotateY: 90, opacity: 0 }}
+            animate={{ scale: 1, rotateY: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <CardTile card={card} disableExpand />
           </motion.div>
         )}
       </AnimatePresence>
@@ -204,6 +215,7 @@ function CardBack() {
 
 export function BoosterPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const opening =
     (location.state as BoosterOpeningNavigationState | null) ?? null;
   const pcGained = opening?.pcGained ?? 0;
@@ -226,18 +238,21 @@ export function BoosterPage() {
   const [futRevealed, setFutRevealed] = useState<Set<number>>(new Set());
   const [futIdx, setFutIdx] = useState<number | null>(null);
 
-  /* Responsive scale – fit all spread cards in viewport width */
-  const [scale, setScale] = useState(1);
+  /* Responsive dimensions – avoid transform on ancestors so active CardTile can stack above backdrop */
+  const [cardW, setCardW] = useState(CARD_W_MAX);
   useEffect(() => {
     const calc = () => {
       const vw = window.innerWidth;
-      const need = count * CARD_W + Math.max(0, count - 1) * CARD_GAP;
-      setScale(Math.min(1, Math.max(0.45, (vw - 48) / need)));
+      const available = Math.max(320, vw - 48);
+      const dynamicWidth =
+        (available - Math.max(0, count - 1) * CARD_GAP) / Math.max(1, count);
+      setCardW(Math.max(CARD_W_MIN, Math.min(CARD_W_MAX, dynamicWidth)));
     };
     calc();
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
   }, [count]);
+  const cardH = Math.round((cardW * 4) / 3);
 
   /* Derived */
   const cardRevealed = useCallback(
@@ -299,30 +314,28 @@ export function BoosterPage() {
   }
 
   /* ─── Layout ─── */
-  const totalW = count * CARD_W + Math.max(0, count - 1) * CARD_GAP;
+  const totalW = count * cardW + Math.max(0, count - 1) * CARD_GAP;
   const center = (count - 1) / 2;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-slate-950">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-slate-950">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(15,23,42,1)_0%,rgba(2,6,23,1)_100%)]" />
 
       {/* Top bar */}
-      <header className="relative z-10 px-6 py-4">
+      <header className="relative px-6 py-4">
         <span className="text-xs tracking-widest uppercase text-slate-500">
           {opening.seriesName ?? "Série"} · {opening.boosterName ?? "Booster"}
         </span>
       </header>
 
       {/* Card area */}
-      <div className="relative z-10 flex flex-1 items-center justify-center">
+      <div className="relative flex flex-1 items-center justify-center">
         <div
           className="relative"
           style={{
             width: totalW,
-            height: CARD_H + 24,
-            transform: `scale(${scale})`,
-            transformOrigin: "center center",
+            height: cardH + 24,
           }}
         >
           {cards.map((entry, i) => {
@@ -332,37 +345,30 @@ export function BoosterPage() {
             const isNext = i === nextIdx && futIdx === null;
 
             /* Spread: side by side */
-            const spreadX = (i - center) * (CARD_W + CARD_GAP);
+            const spreadX = totalW / 2 + (i - center) * (cardW + CARD_GAP);
             /* Stack: overlapping pile */
-            const stackX = (i - center) * 5;
-            const stackY = (count - 1 - i) * -3;
-            const stackRot = (i - center) * 1.5;
+            const stackX = totalW / 2 + (i - center) * 5;
+            const stackY = cardH / 2 + (count - 1 - i) * -3;
 
             return (
-              <motion.div
+              <div
                 key={i}
-                className="absolute left-1/2 top-1/2"
+                className="absolute transition-[left,top,transform] duration-300 ease-out"
                 style={{
-                  width: CARD_W,
-                  marginLeft: -CARD_W / 2,
-                  marginTop: -CARD_H / 2,
-                  zIndex:
+                  width: cardW,
+                  left:
                     phase === "spread"
-                      ? revealed
-                        ? 20 + i
-                        : 10 + i
-                      : count - i,
-                }}
-                animate={{
-                  x: phase === "spread" ? spreadX : stackX,
-                  y: phase === "spread" ? 0 : stackY,
-                  rotate: phase === "spread" ? 0 : stackRot,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 230,
-                  damping: 28,
-                  delay: phase === "spread" ? i * 0.07 : 0,
+                      ? spreadX - cardW / 2
+                      : stackX - cardW / 2,
+                  top:
+                    phase === "spread"
+                      ? cardH / 2 - cardH / 2
+                      : stackY - cardH / 2,
+                  transform:
+                    phase === "spread"
+                      ? "none"
+                      : `rotate(${(i - center) * 1.5}deg)`,
+                  zIndex: phase === "stack" ? count - i : undefined,
                 }}
               >
                 <div
@@ -374,11 +380,21 @@ export function BoosterPage() {
                   <AnimatePresence mode="wait" initial={false}>
                     {revealed ? (
                       <motion.div
-                        key="front"
-                        initial={isFutRev ? false : { rotateY: -90 }}
-                        animate={{ rotateY: 0 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
                         className="relative"
+                        key="front"
+                        initial={
+                          isFutRev
+                            ? { scale: 1.15, opacity: 0 }
+                            : { rotateY: -90 }
+                        }
+                        animate={
+                          isFutRev ? { scale: 1, opacity: 1 } : { rotateY: 0 }
+                        }
+                        transition={
+                          isFutRev
+                            ? { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
+                            : { duration: 0.25 }
+                        }
                       >
                         <CardTile card={card} />
                         {isDuplicate && (
@@ -439,7 +455,7 @@ export function BoosterPage() {
                     )}
                   </AnimatePresence>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -474,7 +490,7 @@ export function BoosterPage() {
       <AnimatePresence>
         {allDone && (
           <motion.footer
-            className="relative z-10 flex flex-col items-center gap-4 px-6 pb-8 pt-2"
+            className="relative flex flex-col items-center gap-4 px-6 pb-8 pt-2"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -495,12 +511,13 @@ export function BoosterPage() {
               >
                 Legendex
               </Link>
-              <Link
-                to="/shop"
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
                 className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
               >
                 Continuer
-              </Link>
+              </button>
             </div>
           </motion.footer>
         )}
