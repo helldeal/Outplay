@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   BookMarked,
   CalendarClock,
+  ChevronDown,
   Coins,
   LogIn,
   LogOut,
@@ -20,7 +21,7 @@ import {
   useDailyBoosterTargetQuery,
   useHasOpenedDailyTodayQuery,
 } from "../query/booster";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function formatCountdown(millisecondsLeft: number) {
   const totalSeconds = Math.max(0, Math.floor(millisecondsLeft / 1000));
@@ -36,22 +37,48 @@ function formatCountdown(millisecondsLeft: number) {
 }
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-2 text-sm transition ${
+  `rounded-xl px-3 py-2 text-sm transition ${
     isActive
-      ? "bg-slate-800 text-slate-100"
+      ? "bg-slate-200/10 text-white shadow-[inset_0_0_0_1px_rgba(148,163,184,0.25)]"
       : "text-slate-300 hover:bg-slate-800/70 hover:text-white"
   }`;
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export function AppLayout() {
   const { user, profile, logout, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isOpeningDaily, setIsOpeningDaily] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [dailyCountdown, setDailyCountdown] = useState("00:00:00");
   const [hasTriggeredResetRefresh, setHasTriggeredResetRefresh] =
     useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const dailyTargetQuery = useDailyBoosterTargetQuery();
   const openedTodayQuery = useHasOpenedDailyTodayQuery(user?.id);
+
+  const rawUsername =
+    profile?.username ??
+    (user?.user_metadata?.preferred_username as string | undefined) ??
+    (user?.user_metadata?.full_name as string | undefined) ??
+    user?.email?.split("@")[0] ??
+    "Player";
+
+  const username = rawUsername.split("#")[0]?.trim() || "Player";
+
+  const avatarUrl =
+    (user?.user_metadata?.avatar_url as string | undefined) ??
+    (user?.user_metadata?.picture as string | undefined) ??
+    (user?.user_metadata?.avatar as string | undefined) ??
+    null;
 
   useEffect(() => {
     if (!openedTodayQuery.data) {
@@ -82,6 +109,20 @@ export function AppLayout() {
       window.clearInterval(timer);
     };
   }, [openedTodayQuery.data]);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!profileMenuRef.current) return;
+      if (!profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", onPointerDown);
+    return () => window.removeEventListener("mousedown", onPointerDown);
+  }, [isProfileMenuOpen]);
 
   useEffect(() => {
     if (!user?.id || !openedTodayQuery.data) {
@@ -157,17 +198,23 @@ export function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-[10000] border-b border-slate-800 bg-slate-950/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4">
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(56,189,248,0.18),transparent_28%),radial-gradient(circle_at_85%_0%,rgba(124,58,237,0.16),transparent_30%),linear-gradient(to_bottom,rgba(2,6,23,1),rgba(2,6,23,0.92))]" />
+
+      <header className="fixed inset-x-0 top-0 z-[10000] border-b border-slate-800/70 bg-slate-950/70 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3.5">
           <Link
             to="/"
-            className="text-lg font-semibold tracking-wide text-cyan-300"
+            className="group inline-flex items-center rounded-xl px-2 py-1 transition hover:bg-slate-800/50"
           >
-            OUTPLAY
+            <img
+              src="/logo-complete.png"
+              alt="Outplay"
+              className="h-8 w-auto drop-shadow-[0_0_14px_rgba(56,189,248,0.35)] transition group-hover:brightness-110"
+            />
           </Link>
 
-          <nav className="hidden items-center gap-2 md:flex">
+          <nav className="hidden items-center gap-1.5 rounded-2xl border border-slate-700/70 bg-slate-900/50 p-1 md:flex">
             <NavLink to="/shop" className={navItemClass}>
               <span className="inline-flex items-center gap-1">
                 <ShoppingBag className="h-4 w-4" />
@@ -196,7 +243,11 @@ export function AppLayout() {
                     void openDailyFromHeader().catch(() => undefined);
                   }}
                   disabled={!canOpenDaily}
-                  className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-slate-100 transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    canOpenDaily
+                      ? "border border-cyan-300/70 bg-cyan-400/15 shadow-[0_0_0_1px_rgba(34,211,238,0.35),0_0_24px_rgba(34,211,238,0.22)] hover:bg-cyan-400/20"
+                      : "border border-slate-600/80 bg-slate-900/70 hover:border-cyan-400/50 hover:bg-slate-800/80"
+                  }`}
                   title={
                     openedTodayQuery.data
                       ? `Prochain daily dans ${dailyCountdown}`
@@ -214,22 +265,67 @@ export function AppLayout() {
                       ? `Daily ${dailyCountdown}`
                       : "Daily"}
                 </button>
-                <div className="flex items-center gap-2 rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200">
+                <div className="flex items-center gap-2 rounded-xl border border-slate-600/80 bg-slate-900/70 px-3 py-2 text-sm text-slate-100">
                   <Coins className="h-4 w-4 text-amber-300" />
                   <span>{profile?.pc_balance ?? 0} PC</span>
                 </div>
-                <button
-                  onClick={() => void logout()}
-                  className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
+
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileMenuOpen((open) => !open)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-600/80 bg-slate-900/70 px-2.5 py-1.5 text-sm text-slate-100 transition hover:border-cyan-400/50 hover:bg-slate-800/80"
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={username}
+                        className="h-8 w-8 rounded-full border border-slate-500/70 object-cover"
+                      />
+                    ) : (
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-500/70 bg-slate-700 text-xs font-semibold text-slate-100">
+                        {getInitials(username) || "OP"}
+                      </span>
+                    )}
+                    <span className="max-w-[112px] truncate font-medium">
+                      {username}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-slate-400 transition ${
+                        isProfileMenuOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-slate-700/80 bg-slate-900/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl">
+                      <div className="mb-2 rounded-xl bg-slate-800/70 px-3 py-2">
+                        <p className="truncate text-sm font-medium text-slate-100">
+                          {username}
+                        </p>
+                        <p className="truncate text-xs text-slate-400">
+                          {user.email}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          void logout();
+                        }}
+                        className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-800 hover:text-white"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1 rounded-md bg-cyan-500 px-3 py-1.5 text-sm font-medium text-slate-950 transition hover:bg-cyan-400"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-400 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
               >
                 <LogIn className="h-4 w-4" />
                 Login
@@ -238,7 +334,7 @@ export function AppLayout() {
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pb-3 text-xs text-slate-400 md:hidden">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-2 px-4 pb-3 text-xs text-slate-400 md:hidden">
           <Trophy className="h-4 w-4" />
           <NavLink to="/shop" className={navItemClass}>
             Boutique
@@ -252,11 +348,11 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-6">
+      <main className="relative mx-auto mt-28 w-full max-w-7xl px-4 py-6 md:mt-20">
         <Outlet />
       </main>
 
-      <footer className="border-t border-slate-800 px-4 py-6 text-center text-xs text-slate-500">
+      <footer className="relative border-t border-slate-800/80 px-4 py-6 text-center text-xs text-slate-500">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-1">
           <UserCircle2 className="h-4 w-4" />
           OUTPLAY POC

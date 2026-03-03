@@ -5,6 +5,7 @@ import { ChevronsUp, Coins, Sparkles } from "lucide-react";
 import { CardTile } from "../components/CardTile";
 import type { CardWithRelations, Rarity } from "../types";
 import { rarityRank } from "../utils/rarity";
+import { useImagePreload } from "../hooks/useImagePreload";
 
 /* ─────────────────────── Types ─────────────────────── */
 
@@ -91,6 +92,16 @@ function buildHints(card: CardWithRelations): Hint[] {
       label: "Poste",
     });
   return h;
+}
+
+function getCardAssetUrls(card: CardWithRelations): string[] {
+  return [
+    card.imageUrl,
+    card.game?.logoUrl,
+    card.nationality?.flagUrl,
+    card.team?.logoUrl,
+    card.role?.iconUrl,
+  ].filter((value): value is string => Boolean(value));
 }
 
 function FutReveal({
@@ -191,8 +202,12 @@ function CardBack() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(56,189,248,0.15),transparent_55%)]" />
 
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-500/40 bg-gradient-to-br from-cyan-500/15 to-purple-500/15">
-              <span className="text-xl font-bold text-slate-400/80">O</span>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-500/40 bg-gradient-to-br from-cyan-500/15 to-purple-500/15 p-2.5">
+              <img
+                src="/logo-icon.png"
+                alt="Outplay"
+                className="h-full w-full object-contain opacity-85"
+              />
             </div>
             <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-slate-500/60">
               OUTPLAY
@@ -232,6 +247,16 @@ export function BoosterPage() {
 
   const count = cards.length;
 
+  const preloadUrls = useMemo(
+    () => cards.flatMap(({ card }) => getCardAssetUrls(card)),
+    [cards],
+  );
+  const {
+    isReady: areCardAssetsReady,
+    loaded: preloadedAssets,
+    total: totalAssets,
+  } = useImagePreload(preloadUrls);
+
   /* State */
   const [phase, setPhase] = useState<"stack" | "spread">("stack");
   const [flipped, setFlipped] = useState<Set<number>>(new Set());
@@ -270,6 +295,7 @@ export function BoosterPage() {
   /* Handlers */
   const onCardClick = useCallback(
     (idx: number) => {
+      if (!areCardAssetsReady) return;
       if (futIdx !== null) return;
 
       if (phase === "stack") {
@@ -286,7 +312,7 @@ export function BoosterPage() {
         setFlipped((p) => new Set([...p, idx]));
       }
     },
-    [futIdx, phase, cardRevealed, nextIdx, cards],
+    [areCardAssetsReady, futIdx, phase, cardRevealed, nextIdx, cards],
   );
 
   const onFutDone = useCallback(() => {
@@ -373,7 +399,9 @@ export function BoosterPage() {
               >
                 <div
                   className={
-                    phase === "stack" || isNext ? "cursor-pointer" : ""
+                    areCardAssetsReady && (phase === "stack" || isNext)
+                      ? "cursor-pointer"
+                      : ""
                   }
                   onClick={() => onCardClick(i)}
                 >
@@ -396,7 +424,7 @@ export function BoosterPage() {
                             : { duration: 0.25 }
                         }
                       >
-                        <CardTile card={card} />
+                        <CardTile card={card} disableExpand />
                         {isDuplicate && (
                           <motion.div
                             initial={{ scale: 0, opacity: 0 }}
@@ -422,19 +450,19 @@ export function BoosterPage() {
                           transition: { duration: 0.25 },
                         }}
                         whileHover={
-                          isNext || phase === "stack"
+                          areCardAssetsReady && (isNext || phase === "stack")
                             ? { scale: 1.04, y: -6 }
                             : undefined
                         }
                         whileTap={
-                          isNext || phase === "stack"
+                          areCardAssetsReady && (isNext || phase === "stack")
                             ? { scale: 0.97 }
                             : undefined
                         }
                       >
                         <CardBack />
 
-                        {phase === "spread" && isNext && (
+                        {phase === "spread" && isNext && areCardAssetsReady && (
                           <motion.div
                             initial={{ opacity: 0, y: 8 }}
                             animate={{
@@ -471,7 +499,9 @@ export function BoosterPage() {
               repeatType: "reverse",
             }}
           >
-            Cliquez pour ouvrir
+            {areCardAssetsReady
+              ? "Cliquez pour ouvrir"
+              : `Préchargement des visuels… ${preloadedAssets}/${totalAssets}`}
           </motion.p>
         )}
 
@@ -481,7 +511,9 @@ export function BoosterPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            Cliquez sur la carte suivante
+            {areCardAssetsReady
+              ? "Cliquez sur la carte suivante"
+              : `Préchargement des visuels… ${preloadedAssets}/${totalAssets}`}
           </motion.p>
         )}
       </div>

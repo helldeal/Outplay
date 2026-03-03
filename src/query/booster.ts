@@ -28,6 +28,7 @@ export interface ShopBoosterWithSeries {
   type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK";
   price_pc: number;
   image_url: string | null;
+  drop_rates: Record<string, number>;
   is_daily_only: boolean;
   series: Pick<Series, "id" | "name" | "slug" | "code" | "coverImage">;
 }
@@ -131,7 +132,7 @@ async function fetchShopBoosters() {
   const { data, error } = await supabase
     .from("boosters")
     .select(
-      "id, name, type, price_pc, image_url, is_daily_only, series:series_id(id, name, slug, code, coverImage)",
+      "id, name, type, price_pc, image_url, drop_rates, is_daily_only, series:series_id(id, name, slug, code, coverImage)",
     )
     .eq("is_daily_only", false)
     .order("price_pc", { ascending: true });
@@ -154,6 +155,10 @@ async function fetchShopBoosters() {
         type: row.type,
         price_pc: row.price_pc,
         image_url: row.image_url,
+        drop_rates:
+          row.drop_rates && typeof row.drop_rates === "object"
+            ? (row.drop_rates as Record<string, number>)
+            : {},
         is_daily_only: row.is_daily_only,
         series: {
           id: relation.id,

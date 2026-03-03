@@ -45,7 +45,6 @@
 }
 
 .card__rotator {
-    --glow: #69d1e9;
     transform: rotateY(var(--rx)) rotateX(var(--ry));
     transform-style: preserve-3d;
     box-shadow: 0px 10px 20px -5px black;
@@ -55,13 +54,13 @@
 }
 
 .card.active .card__rotator {
-    box-shadow: 0 0 10px 0px var(--glow), 0 0 10px 0px var(--glow),
-        0 0 30px 0px var(--glow);
+    box-shadow: 0 0 10px 0px var(--glow), 0 0 18px 0px var(--glow-accent),
+        0 0 32px 0px var(--glow);
 }
 
 .card__rotator:focus {
-    box-shadow: 0 0 10px 0px var(--glow), 0 0 10px 0px var(--glow),
-        0 0 30px 0px var(--glow);
+    box-shadow: 0 0 10px 0px var(--glow), 0 0 18px 0px var(--glow-accent),
+        0 0 32px 0px var(--glow);
 }
 
 .card.active .card__rotator:focus {
@@ -1061,4 +1060,14 @@
         rgba(0, 0, 0, 0.5) 90%
     );
     mix-blend-mode: overlay;
+}
+
+.card.not-owned .card__shine,
+.card.not-owned .card__glare {
+    filter: grayscale(1) saturate(0) brightness(0.6);
+    opacity: calc(var(--o, 0) * 0.35);
+}
+
+.card.not-owned .card__glare {
+    mix-blend-mode: soft-light;
 }
