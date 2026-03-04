@@ -13,11 +13,19 @@ $$;
 ALTER TABLE public.users
 DROP CONSTRAINT IF EXISTS users_id_fkey;
 
-ALTER TABLE public.users
-ADD CONSTRAINT users_id_fkey
-FOREIGN KEY (id)
-REFERENCES auth.users(id)
-ON DELETE CASCADE;
+DO $$
+BEGIN
+  IF to_regclass('auth.users') IS NOT NULL THEN
+    EXECUTE $sql$
+      ALTER TABLE public.users
+      ADD CONSTRAINT users_id_fkey
+      FOREIGN KEY (id)
+      REFERENCES auth.users(id)
+      ON DELETE CASCADE;
+    $sql$;
+  END IF;
+END
+$$;
 
 -- Business rule: one LEGENDS card max per series.
 CREATE UNIQUE INDEX IF NOT EXISTS cards_one_legends_per_series_idx
@@ -49,55 +57,108 @@ ALTER TABLE public.user_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booster_openings ENABLE ROW LEVEL SECURITY;
 
 -- Policies: user can only access own records.
-DROP POLICY IF EXISTS users_select_own ON public.users;
-CREATE POLICY users_select_own
-ON public.users
-FOR SELECT
-USING (auth.uid() = id);
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS users_select_own ON public.users;
+  DROP POLICY IF EXISTS users_insert_own ON public.users;
+  DROP POLICY IF EXISTS users_update_own ON public.users;
+  DROP POLICY IF EXISTS user_cards_select_own ON public.user_cards;
+  DROP POLICY IF EXISTS user_cards_insert_own ON public.user_cards;
+  DROP POLICY IF EXISTS user_cards_update_own ON public.user_cards;
+  DROP POLICY IF EXISTS booster_openings_select_own ON public.booster_openings;
+  DROP POLICY IF EXISTS booster_openings_insert_own ON public.booster_openings;
 
-DROP POLICY IF EXISTS users_insert_own ON public.users;
-CREATE POLICY users_insert_own
-ON public.users
-FOR INSERT
-WITH CHECK (auth.uid() = id);
+  IF to_regprocedure('auth.uid()') IS NOT NULL THEN
+    EXECUTE $sql$
+      CREATE POLICY users_select_own
+      ON public.users
+      FOR SELECT
+      USING (auth.uid() = id);
 
-DROP POLICY IF EXISTS users_update_own ON public.users;
-CREATE POLICY users_update_own
-ON public.users
-FOR UPDATE
-USING (auth.uid() = id)
-WITH CHECK (auth.uid() = id);
+      CREATE POLICY users_insert_own
+      ON public.users
+      FOR INSERT
+      WITH CHECK (auth.uid() = id);
 
-DROP POLICY IF EXISTS user_cards_select_own ON public.user_cards;
-CREATE POLICY user_cards_select_own
-ON public.user_cards
-FOR SELECT
-USING (auth.uid() = user_id);
+      CREATE POLICY users_update_own
+      ON public.users
+      FOR UPDATE
+      USING (auth.uid() = id)
+      WITH CHECK (auth.uid() = id);
 
-DROP POLICY IF EXISTS user_cards_insert_own ON public.user_cards;
-CREATE POLICY user_cards_insert_own
-ON public.user_cards
-FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+      CREATE POLICY user_cards_select_own
+      ON public.user_cards
+      FOR SELECT
+      USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS user_cards_update_own ON public.user_cards;
-CREATE POLICY user_cards_update_own
-ON public.user_cards
-FOR UPDATE
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+      CREATE POLICY user_cards_insert_own
+      ON public.user_cards
+      FOR INSERT
+      WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS booster_openings_select_own ON public.booster_openings;
-CREATE POLICY booster_openings_select_own
-ON public.booster_openings
-FOR SELECT
-USING (auth.uid() = user_id);
+      CREATE POLICY user_cards_update_own
+      ON public.user_cards
+      FOR UPDATE
+      USING (auth.uid() = user_id)
+      WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS booster_openings_insert_own ON public.booster_openings;
-CREATE POLICY booster_openings_insert_own
-ON public.booster_openings
-FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+      CREATE POLICY booster_openings_select_own
+      ON public.booster_openings
+      FOR SELECT
+      USING (auth.uid() = user_id);
+
+      CREATE POLICY booster_openings_insert_own
+      ON public.booster_openings
+      FOR INSERT
+      WITH CHECK (auth.uid() = user_id);
+    $sql$;
+  ELSE
+    EXECUTE $sql$
+      CREATE POLICY users_select_own
+      ON public.users
+      FOR SELECT
+      USING (true);
+
+      CREATE POLICY users_insert_own
+      ON public.users
+      FOR INSERT
+      WITH CHECK (true);
+
+      CREATE POLICY users_update_own
+      ON public.users
+      FOR UPDATE
+      USING (true)
+      WITH CHECK (true);
+
+      CREATE POLICY user_cards_select_own
+      ON public.user_cards
+      FOR SELECT
+      USING (true);
+
+      CREATE POLICY user_cards_insert_own
+      ON public.user_cards
+      FOR INSERT
+      WITH CHECK (true);
+
+      CREATE POLICY user_cards_update_own
+      ON public.user_cards
+      FOR UPDATE
+      USING (true)
+      WITH CHECK (true);
+
+      CREATE POLICY booster_openings_select_own
+      ON public.booster_openings
+      FOR SELECT
+      USING (true);
+
+      CREATE POLICY booster_openings_insert_own
+      ON public.booster_openings
+      FOR INSERT
+      WITH CHECK (true);
+    $sql$;
+  END IF;
+END
+$$;
 
 -- Server-side opening logic (economy + duplicates conversion).
 CREATE OR REPLACE FUNCTION public._resolve_booster_opening(
@@ -248,96 +309,194 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.open_booster(
-  p_booster_id uuid,
-  p_user_id uuid DEFAULT auth.uid()
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+DO $$
 BEGIN
-  IF p_user_id IS NULL THEN
-    RAISE EXCEPTION 'Unauthenticated user';
-  END IF;
+  IF to_regprocedure('auth.uid()') IS NOT NULL THEN
+    EXECUTE $sql$
+      CREATE OR REPLACE FUNCTION public.open_booster(
+        p_booster_id uuid,
+        p_user_id uuid DEFAULT auth.uid()
+      )
+      RETURNS jsonb
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public
+      AS $fn$
+      BEGIN
+        IF p_user_id IS NULL THEN
+          RAISE EXCEPTION 'Unauthenticated user';
+        END IF;
 
-  IF auth.uid() IS DISTINCT FROM p_user_id THEN
-    RAISE EXCEPTION 'You can only open boosters for yourself';
-  END IF;
+        IF auth.uid() IS DISTINCT FROM p_user_id THEN
+          RAISE EXCEPTION 'You can only open boosters for yourself';
+        END IF;
 
-  RETURN public._resolve_booster_opening(
-    p_booster_id,
-    p_user_id,
-    'SHOP'::public."OpeningType",
-    true
-  );
-END;
-$$;
+        RETURN public._resolve_booster_opening(
+          p_booster_id,
+          p_user_id,
+          'SHOP'::public."OpeningType",
+          true
+        );
+      END;
+      $fn$;
+    $sql$;
 
-CREATE OR REPLACE FUNCTION public.open_daily_booster(
-  p_series_code text,
-  p_user_id uuid DEFAULT auth.uid()
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_booster_id uuid;
-  v_today_daily_exists boolean;
-BEGIN
-  IF p_user_id IS NULL THEN
-    RAISE EXCEPTION 'Unauthenticated user';
-  END IF;
+    EXECUTE $sql$
+      CREATE OR REPLACE FUNCTION public.open_daily_booster(
+        p_series_code text,
+        p_user_id uuid DEFAULT auth.uid()
+      )
+      RETURNS jsonb
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public
+      AS $fn$
+      DECLARE
+        v_booster_id uuid;
+        v_today_daily_exists boolean;
+      BEGIN
+        IF p_user_id IS NULL THEN
+          RAISE EXCEPTION 'Unauthenticated user';
+        END IF;
 
-  IF auth.uid() IS DISTINCT FROM p_user_id THEN
-    RAISE EXCEPTION 'You can only open boosters for yourself';
-  END IF;
+        IF auth.uid() IS DISTINCT FROM p_user_id THEN
+          RAISE EXCEPTION 'You can only open boosters for yourself';
+        END IF;
 
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.booster_openings bo
-    WHERE bo.user_id = p_user_id
-      AND bo.type = 'DAILY'::public."OpeningType"
-      AND (bo.created_at AT TIME ZONE 'UTC')::date = (now() AT TIME ZONE 'UTC')::date
-  )
-  INTO v_today_daily_exists;
+        SELECT EXISTS (
+          SELECT 1
+          FROM public.booster_openings bo
+          WHERE bo.user_id = p_user_id
+            AND bo.type = 'DAILY'::public."OpeningType"
+            AND (bo.created_at AT TIME ZONE 'UTC')::date = (now() AT TIME ZONE 'UTC')::date
+        )
+        INTO v_today_daily_exists;
 
-  IF v_today_daily_exists THEN
-    RAISE EXCEPTION 'Daily booster already opened today';
-  END IF;
+        IF v_today_daily_exists THEN
+          RAISE EXCEPTION 'Daily booster already opened today';
+        END IF;
 
-  IF random() < 0.01 THEN
-    SELECT b.id
-    INTO v_booster_id
-    FROM public.boosters b
-    JOIN public.series s ON s.id = b.series_id
-    WHERE s.code = p_series_code
-      AND b.type = 'GODPACK'::public."BoosterType"
-    LIMIT 1;
+        IF random() < 0.01 THEN
+          SELECT b.id
+          INTO v_booster_id
+          FROM public.boosters b
+          JOIN public.series s ON s.id = b.series_id
+          WHERE s.code = p_series_code
+            AND b.type = 'GODPACK'::public."BoosterType"
+          LIMIT 1;
+        ELSE
+          SELECT b.id
+          INTO v_booster_id
+          FROM public.boosters b
+          JOIN public.series s ON s.id = b.series_id
+          WHERE s.code = p_series_code
+            AND b.type = 'NORMAL'::public."BoosterType"
+          LIMIT 1;
+        END IF;
+
+        IF v_booster_id IS NULL THEN
+          RAISE EXCEPTION 'No daily-eligible booster found for series %', p_series_code;
+        END IF;
+
+        RETURN public._resolve_booster_opening(
+          v_booster_id,
+          p_user_id,
+          'DAILY'::public."OpeningType",
+          false
+        );
+      END;
+      $fn$;
+    $sql$;
   ELSE
-    SELECT b.id
-    INTO v_booster_id
-    FROM public.boosters b
-    JOIN public.series s ON s.id = b.series_id
-    WHERE s.code = p_series_code
-      AND b.type = 'NORMAL'::public."BoosterType"
-    LIMIT 1;
-  END IF;
+    EXECUTE $sql$
+      CREATE OR REPLACE FUNCTION public.open_booster(
+        p_booster_id uuid,
+        p_user_id uuid
+      )
+      RETURNS jsonb
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public
+      AS $fn$
+      BEGIN
+        IF p_user_id IS NULL THEN
+          RAISE EXCEPTION 'Unauthenticated user';
+        END IF;
 
-  IF v_booster_id IS NULL THEN
-    RAISE EXCEPTION 'No daily-eligible booster found for series %', p_series_code;
-  END IF;
+        RETURN public._resolve_booster_opening(
+          p_booster_id,
+          p_user_id,
+          'SHOP'::public."OpeningType",
+          true
+        );
+      END;
+      $fn$;
+    $sql$;
 
-  RETURN public._resolve_booster_opening(
-    v_booster_id,
-    p_user_id,
-    'DAILY'::public."OpeningType",
-    false
-  );
-END;
+    EXECUTE $sql$
+      CREATE OR REPLACE FUNCTION public.open_daily_booster(
+        p_series_code text,
+        p_user_id uuid
+      )
+      RETURNS jsonb
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public
+      AS $fn$
+      DECLARE
+        v_booster_id uuid;
+        v_today_daily_exists boolean;
+      BEGIN
+        IF p_user_id IS NULL THEN
+          RAISE EXCEPTION 'Unauthenticated user';
+        END IF;
+
+        SELECT EXISTS (
+          SELECT 1
+          FROM public.booster_openings bo
+          WHERE bo.user_id = p_user_id
+            AND bo.type = 'DAILY'::public."OpeningType"
+            AND (bo.created_at AT TIME ZONE 'UTC')::date = (now() AT TIME ZONE 'UTC')::date
+        )
+        INTO v_today_daily_exists;
+
+        IF v_today_daily_exists THEN
+          RAISE EXCEPTION 'Daily booster already opened today';
+        END IF;
+
+        IF random() < 0.01 THEN
+          SELECT b.id
+          INTO v_booster_id
+          FROM public.boosters b
+          JOIN public.series s ON s.id = b.series_id
+          WHERE s.code = p_series_code
+            AND b.type = 'GODPACK'::public."BoosterType"
+          LIMIT 1;
+        ELSE
+          SELECT b.id
+          INTO v_booster_id
+          FROM public.boosters b
+          JOIN public.series s ON s.id = b.series_id
+          WHERE s.code = p_series_code
+            AND b.type = 'NORMAL'::public."BoosterType"
+          LIMIT 1;
+        END IF;
+
+        IF v_booster_id IS NULL THEN
+          RAISE EXCEPTION 'No daily-eligible booster found for series %', p_series_code;
+        END IF;
+
+        RETURN public._resolve_booster_opening(
+          v_booster_id,
+          p_user_id,
+          'DAILY'::public."OpeningType",
+          false
+        );
+      END;
+      $fn$;
+    $sql$;
+  END IF;
+END
 $$;
 
 REVOKE ALL ON FUNCTION public._resolve_booster_opening(uuid, uuid, public."OpeningType", boolean) FROM PUBLIC;
@@ -390,6 +549,12 @@ REVOKE ALL ON FUNCTION public.get_leaderboard() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO authenticated;
 
 -- Optional helper: create storage bucket for assets.
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('assets', 'assets', true)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  IF to_regclass('storage.buckets') IS NOT NULL THEN
+    INSERT INTO storage.buckets (id, name, public)
+    VALUES ('assets', 'assets', true)
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+END
+$$;

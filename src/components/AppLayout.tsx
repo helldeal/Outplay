@@ -313,9 +313,9 @@ export function AppLayout() {
                           setIsProfileMenuOpen(false);
                           void logout();
                         }}
-                        className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-800 hover:text-white"
+                        className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
                       >
-                        <LogOut className="h-4 w-4" />
+                        <LogOut className="h-4 w-4 text-red-400" />
                         Logout
                       </button>
                     </div>

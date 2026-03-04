@@ -102,6 +102,7 @@ function CardInner({
                 !isOwned ? "grayscale opacity-30" : ""
               }`}
               loading="lazy"
+              draggable={false}
             />
 
             <div className="absolute right-3 bottom-3 z-[1] flex flex-col items-center gap-1.5">
@@ -110,6 +111,7 @@ function CardInner({
                   src={card.game.logoUrl}
                   alt={card.game.name}
                   className="h-[7cqw] w-[7cqw] rounded-sm object-contain"
+                  draggable={false}
                 />
               ) : null}
 
@@ -118,6 +120,7 @@ function CardInner({
                   src={card.nationality.flagUrl}
                   alt={card.nationality.code ?? "flag"}
                   className="h-[7cqw] w-[7cqw] rounded-full object-cover"
+                  draggable={false}
                 />
               ) : null}
 
@@ -126,6 +129,7 @@ function CardInner({
                   src={card.team.logoUrl}
                   alt={card.team.name}
                   className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-contain"
+                  draggable={false}
                 />
               ) : null}
 
@@ -134,6 +138,7 @@ function CardInner({
                   src={card.role.iconUrl}
                   alt={card.role.name}
                   className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-cover"
+                  draggable={false}
                 />
               ) : null}
             </div>
@@ -201,11 +206,12 @@ export function CardTile({
 
       <div
         ref={cardRef}
-        className={`card ${interacting ? "interacting" : ""} ${active ? "active" : ""} ${!isOwned ? "not-owned pointer-events-auto cursor-default" : "cursor-pointer"}`}
+        className={`card select-none ${interacting ? "interacting" : ""} ${active ? "active" : ""} ${!isOwned ? "not-owned pointer-events-auto cursor-default" : "cursor-pointer"}`}
         data-rarity={cssRarity}
         data-supertype="pokémon"
         data-card-id={card.id}
         style={glowStyle}
+        onDragStart={(event) => event.preventDefault()}
         {...handlers}
       >
         <div className="card__translater">
