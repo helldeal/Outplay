@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronsUp, Coins, Sparkles } from "lucide-react";
 import { CardTile } from "../components/CardTile";
+import { PageLoading } from "../components/PageLoading";
 import type { CardWithRelations, Rarity } from "../types";
 import { rarityRank } from "../utils/rarity";
 import { useImagePreload } from "../hooks/useImagePreload";
@@ -251,11 +252,7 @@ export function BoosterPage() {
     () => cards.flatMap(({ card }) => getCardAssetUrls(card)),
     [cards],
   );
-  const {
-    isReady: areCardAssetsReady,
-    loaded: preloadedAssets,
-    total: totalAssets,
-  } = useImagePreload(preloadUrls);
+  const { isReady: areCardAssetsReady } = useImagePreload(preloadUrls);
 
   /* State */
   const [phase, setPhase] = useState<"stack" | "spread">("stack");
@@ -334,6 +331,19 @@ export function BoosterPage() {
           >
             Aller à la boutique →
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!areCardAssetsReady) {
+    return (
+      <div className="fixed inset-0 bg-slate-950 p-6">
+        <div className="flex h-full items-center justify-center">
+          <PageLoading
+            title={opening.boosterName ?? "Booster"}
+            subtitle="Préparation de l'ouverture…"
+          />
         </div>
       </div>
     );
@@ -499,9 +509,7 @@ export function BoosterPage() {
               repeatType: "reverse",
             }}
           >
-            {areCardAssetsReady
-              ? "Cliquez pour ouvrir"
-              : `Préchargement des visuels… ${preloadedAssets}/${totalAssets}`}
+            Cliquez pour ouvrir
           </motion.p>
         )}
 
@@ -511,9 +519,7 @@ export function BoosterPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            {areCardAssetsReady
-              ? "Cliquez sur la carte suivante"
-              : `Préchargement des visuels… ${preloadedAssets}/${totalAssets}`}
+            Cliquez sur la carte suivante
           </motion.p>
         )}
       </div>

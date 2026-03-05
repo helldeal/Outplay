@@ -8,6 +8,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
+import { PageLoading } from "../components/PageLoading";
 import {
   useLeaderboardQuery,
   useRecentDropsQuery,
@@ -121,12 +122,7 @@ export function LeaderboardPage() {
   }
 
   if (leaderboardQuery.isLoading || recentDropsQuery.isLoading) {
-    return (
-      <p className="flex items-center gap-2 text-sm text-slate-400">
-        <LoaderCircle className="h-4 w-4 animate-spin" />
-        Chargement du leaderboard…
-      </p>
-    );
+    return <PageLoading subtitle="Chargement du leaderboard…" />;
   }
 
   if (leaderboardQuery.error || recentDropsQuery.error) {

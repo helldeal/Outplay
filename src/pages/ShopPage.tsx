@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Gift, LoaderCircle, ShoppingBag, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { PageLoading } from "../components/PageLoading";
 import {
   computeDuplicateIndices,
   fetchCardsByIds,
@@ -115,10 +116,7 @@ export function ShopPage() {
 
   if (boostersQuery.isLoading) {
     return (
-      <p className="flex items-center gap-2 text-sm text-slate-400">
-        <LoaderCircle className="h-4 w-4 animate-spin" />
-        Chargement de la boutique...
-      </p>
+      <PageLoading title="Boutique" subtitle="Chargement de la boutique…" />
     );
   }
 
@@ -132,13 +130,12 @@ export function ShopPage() {
 
   return (
     <>
-      <section className="space-y-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
-            <ShoppingBag className="h-6 w-6 text-cyan-300" />
+      <section className="space-y-8">
+        <div className="text-center">
+          <h1 className="flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
             Boutique
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
             Tous les boosters achetables par série. Les daily sont disponibles
             via le bouton du header.
           </p>
@@ -157,7 +154,7 @@ export function ShopPage() {
                 <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
                   Series {entry.code}
                 </p>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-xl font-black uppercase italic text-white">
                   {entry.name}
                 </h2>
               </div>
@@ -166,7 +163,7 @@ export function ShopPage() {
                 {entry.boosters.map((booster) => (
                   <article
                     key={booster.id}
-                    className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70"
+                    className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50"
                   >
                     <div className="p-4 pb-0">
                       {(booster.image_url ?? entry.coverImage) ? (
@@ -184,7 +181,7 @@ export function ShopPage() {
                       )}
                     </div>
                     <div className="space-y-2 p-4">
-                      <h3 className="text-lg font-semibold text-white">
+                      <h3 className="text-lg font-black uppercase italic text-white">
                         {booster.name}
                       </h3>
                       <p className="text-sm text-slate-400">{booster.type}</p>
@@ -212,7 +209,7 @@ export function ShopPage() {
                           onClick={() => {
                             setDropRatesModalBoosterId(booster.id);
                           }}
-                          className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-slate-700"
+                          className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-200 transition hover:bg-slate-700"
                         >
                           Voir les taux
                         </button>
@@ -226,7 +223,7 @@ export function ShopPage() {
         </div>
 
         {boosters.length === 0 ? (
-          <div className="rounded-md border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400">
             Aucun booster achetable disponible.
           </div>
         ) : null}
@@ -240,7 +237,7 @@ export function ShopPage() {
           }}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900/95 p-4 shadow-2xl"
             onClick={(event) => {
               event.stopPropagation();
             }}
