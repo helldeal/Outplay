@@ -1,0 +1,46 @@
+import { Link } from "react-router-dom";
+import type { AchievementNotification } from "../../query/achievements";
+
+export interface AchievementToastItem extends AchievementNotification {
+  id: string;
+}
+
+export function AchievementToasts({
+  toasts,
+}: {
+  toasts: AchievementToastItem[];
+}) {
+  if (toasts.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="pointer-events-none fixed right-4 top-20 z-[10020] flex w-[min(92vw,360px)] flex-col gap-2">
+      {toasts.map((toast) => (
+        <article
+          key={toast.id}
+          className="pointer-events-auto relative overflow-hidden rounded-2xl border border-amber-300/45 bg-slate-900/95 p-3.5 shadow-[0_18px_40px_rgba(2,6,23,0.65)] backdrop-blur"
+        >
+          <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-amber-400/20 blur-2xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(251,191,36,0.16),transparent_40%,rgba(56,189,248,0.08))]" />
+
+          <p className="relative text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+            Achievement debloque
+          </p>
+          <p className="relative mt-1 text-sm font-black uppercase italic text-white">
+            {toast.name}
+          </p>
+          <p className="relative text-xs text-slate-200/90">
+            {toast.reward_label}
+          </p>
+          <Link
+            to="/achievements"
+            className="relative mt-2 inline-flex items-center justify-center rounded-md border border-amber-200/70 bg-amber-100/95 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-900 transition hover:bg-white"
+          >
+            Voir achievements
+          </Link>
+        </article>
+      ))}
+    </div>
+  );
+}

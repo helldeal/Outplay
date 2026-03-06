@@ -17,6 +17,7 @@ interface LeaderboardRpcRow {
   avatar_url: string | null;
   total_cards: number;
   weighted_score: number;
+  achievements_unlocked: number;
 }
 
 export interface LeaderboardRow {
@@ -25,6 +26,7 @@ export interface LeaderboardRow {
   avatarUrl: string | null;
   totalCards: number;
   weightedScore: number;
+  achievementsUnlocked: number;
 }
 
 export const leaderboardQueryKey = ["leaderboard"] as const;
@@ -45,6 +47,7 @@ export function useLeaderboardQuery(isEnabled: boolean) {
         avatarUrl: row.avatar_url,
         totalCards: row.total_cards,
         weightedScore: row.weighted_score,
+        achievementsUnlocked: row.achievements_unlocked,
       }));
     },
   });

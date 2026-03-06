@@ -99,25 +99,37 @@ export function LegendexPage() {
 
   return (
     <section className="space-y-8">
-      <div className="text-center">
-        <h1 className="flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
-          Legendex
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
-          Index des cartes avec visibilité de la progression par série.
-        </p>
+      <div className="relative overflow-hidden rounded-3xl border border-cyan-300/30 bg-slate-900/70 p-6 text-center shadow-[0_24px_80px_rgba(2,6,23,0.65)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_10%,rgba(56,189,248,0.2),transparent_35%),radial-gradient(circle_at_86%_0%,rgba(168,85,247,0.2),transparent_30%),linear-gradient(120deg,rgba(56,189,248,0.08),transparent_42%,rgba(168,85,247,0.1))]" />
+        <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-cyan-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 -bottom-16 h-52 w-52 rounded-full bg-purple-300/15 blur-3xl" />
+
+        <div className="relative">
+          <p className="inline-flex rounded-full border border-cyan-200/50 bg-cyan-300/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">
+            Collection Index
+          </p>
+          <h1 className="mt-3 flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
+            Legendex
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm text-slate-300">
+            Index des cartes avec visibilite claire de ta progression par serie.
+          </p>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4 shadow-[0_10px_32px_rgba(2,6,23,0.4)]">
         <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="series-select" className="text-sm text-slate-300">
+          <label
+            htmlFor="series-select"
+            className="text-xs font-black uppercase tracking-[0.14em] text-slate-300"
+          >
             Série
           </label>
           <select
             id="series-select"
             value={selectedSeriesId}
             onChange={(event) => setSelectedSeriesId(event.target.value)}
-            className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            className="rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-semibold text-slate-100 shadow-[0_6px_18px_rgba(2,6,23,0.35)]"
           >
             {(seriesQuery.data ?? []).map((series) => (
               <option key={series.id} value={series.id}>
@@ -128,7 +140,8 @@ export function LegendexPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/55 p-4 shadow-[0_12px_34px_rgba(2,6,23,0.4)]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.1),transparent_35%,rgba(168,85,247,0.1))]" />
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
@@ -142,15 +155,15 @@ export function LegendexPage() {
             <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
               Complétion
             </p>
-            <p className="text-2xl font-black tracking-tight text-cyan-300">
+            <p className="text-3xl font-black tracking-tight text-cyan-300">
               {completion}%
             </p>
           </div>
         </div>
 
-        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-800/90">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 transition-all duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-cyan-400 to-purple-400 transition-all duration-500"
             style={{ width: `${completion}%` }}
           />
         </div>

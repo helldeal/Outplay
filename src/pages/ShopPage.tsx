@@ -4,6 +4,10 @@ import { Gift, LoaderCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { PageLoading } from "../components/PageLoading";
+import {
+  BoosterTypeBadge,
+  resolveBoosterTone,
+} from "../components/rewards/reward-theme";
 import { useImagePreload } from "../hooks/useImagePreload";
 import { rarityLabel, rarityTextColor } from "../utils/rarity";
 import {
@@ -99,13 +103,6 @@ export function ShopPage() {
         ownedBefore,
       );
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
-        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
-      ]);
-
-      await refreshProfile();
-
       navigate("/booster-opening", {
         state: {
           openedCards,
@@ -118,6 +115,12 @@ export function ShopPage() {
           seriesCode: booster.series.code,
         },
       });
+
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        refreshProfile(),
+      ]).catch(() => undefined);
     } catch (error) {
       setOpeningError(
         error instanceof Error
@@ -146,14 +149,23 @@ export function ShopPage() {
   return (
     <>
       <section className="space-y-8">
-        <div className="text-center">
-          <h1 className="flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
-            Boutique
-          </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
-            Tous les boosters achetables par série. Les daily sont disponibles
-            via le bouton du header.
-          </p>
+        <div className="relative overflow-hidden rounded-3xl border border-cyan-300/30 bg-slate-900/70 p-6 text-center shadow-[0_24px_80px_rgba(2,6,23,0.65)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.2),transparent_36%),radial-gradient(circle_at_82%_0%,rgba(251,191,36,0.2),transparent_28%),linear-gradient(120deg,rgba(56,189,248,0.08),transparent_44%,rgba(251,191,36,0.1))]" />
+          <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-cyan-300/20 blur-3xl" />
+          <div className="pointer-events-none absolute -left-16 -bottom-16 h-52 w-52 rounded-full bg-amber-300/15 blur-3xl" />
+
+          <div className="relative">
+            <p className="inline-flex rounded-full border border-cyan-200/50 bg-cyan-300/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">
+              Shop Hub
+            </p>
+            <h1 className="mt-3 flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
+              Boutique
+            </h1>
+            <p className="mx-auto mt-3 max-w-md text-sm text-slate-300">
+              Tous les boosters achetables par serie. Les daily restent
+              disponibles via le bouton du header.
+            </p>
+          </div>
         </div>
 
         {openingError ? (
@@ -164,8 +176,13 @@ export function ShopPage() {
 
         <div className="space-y-8">
           {Array.from(boostersBySeries.entries()).map(([seriesId, entry]) => (
-            <div key={seriesId} className="space-y-3">
-              <div className="space-y-1">
+            <div
+              key={seriesId}
+              className="relative overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/55 p-4 shadow-[0_12px_38px_rgba(2,6,23,0.45)]"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(56,189,248,0.08),transparent_35%,rgba(251,191,36,0.08))]" />
+
+              <div className="relative mb-4 space-y-1">
                 <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
                   Series {entry.code}
                 </p>
@@ -174,64 +191,70 @@ export function ShopPage() {
                 </h2>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {entry.boosters.map((booster) => (
-                  <article
-                    key={booster.id}
-                    className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50"
-                  >
-                    <div className="p-4 pb-0">
-                      {(booster.image_url ?? entry.coverImage) ? (
-                        <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800">
-                          <div className="aspect-[3/4]">
-                            <img
-                              src={booster.image_url ?? entry.coverImage ?? ""}
-                              alt={booster.name}
-                              className="h-full w-full object-cover"
-                            />
+              <div className="relative grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {entry.boosters.map((booster) => {
+                  const tone = resolveBoosterTone(booster.type);
+
+                  return (
+                    <article
+                      key={booster.id}
+                      className={`group overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/70 shadow-[0_10px_30px_rgba(2,6,23,0.4)] transition hover:-translate-y-1 ${tone.shopCardHoverClass}`}
+                    >
+                      <div className="p-4 pb-0">
+                        {(booster.image_url ?? entry.coverImage) ? (
+                          <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800">
+                            <div className="aspect-[3/4]">
+                              <img
+                                src={
+                                  booster.image_url ?? entry.coverImage ?? ""
+                                }
+                                alt={booster.name}
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="aspect-[3/4] rounded-lg border border-slate-700 bg-slate-800" />
-                      )}
-                    </div>
-                    <div className="space-y-2 p-4">
-                      <h3 className="text-lg font-black uppercase italic text-white">
-                        {booster.name}
-                      </h3>
-                      <p className="text-sm text-slate-400">{booster.type}</p>
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          onClick={() => {
-                            void openShopBooster(booster);
-                          }}
-                          disabled={!user || openingBoosterId !== null}
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {openingBoosterId === booster.id ? (
-                            <>
-                              <LoaderCircle className="h-4 w-4 animate-spin" />
-                              Opening...
-                            </>
-                          ) : (
-                            <>
-                              <Gift className="h-4 w-4" />
-                              Acheter {booster.price_pc} PC
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDropRatesModalBoosterId(booster.id);
-                          }}
-                          className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-200 transition hover:bg-slate-700"
-                        >
-                          Voir les taux
-                        </button>
+                        ) : (
+                          <div className="aspect-[3/4] rounded-lg border border-slate-700 bg-slate-800" />
+                        )}
                       </div>
-                    </div>
-                  </article>
-                ))}
+                      <div className="space-y-2 p-4">
+                        <h3 className="text-lg font-black uppercase italic text-white">
+                          {booster.name}
+                        </h3>
+                        <BoosterTypeBadge boosterType={booster.type} />
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            onClick={() => {
+                              void openShopBooster(booster);
+                            }}
+                            disabled={!user || openingBoosterId !== null}
+                            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${tone.shopBuyButtonClass}`}
+                          >
+                            {openingBoosterId === booster.id ? (
+                              <>
+                                <LoaderCircle className="h-4 w-4 animate-spin" />
+                                Opening...
+                              </>
+                            ) : (
+                              <>
+                                <Gift className="h-4 w-4" />
+                                Acheter {booster.price_pc} PC
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDropRatesModalBoosterId(booster.id);
+                            }}
+                            className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-600 bg-slate-800/90 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-200 transition hover:border-slate-400 hover:bg-slate-700"
+                          >
+                            Voir les taux
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
           ))}

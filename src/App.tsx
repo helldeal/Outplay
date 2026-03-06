@@ -3,11 +3,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthProvider";
 import { AppLayout } from "./components/AppLayout";
 import { AchievementsPage } from "./pages/AchievementsPage";
+import { AboutPage } from "./pages/AboutPage";
 import { BoosterPage } from "./pages/BoosterPage";
 import { HomePage } from "./pages/HomePage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
 import { ShopPage } from "./pages/ShopPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -40,6 +42,8 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route
           path="/shop"
           element={
