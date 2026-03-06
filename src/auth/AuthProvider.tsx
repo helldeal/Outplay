@@ -70,7 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             rootKey === "legendex-cards" ||
             rootKey === "booster-list" ||
             rootKey === "series-boosters" ||
-            rootKey === "daily-booster-opened-today"
+            rootKey === "daily-booster-opened-today" ||
+            rootKey === "login-streak-status" ||
+            rootKey === "achievements-progress" ||
+            rootKey === "achievements-unseen-count" ||
+            rootKey === "achievements-notifications"
           );
         },
       }),

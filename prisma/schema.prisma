@@ -9,14 +9,18 @@ datasource db {
 }
 
 model User {
-  id        String   @id @db.Uuid
-  createdAt DateTime @default(now())
-  username  String?
-  avatarUrl String?  @map("avatar_url")
-  pcBalance Int      @default(0) @map("pc_balance")
+  id            String   @id @db.Uuid
+  createdAt     DateTime @default(now())
+  username      String?
+  avatarUrl     String?  @map("avatar_url")
+  pcBalance     Int      @default(0) @map("pc_balance")
+  totalPcEarned BigInt   @default(0) @map("total_pc_earned")
+  title         String?
 
   userCards       UserCard[]
   boosterOpenings BoosterOpening[]
+  loginStreak     LoginStreak?
+  achievements    UserAchievement[]
 
   @@map("users")
   @@schema("public")
@@ -158,21 +162,75 @@ model UserCard {
 }
 
 model BoosterOpening {
-  id        String      @id @default(uuid()) @db.Uuid
-  userId    String      @map("user_id") @db.Uuid
-  boosterId String      @map("booster_id") @db.Uuid
-  seriesId  String      @map("series_id") @db.Uuid
-  cards     Json
-  pcGained  Int         @default(0) @map("pc_gained")
-  type      OpeningType @default(SHOP)
-  createdAt DateTime    @default(now()) @map("created_at")
+  id             String      @id @default(uuid()) @db.Uuid
+  userId         String      @map("user_id") @db.Uuid
+  boosterId      String      @map("booster_id") @db.Uuid
+  seriesId       String      @map("series_id") @db.Uuid
+  cards          Json
+  pcGained       Int         @default(0) @map("pc_gained")
+  duplicateCards Int         @default(0) @map("duplicate_cards")
+  type           OpeningType @default(SHOP)
+  createdAt      DateTime    @default(now()) @map("created_at")
 
-  user    User    @relation(fields: [userId], references: [id])
-  booster Booster @relation(fields: [boosterId], references: [id])
-  series  Series  @relation(fields: [seriesId], references: [id])
+  user                 User              @relation(fields: [userId], references: [id])
+  booster              Booster           @relation(fields: [boosterId], references: [id])
+  series               Series            @relation(fields: [seriesId], references: [id])
+  rewardedAchievements UserAchievement[]
 
   @@index([userId])
   @@map("booster_openings")
+  @@schema("public")
+}
+
+model LoginStreak {
+  userId           String    @id @map("user_id") @db.Uuid
+  currentDay       Int       @default(0) @map("current_day")
+  lastClaimDate    DateTime? @map("last_claim_date") @db.Date
+  totalClaimedDays Int       @default(0) @map("total_claimed_days")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_streaks")
+  @@schema("public")
+}
+
+model AchievementDefinition {
+  id                String       @id @default(uuid()) @db.Uuid
+  code              String       @unique
+  name              String
+  category          String
+  description       String
+  metricKey         String       @map("metric_key")
+  targetValue       Decimal      @map("target_value") @db.Decimal
+  rewardPc          Int          @default(0) @map("reward_pc")
+  rewardBoosterType BoosterType? @map("reward_booster_type")
+  rewardTitle       String?      @map("reward_title")
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  userAchievements UserAchievement[]
+
+  @@map("achievement_definitions")
+  @@schema("public")
+}
+
+model UserAchievement {
+  userId          String    @map("user_id") @db.Uuid
+  achievementId   String    @map("achievement_id") @db.Uuid
+  unlockedAt      DateTime  @default(now()) @map("unlocked_at") @db.Timestamptz(6)
+  rewardGrantedAt DateTime? @map("reward_granted_at") @db.Timestamptz(6)
+  notifiedAt      DateTime? @map("notified_at") @db.Timestamptz(6)
+  seenAt          DateTime? @map("seen_at") @db.Timestamptz(6)
+  rewardOpeningId String?   @map("reward_opening_id") @db.Uuid
+
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   AchievementDefinition @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  rewardOpening BoosterOpening?       @relation(fields: [rewardOpeningId], references: [id], onDelete: SetNull)
+
+  @@id([userId, achievementId])
+  @@index([userId, unlockedAt])
+  @@map("user_achievements")
   @@schema("public")
 }
 
@@ -198,6 +256,8 @@ enum BoosterType {
 enum OpeningType {
   SHOP
   DAILY
+  STREAK
+  ACHIEVEMENT
 
   @@schema("public")
 }

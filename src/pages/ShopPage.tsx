@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Gift, LoaderCircle, ShoppingBag, X } from "lucide-react";
+import { Gift, LoaderCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { PageLoading } from "../components/PageLoading";
+import { useImagePreload } from "../hooks/useImagePreload";
+import { rarityLabel, rarityTextColor } from "../utils/rarity";
 import {
   computeDuplicateIndices,
   fetchCardsByIds,
@@ -31,8 +33,21 @@ export function ShopPage() {
     "CHALLENGER",
     "ROOKIE",
   ];
+  const rarityBarTone: Record<string, string> = {
+    LEGENDS: "from-amber-300 via-amber-400 to-amber-500",
+    WORLD_CLASS: "from-orange-300 via-orange-400 to-orange-500",
+    CHAMPION: "from-purple-300 via-purple-400 to-purple-500",
+    CHALLENGER: "from-blue-300 via-blue-400 to-blue-500",
+    ROOKIE: "from-zinc-300 via-zinc-400 to-zinc-500",
+  };
 
   const boosters = boostersQuery.data ?? [];
+  const preloadUrls = useMemo(
+    () =>
+      boosters.map((booster) => booster.image_url ?? booster.series.coverImage),
+    [boosters],
+  );
+  const { isReady: areBoosterAssetsReady } = useImagePreload(preloadUrls);
   const dropRatesBooster =
     dropRatesModalBoosterId === null
       ? null
@@ -114,7 +129,7 @@ export function ShopPage() {
     }
   };
 
-  if (boostersQuery.isLoading) {
+  if (boostersQuery.isLoading || !areBoosterAssetsReady) {
     return (
       <PageLoading title="Boutique" subtitle="Chargement de la boutique…" />
     );
@@ -231,28 +246,33 @@ export function ShopPage() {
 
       {dropRatesBooster ? (
         <div
-          className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[10010] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md"
           onClick={() => {
             setDropRatesModalBoosterId(null);
           }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900/95 p-4 shadow-2xl"
+            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/95 p-5 shadow-[0_30px_80px_rgba(2,6,23,0.75)]"
             onClick={(event) => {
               event.stopPropagation();
             }}
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.08em] text-cyan-300">
-                  Taux de drop
+            <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
+
+            <div className="relative mb-4 flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="inline-flex rounded-full border border-cyan-300/40 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200">
+                  Drop Rates
                 </p>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-xl font-black uppercase italic text-white">
                   {dropRatesBooster.name}
                 </h3>
+                <p className="text-xs text-slate-400">
+                  Probabilites par rarete pour ce booster
+                </p>
               </div>
               <button
-                className="rounded-md p-1 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                className="rounded-md border border-slate-700 bg-slate-900/80 p-1.5 text-slate-300 transition hover:border-slate-500 hover:bg-slate-800 hover:text-white"
                 onClick={() => {
                   setDropRatesModalBoosterId(null);
                 }}
@@ -262,34 +282,52 @@ export function ShopPage() {
               </button>
             </div>
 
-            <ul className="space-y-1 rounded-md border border-slate-700 bg-slate-800/70 p-3 text-sm text-slate-200">
+            <ul className="relative space-y-2 rounded-2xl border border-slate-800/90 bg-slate-900/60 p-3 text-sm text-slate-200">
               {dropRateOrder
                 .filter(
                   (rarity) => dropRatesBooster.drop_rates[rarity] !== undefined,
                 )
-                .map((rarity) => (
-                  <li
-                    key={rarity}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-slate-300">{rarity}</span>
-                    <span className="text-amber-300">
-                      {dropRatesBooster.drop_rates[rarity]}%
-                    </span>
-                  </li>
-                ))}
+                .map((rarity) => {
+                  const pct = Number(dropRatesBooster.drop_rates[rarity] ?? 0);
+                  return (
+                    <li
+                      key={rarity}
+                      className="rounded-xl border border-slate-800 bg-slate-950/80 p-2.5"
+                    >
+                      <div className="mb-1.5 flex items-center justify-between gap-2">
+                        <span
+                          className={`text-xs font-black uppercase tracking-wide ${rarityTextColor(rarity)}`}
+                        >
+                          {rarityLabel(rarity)}
+                        </span>
+                        <span className="text-sm font-black text-white">
+                          {pct}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${rarityBarTone[rarity] ?? "from-cyan-300 to-cyan-500"}`}
+                          style={{
+                            width: `${Math.max(0, Math.min(100, pct))}%`,
+                          }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
             </ul>
 
             {dropRateOrder.every(
               (rarity) => dropRatesBooster.drop_rates[rarity] === undefined,
             ) ? (
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-400">
                 Aucun taux disponible.
               </p>
             ) : null}
 
-            <div className="mt-4 border-t border-slate-800 pt-3 text-xs text-slate-400">
-              D'autres informations sur le booster seront ajoutées ici.
+            <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-[11px] uppercase tracking-wide text-slate-500">
+              <span>Data live</span>
+              <span>Outplay odds panel</span>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthProvider";
 import { AppLayout } from "./components/AppLayout";
+import { AchievementsPage } from "./pages/AchievementsPage";
 import { BoosterPage } from "./pages/BoosterPage";
 import { HomePage } from "./pages/HomePage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
@@ -73,6 +74,14 @@ export default function App() {
           element={
             <RequireAuth>
               <LegendexPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/achievements"
+          element={
+            <RequireAuth>
+              <AchievementsPage />
             </RequireAuth>
           }
         />

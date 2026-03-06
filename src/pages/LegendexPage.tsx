@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
 import { PageLoading } from "../components/PageLoading";
+import { useImagePreload } from "../hooks/useImagePreload";
 import {
   useLegendexCardsQuery,
   useLegendexOwnedCardsQuery,
@@ -44,6 +45,19 @@ export function LegendexPage() {
   const owned =
     ownedData instanceof Map ? ownedData : new Map<string, string>();
 
+  const preloadUrls = useMemo(
+    () =>
+      cards.flatMap((card) => [
+        card.imageUrl,
+        card.game?.logoUrl,
+        card.nationality?.flagUrl,
+        card.team?.logoUrl,
+        card.role?.iconUrl,
+      ]),
+    [cards],
+  );
+  const { isReady: areCardAssetsReady } = useImagePreload(preloadUrls);
+
   const selectedSeries =
     (seriesQuery.data ?? []).find((series) => series.id === selectedSeriesId) ??
     null;
@@ -65,7 +79,8 @@ export function LegendexPage() {
   const isPageLoading =
     seriesQuery.isLoading ||
     (Boolean(selectedSeriesId) && cardsQuery.isLoading) ||
-    (Boolean(user?.id && selectedSeriesId) && ownedQuery.isLoading);
+    (Boolean(user?.id && selectedSeriesId) && ownedQuery.isLoading) ||
+    !areCardAssetsReady;
 
   if (isPageLoading) {
     return <PageLoading title="Legendex" subtitle="Chargement du Legendex…" />;

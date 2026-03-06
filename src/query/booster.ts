@@ -10,7 +10,25 @@ export interface OpenBoosterResponse {
   cards: string[];
   pcGained: number;
   chargedPc: number;
-  type: "SHOP" | "DAILY";
+  type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+}
+
+export interface LoginStreakStatus {
+  current_day: number;
+  last_claim_date: string | null;
+  can_claim_today: boolean;
+  next_day: number;
+  next_reward_type: "PC" | "BOOSTER";
+  next_reward_pc: number;
+  next_reward_booster_type: "NORMAL" | "LUCK" | "PREMIUM" | null;
+}
+
+interface LoginStreakClaimResponse {
+  day: number;
+  rewardType: "PC" | "BOOSTER";
+  pcGained: number;
+  boosterType: "NORMAL" | "LUCK" | "PREMIUM" | null;
+  opening: OpenBoosterResponse | null;
 }
 
 interface DailyBoosterTarget {
@@ -57,6 +75,18 @@ export async function openDailyBoosterRpc(seriesCode: string, userId: string) {
   }
 
   return data as OpenBoosterResponse;
+}
+
+export async function claimLoginStreakRewardRpc(userId: string) {
+  const { data, error } = await supabase.rpc("claim_login_streak_reward", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as LoginStreakClaimResponse;
 }
 
 export async function fetchCardsByIds(cardIds: string[]) {
@@ -172,6 +202,37 @@ async function fetchShopBoosters() {
     .filter((booster): booster is ShopBoosterWithSeries => Boolean(booster));
 }
 
+async function fetchLoginStreakStatus(userId: string) {
+  const { data, error } = await supabase.rpc("get_login_streak_status", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) {
+    return null;
+  }
+
+  return {
+    current_day: Number(row.current_day ?? 0),
+    last_claim_date:
+      typeof row.last_claim_date === "string" ? row.last_claim_date : null,
+    can_claim_today: Boolean(row.can_claim_today),
+    next_day: Number(row.next_day ?? 1),
+    next_reward_type: row.next_reward_type === "BOOSTER" ? "BOOSTER" : "PC",
+    next_reward_pc: Number(row.next_reward_pc ?? 0),
+    next_reward_booster_type:
+      row.next_reward_booster_type === "NORMAL" ||
+      row.next_reward_booster_type === "LUCK" ||
+      row.next_reward_booster_type === "PREMIUM"
+        ? row.next_reward_booster_type
+        : null,
+  } as LoginStreakStatus;
+}
+
 async function fetchHasOpenedDailyToday(userId: string) {
   const startOfTodayUtc = new Date();
   startOfTodayUtc.setUTCHours(0, 0, 0, 0);
@@ -202,6 +263,14 @@ export function useHasOpenedDailyTodayQuery(userId?: string) {
     queryKey: ["daily-booster-opened-today", userId],
     enabled: Boolean(userId),
     queryFn: () => fetchHasOpenedDailyToday(userId!),
+  });
+}
+
+export function useLoginStreakStatusQuery(userId?: string) {
+  return useQuery({
+    queryKey: ["login-streak-status", userId],
+    enabled: Boolean(userId),
+    queryFn: () => fetchLoginStreakStatus(userId!),
   });
 }
 

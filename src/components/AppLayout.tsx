@@ -1,9 +1,11 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
+  Award,
   BookMarked,
   CalendarClock,
   ChevronDown,
   Coins,
+  Flame,
   LogIn,
   LogOut,
   LoaderCircle,
@@ -14,12 +16,19 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthProvider";
 import {
+  useAchievementNotificationsQuery,
+  useAchievementUnseenCountQuery,
+  type AchievementNotification,
+} from "../query/achievements";
+import {
+  claimLoginStreakRewardRpc,
   computeDuplicateIndices,
   fetchCardsByIds,
   getOwnedCardIds,
   openDailyBoosterRpc,
   useDailyBoosterTargetQuery,
   useHasOpenedDailyTodayQuery,
+  useLoginStreakStatusQuery,
 } from "../query/booster";
 import { useEffect, useRef, useState } from "react";
 
@@ -52,18 +61,48 @@ function getInitials(name: string): string {
     .join("");
 }
 
+function formatStreakRewardLabel(params: {
+  rewardType: "PC" | "BOOSTER";
+  rewardPc: number;
+  rewardBoosterType: "NORMAL" | "LUCK" | "PREMIUM" | null;
+}): string {
+  if (params.rewardType === "PC") {
+    return `${params.rewardPc} PC`;
+  }
+
+  switch (params.rewardBoosterType) {
+    case "LUCK":
+      return "Luck Booster";
+    case "PREMIUM":
+      return "Premium Booster";
+    case "NORMAL":
+    default:
+      return "Normal Booster";
+  }
+}
+
 export function AppLayout() {
   const { user, profile, logout, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isOpeningDaily, setIsOpeningDaily] = useState(false);
+  const [isClaimingStreak, setIsClaimingStreak] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [dailyCountdown, setDailyCountdown] = useState("00:00:00");
   const [hasTriggeredResetRefresh, setHasTriggeredResetRefresh] =
     useState(false);
+  const [achievementToasts, setAchievementToasts] = useState<
+    Array<AchievementNotification & { id: string }>
+  >([]);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const seenNotificationIdsRef = useRef<Set<string>>(new Set());
   const dailyTargetQuery = useDailyBoosterTargetQuery();
   const openedTodayQuery = useHasOpenedDailyTodayQuery(user?.id);
+  const streakStatus = useLoginStreakStatusQuery(user?.id).data;
+  const unseenAchievementsQuery = useAchievementUnseenCountQuery(user?.id);
+  const achievementNotificationsQuery = useAchievementNotificationsQuery(
+    user?.id,
+  );
 
   const rawUsername =
     profile?.username ??
@@ -79,9 +118,40 @@ export function AppLayout() {
     (user?.user_metadata?.picture as string | undefined) ??
     (user?.user_metadata?.avatar as string | undefined) ??
     null;
+  const unseenAchievementCount = Math.max(0, unseenAchievementsQuery.data ?? 0);
 
   useEffect(() => {
-    if (!openedTodayQuery.data) {
+    const notifications = achievementNotificationsQuery.data ?? [];
+    if (notifications.length === 0) {
+      return;
+    }
+
+    for (const notification of notifications) {
+      const notificationId = `${notification.code}:${notification.unlocked_at}`;
+      if (seenNotificationIdsRef.current.has(notificationId)) {
+        continue;
+      }
+
+      seenNotificationIdsRef.current.add(notificationId);
+
+      setAchievementToasts((prev) =>
+        [...prev, { ...notification, id: notificationId }].slice(-4),
+      );
+
+      window.setTimeout(() => {
+        setAchievementToasts((prev) =>
+          prev.filter((toast) => toast.id !== notificationId),
+        );
+      }, 5200);
+    }
+  }, [achievementNotificationsQuery.data]);
+
+  const shouldDisplayResetCountdown =
+    Boolean(openedTodayQuery.data) ||
+    (streakStatus ? !streakStatus.can_claim_today : false);
+
+  useEffect(() => {
+    if (!shouldDisplayResetCountdown) {
       setDailyCountdown("00:00:00");
       setHasTriggeredResetRefresh(false);
       return;
@@ -108,7 +178,7 @@ export function AppLayout() {
     return () => {
       window.clearInterval(timer);
     };
-  }, [openedTodayQuery.data]);
+  }, [shouldDisplayResetCountdown]);
 
   useEffect(() => {
     if (!isProfileMenuOpen) return;
@@ -125,7 +195,7 @@ export function AppLayout() {
   }, [isProfileMenuOpen]);
 
   useEffect(() => {
-    if (!user?.id || !openedTodayQuery.data) {
+    if (!user?.id || !shouldDisplayResetCountdown) {
       return;
     }
 
@@ -134,13 +204,18 @@ export function AppLayout() {
     }
 
     setHasTriggeredResetRefresh(true);
-    void queryClient.invalidateQueries({
-      queryKey: ["daily-booster-opened-today", user.id],
-    });
+    void Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["daily-booster-opened-today", user.id],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["login-streak-status", user.id],
+      }),
+    ]);
   }, [
     dailyCountdown,
     hasTriggeredResetRefresh,
-    openedTodayQuery.data,
+    shouldDisplayResetCountdown,
     queryClient,
     user?.id,
   ]);
@@ -150,6 +225,19 @@ export function AppLayout() {
     Boolean(dailyTargetQuery.data?.series.code) &&
     !openedTodayQuery.data &&
     !isOpeningDaily;
+
+  const canClaimStreak =
+    Boolean(user) &&
+    Boolean(streakStatus?.can_claim_today) &&
+    !isClaimingStreak;
+
+  const streakRewardLabel = streakStatus
+    ? formatStreakRewardLabel({
+        rewardType: streakStatus.next_reward_type,
+        rewardPc: streakStatus.next_reward_pc,
+        rewardBoosterType: streakStatus.next_reward_booster_type,
+      })
+    : null;
 
   const openDailyFromHeader = async () => {
     if (!user || !dailyTargetQuery.data?.series.code) {
@@ -176,6 +264,15 @@ export function AppLayout() {
         }),
         queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-progress", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-unseen-count", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-notifications", user.id],
+        }),
       ]);
 
       await refreshProfile();
@@ -194,6 +291,70 @@ export function AppLayout() {
       });
     } finally {
       setIsOpeningDaily(false);
+    }
+  };
+
+  const claimStreakFromHeader = async () => {
+    if (!user) {
+      return;
+    }
+
+    setIsClaimingStreak(true);
+    try {
+      const ownedBefore = await getOwnedCardIds(user.id);
+      const result = await claimLoginStreakRewardRpc(user.id);
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["login-streak-status", user.id],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-progress", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-unseen-count", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-notifications", user.id],
+        }),
+      ]);
+
+      await refreshProfile();
+
+      if (result.rewardType !== "BOOSTER" || !result.opening) {
+        return;
+      }
+
+      const cardIds = result.opening.cards ?? [];
+      const openedCards = await fetchCardsByIds(cardIds);
+      const duplicateCardIndices = computeDuplicateIndices(
+        cardIds,
+        ownedBefore,
+      );
+
+      const boosterLabel =
+        result.boosterType === "PREMIUM"
+          ? "Premium Booster"
+          : result.boosterType === "LUCK"
+            ? "Luck Booster"
+            : "Normal Booster";
+
+      navigate("/booster-opening", {
+        state: {
+          openedCards,
+          duplicateCardIndices,
+          pcGained: result.opening.pcGained ?? 0,
+          chargedPc: result.opening.chargedPc ?? 0,
+          boosterName: `Streak ${boosterLabel}`,
+          seriesName: dailyTargetQuery.data?.series.name,
+          seriesSlug: dailyTargetQuery.data?.series.slug,
+          seriesCode: dailyTargetQuery.data?.series.code,
+        },
+      });
+    } finally {
+      setIsClaimingStreak(false);
     }
   };
 
@@ -233,6 +394,17 @@ export function AppLayout() {
                 Leaderboard
               </span>
             </NavLink>
+            <NavLink to="/achievements" className={navItemClass}>
+              <span className="inline-flex items-center gap-1">
+                <Award className="h-4 w-4" />
+                Achievements
+                {unseenAchievementCount > 0 ? (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-slate-950">
+                    {unseenAchievementCount > 9 ? "9+" : unseenAchievementCount}
+                  </span>
+                ) : null}
+              </span>
+            </NavLink>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -264,6 +436,35 @@ export function AppLayout() {
                     : openedTodayQuery.data
                       ? `Daily ${dailyCountdown}`
                       : "Daily"}
+                </button>
+                <button
+                  onClick={() => {
+                    void claimStreakFromHeader().catch(() => undefined);
+                  }}
+                  disabled={!canClaimStreak}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-slate-100 transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    canClaimStreak
+                      ? "border border-amber-300/70 bg-amber-400/15 shadow-[0_0_0_1px_rgba(251,191,36,0.35),0_0_24px_rgba(251,191,36,0.22)] hover:bg-amber-400/20"
+                      : "border border-slate-600/80 bg-slate-900/70 hover:border-amber-400/50 hover:bg-slate-800/80"
+                  }`}
+                  title={
+                    streakStatus
+                      ? streakStatus.can_claim_today
+                        ? `Jour ${streakStatus.next_day}: ${streakRewardLabel ?? "Reward"}`
+                        : `Prochaine claim streak dans ${dailyCountdown}`
+                      : "Récompense streak"
+                  }
+                >
+                  {isClaimingStreak ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Flame className="h-4 w-4" />
+                  )}
+                  {isClaimingStreak
+                    ? "Claim..."
+                    : streakStatus?.can_claim_today
+                      ? `Streak J${streakStatus.next_day}`
+                      : `Streak ${dailyCountdown}`}
                 </button>
                 <div className="flex items-center gap-2 rounded-xl border border-slate-600/80 bg-slate-900/70 px-3 py-2 text-sm text-slate-100">
                   <Coins className="h-4 w-4 text-amber-300" />
@@ -345,8 +546,39 @@ export function AppLayout() {
           <NavLink to="/leaderboard" className={navItemClass}>
             Leaderboard
           </NavLink>
+          <NavLink to="/achievements" className={navItemClass}>
+            Achievements
+            {unseenAchievementCount > 0 ? ` (${unseenAchievementCount})` : ""}
+          </NavLink>
         </div>
       </header>
+
+      {achievementToasts.length > 0 ? (
+        <div className="pointer-events-none fixed right-4 top-20 z-[10020] flex w-[min(92vw,360px)] flex-col gap-2">
+          {achievementToasts.map((toast) => (
+            <article
+              key={toast.id}
+              className="pointer-events-auto rounded-xl border border-emerald-300/50 bg-emerald-500/15 p-3 shadow-xl shadow-black/35 backdrop-blur"
+            >
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
+                Achievement debloque
+              </p>
+              <p className="mt-1 text-sm font-semibold text-white">
+                {toast.name}
+              </p>
+              <p className="text-xs text-emerald-100/85">
+                {toast.reward_label}
+              </p>
+              <Link
+                to="/achievements"
+                className="mt-2 inline-flex items-center justify-center rounded-md border border-emerald-200/60 bg-emerald-100/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-900 transition hover:bg-white"
+              >
+                Voir achievements
+              </Link>
+            </article>
+          ))}
+        </div>
+      ) : null}
 
       <main className="relative mx-auto mt-28 w-full max-w-7xl px-4 py-6 md:mt-20">
         <Outlet />
