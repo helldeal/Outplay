@@ -113,8 +113,9 @@ export function AppHeader({
                 <Award className="h-4 w-4" />
                 Achievements
                 {unseenAchievementCount > 0 ? (
-                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-slate-950">
-                    {unseenAchievementCount > 9 ? "9+" : unseenAchievementCount}
+                  <span className="relative inline-flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
                   </span>
                 ) : null}
               </span>
@@ -247,7 +248,12 @@ export function AppHeader({
         </NavLink>
         <NavLink to="/achievements" className={navItemClass}>
           Achievements
-          {unseenAchievementCount > 0 ? ` (${unseenAchievementCount})` : ""}
+          {unseenAchievementCount > 0 ? (
+            <span className="relative ml-1 inline-flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
+            </span>
+          ) : null}
         </NavLink>
       </div>
     </header>

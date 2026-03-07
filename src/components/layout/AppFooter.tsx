@@ -32,7 +32,7 @@ const sitemapSections = [
           </span>
         ),
         toneClass:
-          "border-cyan-300/45 bg-cyan-300/10 text-cyan-100 hover:bg-cyan-300/18 hover:border-cyan-200/70",
+          "border-green-300/45 bg-green-300/10 text-green-100 hover:bg-green-300/18 hover:border-green-200/70",
       },
       {
         href: "https://buymeacoffee.com/helldeal",

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Gift, LoaderCircle, X } from "lucide-react";
+import { Gift, Info, LoaderCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { PageLoading } from "../components/PageLoading";
@@ -19,8 +19,19 @@ import {
 } from "../query/booster";
 import type { ShopBoosterWithSeries } from "../query/booster";
 
+const BOOSTER_DRAW_COUNT = 5;
+
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function atLeastOneInBoosterRate(singleDrawPercent: number) {
+  const p = clampPercent(singleDrawPercent) / 100;
+  return (1 - Math.pow(1 - p, BOOSTER_DRAW_COUNT)) * 100;
+}
+
 export function ShopPage() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const boostersQuery = useShopBoostersQuery();
@@ -29,6 +40,9 @@ export function ShopPage() {
   const [dropRatesModalBoosterId, setDropRatesModalBoosterId] = useState<
     string | null
   >(null);
+  const [dropRatesModalView, setDropRatesModalView] = useState<
+    "CARD" | "BOOSTER"
+  >("CARD");
 
   const dropRateOrder = [
     "LEGENDS",
@@ -87,6 +101,14 @@ export function ShopPage() {
   const openShopBooster = async (booster: ShopBoosterWithSeries) => {
     if (!user) {
       setOpeningError("Tu dois être connecté pour ouvrir un booster.");
+      return;
+    }
+
+    const currentPcBalance = profile?.pc_balance ?? 0;
+    if (booster.price_pc > currentPcBalance) {
+      setOpeningError(
+        `PC insuffisants: il faut ${booster.price_pc} PC pour ouvrir ce booster.`,
+      );
       return;
     }
 
@@ -185,6 +207,8 @@ export function ShopPage() {
                 {entry.boosters.map((booster) => {
                   const tone = resolveBoosterTone(booster.type);
                   const coverUrl = booster.image_url ?? entry.coverImage ?? "";
+                  const canAfford =
+                    (profile?.pc_balance ?? 0) >= booster.price_pc;
 
                   return (
                     <article
@@ -228,7 +252,14 @@ export function ShopPage() {
                             onClick={() => {
                               void openShopBooster(booster);
                             }}
-                            disabled={!user || openingBoosterId !== null}
+                            disabled={
+                              !user || openingBoosterId !== null || !canAfford
+                            }
+                            title={
+                              canAfford
+                                ? "Ouvrir ce booster"
+                                : `PC insuffisants (${booster.price_pc} requis)`
+                            }
                             className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${tone.shopBuyButtonClass}`}
                           >
                             {openingBoosterId === booster.id ? (
@@ -239,17 +270,20 @@ export function ShopPage() {
                             ) : (
                               <>
                                 <Gift className="h-4 w-4" />
-                                Acheter
+                                {canAfford ? "Acheter" : "PC insuffisants"}
                               </>
                             )}
                           </button>
                           <button
                             onClick={() => {
+                              setDropRatesModalView("CARD");
                               setDropRatesModalBoosterId(booster.id);
                             }}
-                            className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-600 bg-slate-800/90 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-200 transition hover:border-slate-400 hover:bg-slate-700"
+                            className="inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800/90 px-2.5 py-2 text-slate-200 transition hover:border-cyan-400/70 hover:bg-slate-700 hover:text-cyan-100"
+                            aria-label={`Informations des taux pour ${booster.name}`}
+                            title="Informations des taux"
                           >
-                            Voir les taux
+                            <Info className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -276,7 +310,7 @@ export function ShopPage() {
           }}
         >
           <div
-            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/95 p-5 shadow-[0_30px_80px_rgba(2,6,23,0.75)]"
+            className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/95 p-5 shadow-[0_30px_80px_rgba(2,6,23,0.75)]"
             onClick={(event) => {
               event.stopPropagation();
             }}
@@ -292,7 +326,7 @@ export function ShopPage() {
                   {dropRatesBooster.name}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Probabilites par rarete pour ce booster
+                  Compare les probabilites par carte et par booster
                 </p>
               </div>
               <button
@@ -306,13 +340,49 @@ export function ShopPage() {
               </button>
             </div>
 
+            <div className="relative mb-3 inline-flex rounded-xl border border-slate-700/80 bg-slate-900/80 p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setDropRatesModalView("CARD");
+                }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] transition ${
+                  dropRatesModalView === "CARD"
+                    ? "bg-cyan-400 text-slate-950"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                Par carte
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDropRatesModalView("BOOSTER");
+                }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] transition ${
+                  dropRatesModalView === "BOOSTER"
+                    ? "bg-cyan-400 text-slate-950"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                Par booster
+              </button>
+            </div>
+
             <ul className="relative space-y-2 rounded-2xl border border-slate-800/90 bg-slate-900/60 p-3 text-sm text-slate-200">
               {dropRateOrder
                 .filter(
                   (rarity) => dropRatesBooster.drop_rates[rarity] !== undefined,
                 )
                 .map((rarity) => {
-                  const pct = Number(dropRatesBooster.drop_rates[rarity] ?? 0);
+                  const cardPct = Number(
+                    dropRatesBooster.drop_rates[rarity] ?? 0,
+                  );
+                  const displayPct =
+                    dropRatesModalView === "CARD"
+                      ? clampPercent(cardPct)
+                      : atLeastOneInBoosterRate(cardPct);
+
                   return (
                     <li
                       key={rarity}
@@ -325,14 +395,14 @@ export function ShopPage() {
                           {rarityLabel(rarity)}
                         </span>
                         <span className="text-sm font-black text-white">
-                          {pct}%
+                          {displayPct.toFixed(2)}%
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-slate-800">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${rarityBarTone[rarity] ?? "from-cyan-300 to-cyan-500"}`}
                           style={{
-                            width: `${Math.max(0, Math.min(100, pct))}%`,
+                            width: `${displayPct}%`,
                           }}
                         />
                       </div>
@@ -348,6 +418,12 @@ export function ShopPage() {
                 Aucun taux disponible.
               </p>
             ) : null}
+
+            <p className="mt-3 text-xs text-slate-400">
+              {dropRatesModalView === "CARD"
+                ? "Par carte: probabilite qu'une carte tiree soit de cette rarete."
+                : `Par booster: probabilite d'obtenir au moins une carte de la rarete sur ${BOOSTER_DRAW_COUNT} tirages.`}
+            </p>
 
             <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-[11px] uppercase tracking-wide text-slate-500">
               <span>Data live</span>
