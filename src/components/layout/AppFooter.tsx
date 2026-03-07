@@ -46,11 +46,13 @@ const sitemapSections = [
 ] as const;
 
 export function AppFooter() {
+  const logoSrc = `${import.meta.env.BASE_URL}logo-complete.png`;
+
   return (
     <footer className="relative mt-8 border-t border-slate-800/70 bg-slate-950/70 px-4 py-8 backdrop-blur-xl">
       <div className="relative mx-auto grid w-full max-w-7xl gap-16 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-3">
-          <img src="/logo-complete.png" alt="Outplay" className="h-8 w-auto" />
+          <img src={logoSrc} alt="Outplay" className="h-8 w-auto" />
           <p className="max-w-sm text-sm leading-relaxed text-slate-300">
             Outplay est un hub communautaire de collection esport. Le projet
             evolue en continu avec de nouvelles cartes, economies et

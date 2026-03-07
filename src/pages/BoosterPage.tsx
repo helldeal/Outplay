@@ -197,6 +197,8 @@ function FutReveal({
 /* ─────────────────────── Card Back ─────────────────────── */
 
 function CardBack() {
+  const logoIconSrc = `${import.meta.env.BASE_URL}logo-icon.png`;
+
   return (
     <article className="card-content relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
       <div className="relative overflow-hidden rounded-lg">
@@ -206,7 +208,7 @@ function CardBack() {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-500/40 bg-gradient-to-br from-cyan-500/15 to-purple-500/15 p-2.5">
               <img
-                src="/logo-icon.png"
+                src={logoIconSrc}
                 alt="Outplay"
                 className="h-full w-full object-contain opacity-85"
               />

@@ -8,11 +8,16 @@ import { queryClient } from "./lib/query-client";
 import App from "./App.tsx";
 import { AuthProvider } from "./auth/AuthProvider";
 
+const routerBasename =
+  import.meta.env.BASE_URL === "/"
+    ? "/"
+    : import.meta.env.BASE_URL.replace(/\/$/, "");
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
           <App />
         </BrowserRouter>
       </AuthProvider>

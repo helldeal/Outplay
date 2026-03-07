@@ -81,6 +81,8 @@ export function AppHeader({
   onLogout,
   initials,
 }: AppHeaderProps) {
+  const logoSrc = `${import.meta.env.BASE_URL}logo-complete.png`;
+
   const previousBalanceRef = useRef(pcBalance);
   const displayBalanceRef = useRef(pcBalance);
   const mountedAtRef = useRef(performance.now());
@@ -262,7 +264,7 @@ export function AppHeader({
             className="group inline-flex items-center rounded-xl px-2 py-1 transition hover:bg-slate-800/50"
           >
             <img
-              src="/logo-complete.png"
+              src={logoSrc}
               alt="Outplay"
               className="h-8 w-auto drop-shadow-[0_0_14px_rgba(56,189,248,0.35)] transition group-hover:brightness-110"
             />
