@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { resolveAssetUrl } from "../utils/asset-url";
 import type { Booster, Series } from "../types";
 
 async function fetchSeriesList(): Promise<Series[]> {
@@ -12,7 +13,10 @@ async function fetchSeriesList(): Promise<Series[]> {
     throw error;
   }
 
-  return (data ?? []) as Series[];
+  return ((data ?? []) as Series[]).map((series) => ({
+    ...series,
+    coverImage: resolveAssetUrl(series.coverImage),
+  }));
 }
 
 async function fetchSeriesBySlug(slug: string): Promise<Series> {
@@ -26,7 +30,10 @@ async function fetchSeriesBySlug(slug: string): Promise<Series> {
     throw error;
   }
 
-  return data as Series;
+  return {
+    ...(data as Series),
+    coverImage: resolveAssetUrl((data as Series).coverImage),
+  };
 }
 
 async function fetchBoosters(
@@ -49,7 +56,10 @@ async function fetchBoosters(
     throw error;
   }
 
-  return (data ?? []) as Booster[];
+  return ((data ?? []) as Booster[]).map((booster) => ({
+    ...booster,
+    image_url: resolveAssetUrl(booster.image_url),
+  }));
 }
 
 export function useSeriesBySlugQuery(slug: string) {

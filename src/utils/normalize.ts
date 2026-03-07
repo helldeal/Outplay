@@ -4,6 +4,7 @@ import type {
   Rarity,
   UserCardRow,
 } from "../types";
+import { resolveAssetUrl } from "./asset-url";
 
 type JoinedEntity = LinkedEntity | LinkedEntity[] | null | undefined;
 
@@ -17,6 +18,21 @@ function takeJoined(value: JoinedEntity): LinkedEntity | null {
   }
 
   return value;
+}
+
+function normalizeLinkedEntity(
+  entity: LinkedEntity | null,
+): LinkedEntity | null {
+  if (!entity) {
+    return null;
+  }
+
+  return {
+    ...entity,
+    logoUrl: entity.logoUrl ? resolveAssetUrl(entity.logoUrl) : entity.logoUrl,
+    iconUrl: entity.iconUrl ? resolveAssetUrl(entity.iconUrl) : entity.iconUrl,
+    flagUrl: entity.flagUrl ? resolveAssetUrl(entity.flagUrl) : entity.flagUrl,
+  };
 }
 
 interface RawCard {
@@ -38,8 +54,8 @@ interface RawUserCardRow {
 }
 
 export function normalizeCard(rawCard: RawCard): CardWithRelations {
-  const game = takeJoined(rawCard.game);
-  const nationality = takeJoined(rawCard.nationality);
+  const game = normalizeLinkedEntity(takeJoined(rawCard.game));
+  const nationality = normalizeLinkedEntity(takeJoined(rawCard.nationality));
 
   if (!game || !nationality) {
     throw new Error("Card relation payload is incomplete");
@@ -49,12 +65,12 @@ export function normalizeCard(rawCard: RawCard): CardWithRelations {
     id: rawCard.id,
     name: rawCard.name,
     rarity: rawCard.rarity,
-    imageUrl: rawCard.imageUrl,
+    imageUrl: resolveAssetUrl(rawCard.imageUrl),
     pc_value: rawCard.pc_value,
     game,
-    team: takeJoined(rawCard.team),
+    team: normalizeLinkedEntity(takeJoined(rawCard.team)),
     nationality,
-    role: takeJoined(rawCard.role),
+    role: normalizeLinkedEntity(takeJoined(rawCard.role)),
   };
 }
 

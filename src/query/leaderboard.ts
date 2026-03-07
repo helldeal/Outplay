@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { resolveAssetUrl } from "../utils/asset-url";
 
 /* ── helpers ── */
 
@@ -110,7 +111,7 @@ function mapDropRow(row: RecentDropRpcRow): RecentDrop {
     bestCardId: row.best_card_id,
     bestCardName: row.best_card_name,
     bestCardRarity: row.best_card_rarity,
-    bestCardImageUrl: row.best_card_image_url,
+    bestCardImageUrl: resolveAssetUrl(row.best_card_image_url),
     bestCardPcValue: row.best_card_pc_value ?? 0,
   };
 }

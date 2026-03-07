@@ -46,6 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const userId = user?.id;
+  const authRedirectOverride = import.meta.env.VITE_AUTH_REDIRECT_URL?.trim();
+  const appBasePath =
+    import.meta.env.BASE_URL === "/"
+      ? ""
+      : import.meta.env.BASE_URL.replace(/\/$/, "");
 
   const invalidateUserQueries = useCallback(async () => {
     if (!userId) {
@@ -230,7 +235,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const redirectTo = `${window.location.origin}/collection`;
+    const redirectTo =
+      authRedirectOverride && authRedirectOverride.length > 0
+        ? authRedirectOverride
+        : new URL(
+            `${appBasePath}/collection`.replace(/\/+/g, "/"),
+            window.location.origin,
+          ).toString();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: { redirectTo },
@@ -239,7 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       throw error;
     }
-  }, []);
+  }, [appBasePath, authRedirectOverride]);
 
   const logout = useCallback(async () => {
     if (!isSupabaseConfigured) {

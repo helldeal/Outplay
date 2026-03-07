@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { normalizeCard } from "../utils/normalize";
+import { resolveAssetUrl } from "../utils/asset-url";
 import { supabase } from "../lib/supabase";
 import type { CardWithRelations, Series } from "../types";
 
@@ -184,7 +185,7 @@ async function fetchShopBoosters() {
         name: row.name,
         type: row.type,
         price_pc: row.price_pc,
-        image_url: row.image_url,
+        image_url: resolveAssetUrl(row.image_url),
         drop_rates:
           row.drop_rates && typeof row.drop_rates === "object"
             ? (row.drop_rates as Record<string, number>)
@@ -195,7 +196,7 @@ async function fetchShopBoosters() {
           name: relation.name,
           slug: relation.slug,
           code: relation.code,
-          coverImage: relation.coverImage,
+          coverImage: resolveAssetUrl(relation.coverImage),
         },
       } as ShopBoosterWithSeries;
     })

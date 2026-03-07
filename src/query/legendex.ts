@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { rarityRank } from "../utils/rarity";
+import { normalizeCard } from "../utils/normalize";
 import { supabase } from "../lib/supabase";
 import type { CardWithRelations, Series } from "../types";
 
@@ -42,7 +43,9 @@ export function useLegendexCardsQuery(selectedSeriesId?: string) {
       const rows = (data ?? []) as unknown as (CardWithRelations & {
         series_id: string;
       })[];
-      return rows.sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity));
+      return rows
+        .map((row) => normalizeCard(row as never))
+        .sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity));
     },
   });
 }
