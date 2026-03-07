@@ -181,38 +181,49 @@ export function ShopPage() {
                 </h2>
               </div>
 
-              <div className="relative grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {entry.boosters.map((booster) => {
                   const tone = resolveBoosterTone(booster.type);
+                  const coverUrl = booster.image_url ?? entry.coverImage ?? "";
 
                   return (
                     <article
                       key={booster.id}
-                      className={`group overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/70 shadow-[0_10px_30px_rgba(2,6,23,0.4)] transition hover:-translate-y-1 ${tone.shopCardHoverClass}`}
+                      className={`group relative isolate flex h-full flex-col overflow-hidden rounded-[18px] border border-slate-700/80 bg-[linear-gradient(160deg,rgba(15,23,42,0.92),rgba(2,6,23,0.96))] p-2.5 shadow-[0_12px_30px_rgba(2,6,23,0.48)] transition duration-300 hover:-translate-y-0.5 ${tone.shopCardHoverClass}`}
                     >
-                      <div className="p-4 pb-0">
-                        {(booster.image_url ?? entry.coverImage) ? (
-                          <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800">
+                      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_0%,rgba(255,255,255,0.1),transparent_36%),linear-gradient(130deg,rgba(255,255,255,0.06),transparent_42%,rgba(255,255,255,0.02))] opacity-70" />
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                        <div className="absolute -left-1/2 top-0 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-90 transition-transform duration-700 group-hover:translate-x-[420%]" />
+                      </div>
+
+                      <div className="relative rounded-xl border border-slate-700/80 bg-slate-950/85 p-1.5 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.1)]">
+                        {coverUrl ? (
+                          <div className="overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/90">
                             <div className="aspect-[3/4]">
                               <img
-                                src={
-                                  booster.image_url ?? entry.coverImage ?? ""
-                                }
+                                src={coverUrl}
                                 alt={booster.name}
-                                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                className="h-full w-full object-cover"
                               />
                             </div>
                           </div>
                         ) : (
-                          <div className="aspect-[3/4] rounded-lg border border-slate-700 bg-slate-800" />
+                          <div className="aspect-[3/4] rounded-xl border border-slate-700/70 bg-slate-900/80" />
                         )}
                       </div>
-                      <div className="space-y-2 p-4">
-                        <h3 className="text-lg font-black uppercase italic text-white">
+
+                      <div className="relative mt-2.5 flex grow flex-col space-y-2 px-1 pb-1">
+                        <h3 className="line-clamp-1 text-base font-black uppercase italic text-white">
                           {booster.name}
                         </h3>
-                        <BoosterTypeBadge boosterType={booster.type} />
-                        <div className="mt-2 flex gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <BoosterTypeBadge boosterType={booster.type} />
+                          <span className="text-xs font-black uppercase tracking-[0.14em] text-amber-300">
+                            {booster.price_pc} PC
+                          </span>
+                        </div>
+
+                        <div className="mt-auto flex gap-2 pt-2">
                           <button
                             onClick={() => {
                               void openShopBooster(booster);
@@ -228,7 +239,7 @@ export function ShopPage() {
                             ) : (
                               <>
                                 <Gift className="h-4 w-4" />
-                                Acheter {booster.price_pc} PC
+                                Acheter
                               </>
                             )}
                           </button>

@@ -5,8 +5,10 @@ import {
   Heart,
   MessageCircle,
   Rocket,
+  Shield,
   Wrench,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const techStack = [
   { name: "React", logo: "https://cdn.simpleicons.org/react/61DAFB" },
@@ -144,6 +146,34 @@ export function AboutPage() {
           </p>
         </article>
       </div>
+
+      <section className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/65 px-6 py-8 text-center shadow-[0_24px_80px_rgba(2,6,23,0.65)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(148,163,184,0.12),transparent_32%),radial-gradient(circle_at_90%_0%,rgba(56,189,248,0.1),transparent_26%)]" />
+
+        <div className="relative mx-auto max-w-4xl">
+          <span className="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-slate-950/70 text-slate-300">
+            <Shield className="h-5 w-5" />
+          </span>
+          <h2 className="mt-4 text-2xl font-black text-white">
+            Note Importante
+          </h2>
+          <p className="mx-auto mt-3 max-w-3xl text-base leading-relaxed text-slate-300">
+            Outplay est un projet communautaire non-officiel développé de
+            manière independante. Nous ne sommes pas affiliés, associés,
+            autorisés, approuvés par, ou officiellement lies a Riot Games,
+            Valve, Blizzard, Epic Games ou toute autre organisation. Tous les
+            logos, noms et marques cités appartiennent à leurs propriétaires
+            respectifs.
+          </p>
+
+          <div className="mx-auto mt-7 flex max-w-2xl items-center justify-center gap-6 border-t border-slate-800 pt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <span>© 2026 Outplay</span>
+            <Link to="/privacy" className="transition hover:text-slate-300">
+              Confidentialité
+            </Link>
+          </div>
+        </div>
+      </section>
     </section>
   );
 }

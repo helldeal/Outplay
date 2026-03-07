@@ -75,7 +75,7 @@ export function AppHeader({
   initials,
 }: AppHeaderProps) {
   return (
-    <header className="fixed inset-x-0 top-0 z-[10000] border-b border-slate-800/70 bg-slate-950/70 backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-[995] border-b border-slate-800/70 bg-slate-950/70 backdrop-blur-xl">
       <div className="mx-auto flex w-full items-center justify-between px-16 py-3.5">
         <div className="flex items-center gap-8">
           <Link

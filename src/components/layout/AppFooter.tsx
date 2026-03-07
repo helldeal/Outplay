@@ -1,11 +1,4 @@
-import {
-  Copyright,
-  ExternalLink,
-  Heart,
-  Info,
-  Shield,
-  Sparkles,
-} from "lucide-react";
+import { Copyright, Heart, Info, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const sitemapSections = [
@@ -31,11 +24,22 @@ const sitemapSections = [
     links: [
       {
         href: "https://helldeal.betteruptime.com/",
-        label: "Status Page",
+        label: "Statut Infrastructure",
+        icon: (
+          <span className="relative inline-flex h-3 w-3">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-300 opacity-75" />
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-green-300" />
+          </span>
+        ),
+        toneClass:
+          "border-cyan-300/45 bg-cyan-300/10 text-cyan-100 hover:bg-cyan-300/18 hover:border-cyan-200/70",
       },
       {
         href: "https://buymeacoffee.com/helldeal",
-        label: "Buy Me A Coffee",
+        label: "Soutenir le projet",
+        icon: <Heart className="mt-0.5 h-4 w-4 shrink-0" />,
+        toneClass:
+          "border-amber-300/45 bg-amber-300/10 text-amber-100 hover:bg-amber-300/18 hover:border-amber-200/70",
       },
     ],
   },
@@ -44,14 +48,13 @@ const sitemapSections = [
 export function AppFooter() {
   return (
     <footer className="relative mt-8 border-t border-slate-800/70 bg-slate-950/70 px-4 py-8 backdrop-blur-xl">
-      <div className="relative mx-auto grid w-full max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-1 rounded-full border border-cyan-300/40 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-200">
-            <Sparkles className="h-3.5 w-3.5" />
-            Outplay
-          </p>
-          <p className="text-sm text-slate-300">
-            Hub communautaire de collection esport. Build en continu.
+      <div className="relative mx-auto grid w-full max-w-7xl gap-16 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-3">
+          <img src="/logo-complete.png" alt="Outplay" className="h-8 w-auto" />
+          <p className="max-w-sm text-sm leading-relaxed text-slate-300">
+            Outplay est un hub communautaire de collection esport. Le projet
+            evolue en continu avec de nouvelles cartes, economies et
+            fonctionnalites.
           </p>
         </div>
 
@@ -85,10 +88,15 @@ export function AppFooter() {
                       href={entry.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 transition hover:text-white"
+                      className={
+                        "group flex items-center gap-2 rounded-xl border px-3 py-2 transition " +
+                        entry.toneClass
+                      }
                     >
-                      {entry.label}
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      {entry.icon}
+                      <span className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em]">
+                        {entry.label}
+                      </span>
                     </a>
                   </li>
                 );
@@ -104,29 +112,9 @@ export function AppFooter() {
           Outplay 2026
         </span>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <a
-            href="https://helldeal.betteruptime.com/"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-md border border-cyan-300/45 bg-cyan-300/10 px-2 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-cyan-200 transition hover:bg-cyan-300/20"
-          >
-            <span className="relative inline-flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-cyan-300" />
-            </span>
-            Status infrastructure
-          </a>
-          <a
-            href="https://buymeacoffee.com/helldeal"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-md border border-amber-300/45 bg-amber-300/10 px-2 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-amber-200 transition hover:bg-amber-300/20"
-          >
-            <Heart className="h-3.5 w-3.5" />
-            Soutenir le projet
-          </a>
-        </div>
+        <span className="rounded-lg border border-slate-800/70 bg-slate-900/50 px-3 py-1.5 text-right font-semibold uppercase tracking-[0.08em] text-slate-400">
+          DEV BY <span className="text-amber-200">HellDeal</span> 🫠
+        </span>
       </div>
     </footer>
   );

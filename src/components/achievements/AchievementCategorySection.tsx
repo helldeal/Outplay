@@ -51,12 +51,7 @@ export function AchievementCategorySection({
           );
           const target = Math.max(0, Number(row.target_value ?? 0));
           const current = Math.max(0, Number(row.current_value ?? 0));
-          const progressLabel =
-            target <= 1
-              ? row.unlocked
-                ? "Valide"
-                : "En cours"
-              : `${Math.round(Math.min(current, target))}/${target}`;
+          const progressLabel = `${Math.round(Math.min(current, target) * 100) / 100}/${target}`;
 
           return (
             <article

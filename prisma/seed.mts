@@ -139,6 +139,8 @@ async function clearDatabase() {
   logStep("clearing existing seeded data...");
 
   await prisma.userCard.deleteMany();
+  await prisma.userAchievement.deleteMany();
+  await prisma.loginStreak.deleteMany();
   await prisma.boosterOpening.deleteMany();
   await prisma.booster.deleteMany();
   await prisma.card.deleteMany();
