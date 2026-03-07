@@ -31,6 +31,7 @@ interface CardEntry {
 const CARD_W_MAX = 240;
 const CARD_W_MIN = 140;
 const CARD_GAP = 14;
+const PENDING_PC_DELTA_STORAGE_KEY = "outplay:pendingPcDelta";
 
 /* ─────────────────────── Helpers ─────────────────────── */
 
@@ -235,6 +236,7 @@ export function BoosterPage() {
   const opening =
     (location.state as BoosterOpeningNavigationState | null) ?? null;
   const pcGained = opening?.pcGained ?? 0;
+  const chargedPc = opening?.chargedPc ?? 0;
   const legendexSeriesParam = opening?.seriesSlug ?? opening?.seriesCode;
 
   /* Build sorted card entries: low rarity → high rarity for dramatic reveal */
@@ -288,6 +290,7 @@ export function BoosterPage() {
   }, [count, cardRevealed]);
 
   const allDone = count > 0 && flipped.size + futRevealed.size >= count;
+  const netPcDelta = pcGained - chargedPc;
 
   /* Handlers */
   const onCardClick = useCallback(
@@ -318,6 +321,17 @@ export function BoosterPage() {
       setFutIdx(null);
     }
   }, [futIdx]);
+
+  const onContinue = useCallback(() => {
+    if (netPcDelta !== 0) {
+      window.sessionStorage.setItem(
+        PENDING_PC_DELTA_STORAGE_KEY,
+        String(netPcDelta),
+      );
+    }
+
+    navigate(-1);
+  }, [navigate, netPcDelta]);
 
   /* ─── Empty state ─── */
   if (!opening || count === 0) {
@@ -539,7 +553,11 @@ export function BoosterPage() {
               initial={{ y: 30, scale: 0.96, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
               exit={{ y: 16, scale: 0.98, opacity: 0 }}
-              transition={{ duration: 0.35, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                duration: 0.35,
+                delay: 0.12,
+                ease: [0.22, 1, 0.36, 1],
+              }}
             >
               {pcGained > 0 && (
                 <motion.span
@@ -569,7 +587,7 @@ export function BoosterPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => navigate(-1)}
+                  onClick={onContinue}
                   className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
                 >
                   Continuer

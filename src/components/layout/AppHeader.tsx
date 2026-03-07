@@ -12,7 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
-import type { RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 type NavClassParams = { isActive: boolean };
 
@@ -49,6 +49,13 @@ type AppHeaderProps = {
   initials: string;
 };
 
+const BALANCE_TICK_MS = 780;
+const DELTA_BADGE_MS = 1400;
+const INITIAL_SYNC_GRACE_MS = 5000;
+const PENDING_PC_DELTA_STORAGE_KEY = "outplay:pendingPcDelta";
+
+const pcFormatter = new Intl.NumberFormat("fr-FR");
+
 export function AppHeader({
   isAuthenticated,
   unseenAchievementCount,
@@ -74,6 +81,178 @@ export function AppHeader({
   onLogout,
   initials,
 }: AppHeaderProps) {
+  const previousBalanceRef = useRef(pcBalance);
+  const displayBalanceRef = useRef(pcBalance);
+  const mountedAtRef = useRef(performance.now());
+  const hasSyncedInitialFetchRef = useRef(false);
+  const pendingDeltaRef = useRef<number | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const hideDeltaTimeoutRef = useRef<number | null>(null);
+
+  const [displayBalance, setDisplayBalance] = useState(pcBalance);
+  const [balanceDelta, setBalanceDelta] = useState(0);
+  const [deltaBadgeKey, setDeltaBadgeKey] = useState(0);
+  const [isRollingBalance, setIsRollingBalance] = useState(false);
+
+  const startBalanceAnimation = (
+    fromBalance: number,
+    toBalance: number,
+    deltaForBadge: number,
+    onComplete?: () => void,
+  ) => {
+    if (fromBalance === toBalance) {
+      setDisplayBalance(toBalance);
+      displayBalanceRef.current = toBalance;
+      setIsRollingBalance(false);
+      onComplete?.();
+      return;
+    }
+
+    if (frameRef.current !== null) {
+      window.cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+
+    setBalanceDelta(deltaForBadge);
+    setDeltaBadgeKey((value) => value + 1);
+    setIsRollingBalance(true);
+
+    if (hideDeltaTimeoutRef.current !== null) {
+      window.clearTimeout(hideDeltaTimeoutRef.current);
+    }
+
+    hideDeltaTimeoutRef.current = window.setTimeout(() => {
+      setBalanceDelta(0);
+      hideDeltaTimeoutRef.current = null;
+    }, DELTA_BADGE_MS);
+
+    const delta = toBalance - fromBalance;
+    const startAt = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startAt) / BALANCE_TICK_MS, 1);
+      const easedProgress = 1 - (1 - progress) ** 3;
+      const nextValue = Math.round(fromBalance + delta * easedProgress);
+
+      setDisplayBalance(nextValue);
+      displayBalanceRef.current = nextValue;
+
+      if (progress < 1) {
+        frameRef.current = window.requestAnimationFrame(tick);
+      } else {
+        setDisplayBalance(toBalance);
+        displayBalanceRef.current = toBalance;
+        setIsRollingBalance(false);
+        frameRef.current = null;
+        onComplete?.();
+      }
+    };
+
+    frameRef.current = window.requestAnimationFrame(tick);
+  };
+
+  useEffect(() => {
+    const rawPendingDelta = window.sessionStorage.getItem(
+      PENDING_PC_DELTA_STORAGE_KEY,
+    );
+
+    if (!rawPendingDelta) {
+      return;
+    }
+
+    const parsedDelta = Number(rawPendingDelta);
+    if (!Number.isFinite(parsedDelta) || parsedDelta === 0) {
+      window.sessionStorage.removeItem(PENDING_PC_DELTA_STORAGE_KEY);
+      return;
+    }
+
+    pendingDeltaRef.current = parsedDelta;
+  }, []);
+
+  useEffect(() => {
+    if (pendingDeltaRef.current !== null && pcBalance > 0) {
+      const pendingDelta = pendingDeltaRef.current;
+      const fromBalance = pcBalance - pendingDelta;
+
+      setDisplayBalance(fromBalance);
+      displayBalanceRef.current = fromBalance;
+      previousBalanceRef.current = pcBalance;
+      hasSyncedInitialFetchRef.current = true;
+
+      startBalanceAnimation(fromBalance, pcBalance, pendingDelta, () => {
+        pendingDeltaRef.current = null;
+        window.sessionStorage.removeItem(PENDING_PC_DELTA_STORAGE_KEY);
+      });
+      return;
+    }
+
+    const previousBalance = previousBalanceRef.current;
+
+    if (pcBalance === previousBalance) {
+      setDisplayBalance(pcBalance);
+      displayBalanceRef.current = pcBalance;
+      setIsRollingBalance(false);
+      return;
+    }
+
+    const shouldSkipInitialSyncAnimation =
+      !hasSyncedInitialFetchRef.current &&
+      previousBalance === 0 &&
+      performance.now() - mountedAtRef.current < INITIAL_SYNC_GRACE_MS;
+
+    if (shouldSkipInitialSyncAnimation) {
+      setDisplayBalance(pcBalance);
+      displayBalanceRef.current = pcBalance;
+      previousBalanceRef.current = pcBalance;
+      hasSyncedInitialFetchRef.current = true;
+      setIsRollingBalance(false);
+      return;
+    }
+
+    hasSyncedInitialFetchRef.current = true;
+
+    const delta = pcBalance - previousBalance;
+    const fromBalance = displayBalanceRef.current;
+
+    startBalanceAnimation(fromBalance, pcBalance, delta);
+    previousBalanceRef.current = pcBalance;
+
+    return () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+
+      setIsRollingBalance(false);
+    };
+  }, [pcBalance]);
+
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+      if (hideDeltaTimeoutRef.current !== null) {
+        window.clearTimeout(hideDeltaTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
+  const formattedBalance = useMemo(
+    () => pcFormatter.format(displayBalance),
+    [displayBalance],
+  );
+
+  const formattedDelta = useMemo(() => {
+    if (balanceDelta === 0) {
+      return "";
+    }
+
+    const sign = balanceDelta > 0 ? "+" : "-";
+    return `${sign}${pcFormatter.format(Math.abs(balanceDelta))}`;
+  }, [balanceDelta]);
+
   return (
     <header className="fixed inset-x-0 top-0 z-[995] border-b border-slate-800/70 bg-slate-950/70 backdrop-blur-xl">
       <div className="mx-auto flex w-full items-center justify-between px-16 py-3.5">
@@ -170,9 +349,29 @@ export function AppHeader({
                 {streakButtonLabel}
               </button>
 
-              <div className="flex items-center gap-2 px-1 py-2 text-sm font-semibold text-slate-100">
+              <div className="relative flex items-center gap-2 px-1 py-2 text-sm font-semibold text-slate-100">
                 <Coins className="h-4 w-4 text-amber-300" />
-                <span>{pcBalance} PC</span>
+
+                {balanceDelta !== 0 ? (
+                  <span
+                    key={deltaBadgeKey}
+                    className={`absolute -top-3 right-0 animate-[pc-delta-float_1.25s_ease-out_forwards] text-xs font-bold tabular-nums ${
+                      balanceDelta > 0 ? "text-emerald-300" : "text-rose-300"
+                    }`}
+                  >
+                    {formattedDelta}
+                  </span>
+                ) : null}
+
+                <span
+                  className={`tabular-nums transition-all duration-300 ${
+                    isRollingBalance
+                      ? "scale-[1.03] text-cyan-100 drop-shadow-[0_0_12px_rgba(56,189,248,0.35)]"
+                      : ""
+                  }`}
+                >
+                  {formattedBalance} PC
+                </span>
               </div>
 
               <div className="relative" ref={profileMenuRef}>
@@ -256,6 +455,25 @@ export function AppHeader({
           ) : null}
         </NavLink>
       </div>
+
+      <style>{`
+        @keyframes pc-delta-float {
+          0% {
+            opacity: 0;
+            transform: translateY(4px);
+          }
+          20% {
+            opacity: 1;
+          }
+          80% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+        }
+      `}</style>
     </header>
   );
 }
