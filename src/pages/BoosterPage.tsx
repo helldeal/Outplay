@@ -528,35 +528,54 @@ export function BoosterPage() {
       <AnimatePresence>
         {allDone && (
           <motion.footer
-            className="relative flex flex-col items-center gap-4 px-6 pb-8 pt-2"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-6 pb-8 pt-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
           >
-            {pcGained > 0 && (
-              <span className="flex items-center gap-1.5 text-sm text-emerald-300">
-                <Sparkles className="h-4 w-4" />+{pcGained} PC (doublons)
-              </span>
-            )}
-            <div className="flex gap-3">
-              <Link
-                to={
-                  legendexSeriesParam
-                    ? `/legendex?series=${encodeURIComponent(legendexSeriesParam)}`
-                    : "/legendex"
-                }
-                className="rounded-lg border border-slate-700 px-5 py-2.5 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+            <motion.div
+              className="pointer-events-auto flex flex-col items-center gap-4 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-5 py-3 backdrop-blur-md"
+              initial={{ y: 30, scale: 0.96, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: 16, scale: 0.98, opacity: 0 }}
+              transition={{ duration: 0.35, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {pcGained > 0 && (
+                <motion.span
+                  className="flex items-center gap-1.5 text-sm text-emerald-300"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28, duration: 0.28 }}
+                >
+                  <Sparkles className="h-4 w-4" />+{pcGained} PC (doublons)
+                </motion.span>
+              )}
+              <motion.div
+                className="flex gap-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.34, duration: 0.3 }}
               >
-                Legendex
-              </Link>
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-              >
-                Continuer
-              </button>
-            </div>
+                <Link
+                  to={
+                    legendexSeriesParam
+                      ? `/legendex?series=${encodeURIComponent(legendexSeriesParam)}`
+                      : "/legendex"
+                  }
+                  className="rounded-lg border border-slate-700 px-5 py-2.5 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+                >
+                  Legendex
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                >
+                  Continuer
+                </button>
+              </motion.div>
+            </motion.div>
           </motion.footer>
         )}
       </AnimatePresence>

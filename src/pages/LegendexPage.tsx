@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
-import { PageLoading } from "../components/PageLoading";
 import { useImagePreload } from "../hooks/useImagePreload";
 import {
   useLegendexCardsQuery,
@@ -77,17 +76,11 @@ export function LegendexPage() {
     return Math.round((ownedCount / totalCount) * 100);
   }, [ownedCount, totalCount]);
 
-  const isPageLoading =
-    seriesQuery.isLoading ||
-    (Boolean(selectedSeriesId) && cardsQuery.isLoading) ||
-    (Boolean(user?.id && selectedSeriesId) && ownedQuery.isLoading) ||
-    !areCardAssetsReady;
-
-  if (isPageLoading) {
-    return (
-      <PageLoading title="Legendex" subtitle="Chargement du Legendex..." />
-    );
-  }
+  const isSeriesLoading = seriesQuery.isLoading;
+  const isCardsLoading = Boolean(selectedSeriesId) && cardsQuery.isLoading;
+  const isOwnedLoading =
+    Boolean(user?.id && selectedSeriesId) && ownedQuery.isLoading;
+  const isGridLoading = isCardsLoading || !areCardAssetsReady;
 
   if (seriesQuery.error || cardsQuery.error || ownedQuery.error) {
     return (
@@ -123,6 +116,7 @@ export function LegendexPage() {
             id="series-select"
             value={selectedSeriesId}
             onChange={(event) => setSelectedSeriesId(event.target.value)}
+            disabled={isSeriesLoading || (seriesQuery.data ?? []).length === 0}
             className="rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-semibold text-slate-100 shadow-[0_6px_18px_rgba(2,6,23,0.35)]"
           >
             {(seriesQuery.data ?? []).map((series) => (
@@ -131,6 +125,11 @@ export function LegendexPage() {
               </option>
             ))}
           </select>
+          {isSeriesLoading && (
+            <span className="text-xs text-slate-400">
+              Chargement des séries...
+            </span>
+          )}
         </div>
       </div>
 
@@ -142,7 +141,9 @@ export function LegendexPage() {
               Progression série
             </p>
             <h2 className="mt-1 text-lg font-black uppercase italic text-white">
-              {selectedSeries?.name ?? "Série"}
+              {isCardsLoading
+                ? "Chargement..."
+                : (selectedSeries?.name ?? "Série")}
             </h2>
           </div>
           <div className="text-right">
@@ -150,7 +151,7 @@ export function LegendexPage() {
               Complétion
             </p>
             <p className="text-3xl font-black tracking-tight text-cyan-300">
-              {completion}%
+              {isOwnedLoading ? "..." : `${completion}%`}
             </p>
           </div>
         </div>
@@ -167,22 +168,39 @@ export function LegendexPage() {
           <span className="font-semibold text-white"> {totalCount}</span> cartes
           possedees
         </p>
+        {isOwnedLoading && (
+          <p className="mt-1 text-xs text-slate-400">
+            Synchronisation de ta collection...
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {cards.map((card) => {
-          const isOwned = owned.has(card.id);
-          const obtainedAt = owned.get(card.id);
-          return (
-            <CardTile
-              key={card.id}
-              card={card}
-              isOwned={isOwned}
-              obtainedAt={obtainedAt}
-            />
-          );
-        })}
+        {isGridLoading
+          ? Array.from({ length: 10 }).map((_, index) => (
+              <div
+                key={index}
+                className="aspect-[3/4] animate-pulse rounded-xl border border-slate-800 bg-slate-900/65"
+              />
+            ))
+          : cards.map((card) => {
+              const isOwned = owned.has(card.id);
+              const obtainedAt = owned.get(card.id);
+              return (
+                <CardTile
+                  key={card.id}
+                  card={card}
+                  isOwned={isOwned}
+                  obtainedAt={obtainedAt}
+                />
+              );
+            })}
       </div>
+      {!isGridLoading && cards.length === 0 && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4 text-sm text-slate-400">
+          Aucune carte disponible pour cette série.
+        </div>
+      )}
     </section>
   );
 }

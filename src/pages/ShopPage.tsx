@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Gift, Info, LoaderCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
-import { PageLoading } from "../components/PageLoading";
 import {
   BoosterTypeBadge,
   resolveBoosterTone,
@@ -66,6 +65,7 @@ export function ShopPage() {
     [boosters],
   );
   const { isReady: areBoosterAssetsReady } = useImagePreload(preloadUrls);
+  const isBoostersLoading = boostersQuery.isLoading;
   const dropRatesBooster =
     dropRatesModalBoosterId === null
       ? null
@@ -154,12 +154,6 @@ export function ShopPage() {
     }
   };
 
-  if (boostersQuery.isLoading || !areBoosterAssetsReady) {
-    return (
-      <PageLoading title="Boutique" subtitle="Chargement de la boutique…" />
-    );
-  }
-
   if (boostersQuery.error) {
     return (
       <p className="text-sm text-rose-300">
@@ -187,115 +181,134 @@ export function ShopPage() {
         ) : null}
 
         <div className="space-y-8">
-          {Array.from(boostersBySeries.entries()).map(([seriesId, entry]) => (
-            <div
-              key={seriesId}
-              className="relative overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/55 p-4 shadow-[0_12px_38px_rgba(2,6,23,0.45)]"
-            >
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(56,189,248,0.08),transparent_35%,rgba(251,191,36,0.08))]" />
-
-              <div className="relative mb-4 space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
-                  Series {entry.code}
-                </p>
-                <h2 className="text-xl font-black uppercase italic text-white">
-                  {entry.name}
-                </h2>
-              </div>
-
-              <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {entry.boosters.map((booster) => {
-                  const tone = resolveBoosterTone(booster.type);
-                  const coverUrl = booster.image_url ?? entry.coverImage ?? "";
-                  const canAfford =
-                    (profile?.pc_balance ?? 0) >= booster.price_pc;
-
-                  return (
-                    <article
-                      key={booster.id}
-                      className={`group relative isolate flex h-full flex-col overflow-hidden rounded-[18px] border border-slate-700/80 bg-[linear-gradient(160deg,rgba(15,23,42,0.92),rgba(2,6,23,0.96))] p-2.5 shadow-[0_12px_30px_rgba(2,6,23,0.48)] transition duration-300 hover:-translate-y-0.5 ${tone.shopCardHoverClass}`}
-                    >
-                      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_0%,rgba(255,255,255,0.1),transparent_36%),linear-gradient(130deg,rgba(255,255,255,0.06),transparent_42%,rgba(255,255,255,0.02))] opacity-70" />
-                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                        <div className="absolute -left-1/2 top-0 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-90 transition-transform duration-700 group-hover:translate-x-[420%]" />
-                      </div>
-
-                      <div className="relative rounded-xl border border-slate-700/80 bg-slate-950/85 p-1.5 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.1)]">
-                        {coverUrl ? (
-                          <div className="overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/90">
-                            <div className="aspect-[3/4]">
-                              <img
-                                src={coverUrl}
-                                alt={booster.name}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="aspect-[3/4] rounded-xl border border-slate-700/70 bg-slate-900/80" />
-                        )}
-                      </div>
-
-                      <div className="relative mt-2.5 flex grow flex-col space-y-2 px-1 pb-1">
-                        <h3 className="line-clamp-1 text-base font-black uppercase italic text-white">
-                          {booster.name}
-                        </h3>
-                        <div className="flex items-center justify-between gap-2">
-                          <BoosterTypeBadge boosterType={booster.type} />
-                          <span className="text-xs font-black uppercase tracking-[0.14em] text-amber-300">
-                            {booster.price_pc} PC
-                          </span>
-                        </div>
-
-                        <div className="mt-auto flex gap-2 pt-2">
-                          <button
-                            onClick={() => {
-                              void openShopBooster(booster);
-                            }}
-                            disabled={
-                              !user || openingBoosterId !== null || !canAfford
-                            }
-                            title={
-                              canAfford
-                                ? "Ouvrir ce booster"
-                                : `PC insuffisants (${booster.price_pc} requis)`
-                            }
-                            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${tone.shopBuyButtonClass}`}
-                          >
-                            {openingBoosterId === booster.id ? (
-                              <>
-                                <LoaderCircle className="h-4 w-4 animate-spin" />
-                                Opening...
-                              </>
-                            ) : (
-                              <>
-                                <Gift className="h-4 w-4" />
-                                {canAfford ? "Acheter" : "PC insuffisants"}
-                              </>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setDropRatesModalView("CARD");
-                              setDropRatesModalBoosterId(booster.id);
-                            }}
-                            className="inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800/90 px-2.5 py-2 text-slate-200 transition hover:border-cyan-400/70 hover:bg-slate-700 hover:text-cyan-100"
-                            aria-label={`Informations des taux pour ${booster.name}`}
-                            title="Informations des taux"
-                          >
-                            <Info className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+          {isBoostersLoading && (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="aspect-[3/4] animate-pulse rounded-2xl border border-slate-800 bg-slate-900/60"
+                />
+              ))}
             </div>
-          ))}
+          )}
+
+          {!isBoostersLoading &&
+            Array.from(boostersBySeries.entries()).map(([seriesId, entry]) => (
+              <div
+                key={seriesId}
+                className="relative overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/55 p-4 shadow-[0_12px_38px_rgba(2,6,23,0.45)]"
+              >
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(56,189,248,0.08),transparent_35%,rgba(251,191,36,0.08))]" />
+
+                <div className="relative mb-4 space-y-1">
+                  <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
+                    Series {entry.code}
+                  </p>
+                  <h2 className="text-xl font-black uppercase italic text-white">
+                    {entry.name}
+                  </h2>
+                </div>
+
+                <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {entry.boosters.map((booster) => {
+                    const tone = resolveBoosterTone(booster.type);
+                    const coverUrl =
+                      booster.image_url ?? entry.coverImage ?? "";
+                    const canAfford =
+                      (profile?.pc_balance ?? 0) >= booster.price_pc;
+
+                    return (
+                      <article
+                        key={booster.id}
+                        className={`group relative isolate flex h-full flex-col overflow-hidden rounded-[18px] border border-slate-700/80 bg-[linear-gradient(160deg,rgba(15,23,42,0.92),rgba(2,6,23,0.96))] p-2.5 shadow-[0_12px_30px_rgba(2,6,23,0.48)] transition duration-300 hover:-translate-y-0.5 ${tone.shopCardHoverClass}`}
+                      >
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_0%,rgba(255,255,255,0.1),transparent_36%),linear-gradient(130deg,rgba(255,255,255,0.06),transparent_42%,rgba(255,255,255,0.02))] opacity-70" />
+                        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                          <div className="absolute -left-1/2 top-0 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-90 transition-transform duration-700 group-hover:translate-x-[420%]" />
+                        </div>
+
+                        <div className="relative rounded-xl border border-slate-700/80 bg-slate-950/85 p-1.5 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.1)]">
+                          {coverUrl ? (
+                            <div className="overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/90">
+                              <div className="aspect-[3/4]">
+                                <img
+                                  src={coverUrl}
+                                  alt={booster.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="aspect-[3/4] rounded-xl border border-slate-700/70 bg-slate-900/80" />
+                          )}
+                        </div>
+
+                        <div className="relative mt-2.5 flex grow flex-col space-y-2 px-1 pb-1">
+                          <h3 className="line-clamp-1 text-base font-black uppercase italic text-white">
+                            {booster.name}
+                          </h3>
+                          <div className="flex items-center justify-between gap-2">
+                            <BoosterTypeBadge boosterType={booster.type} />
+                            <span className="text-xs font-black uppercase tracking-[0.14em] text-amber-300">
+                              {booster.price_pc} PC
+                            </span>
+                          </div>
+
+                          <div className="mt-auto flex gap-2 pt-2">
+                            <button
+                              onClick={() => {
+                                void openShopBooster(booster);
+                              }}
+                              disabled={
+                                !user || openingBoosterId !== null || !canAfford
+                              }
+                              title={
+                                canAfford
+                                  ? "Ouvrir ce booster"
+                                  : `PC insuffisants (${booster.price_pc} requis)`
+                              }
+                              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${tone.shopBuyButtonClass}`}
+                            >
+                              {openingBoosterId === booster.id ? (
+                                <>
+                                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                                  Opening...
+                                </>
+                              ) : (
+                                <>
+                                  <Gift className="h-4 w-4" />
+                                  {canAfford ? "Acheter" : "PC insuffisants"}
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDropRatesModalView("CARD");
+                                setDropRatesModalBoosterId(booster.id);
+                              }}
+                              className="inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800/90 px-2.5 py-2 text-slate-200 transition hover:border-cyan-400/70 hover:bg-slate-700 hover:text-cyan-100"
+                              aria-label={`Informations des taux pour ${booster.name}`}
+                              title="Informations des taux"
+                            >
+                              <Info className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+          {!isBoostersLoading && !areBoosterAssetsReady && (
+            <p className="text-xs text-slate-400">
+              Préchargement des visuels en cours...
+            </p>
+          )}
         </div>
 
-        {boosters.length === 0 ? (
+        {!isBoostersLoading && boosters.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400">
             Aucun booster achetable disponible.
           </div>

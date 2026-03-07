@@ -11,10 +11,6 @@ export function AchievementToasts({
 }: {
   toasts: AchievementToastItem[];
 }) {
-  if (toasts.length === 0) {
-    return null;
-  }
-
   return (
     <div className="pointer-events-none fixed right-4 top-20 z-[10020] flex w-[min(92vw,360px)] flex-col gap-2">
       <AnimatePresence initial={false}>
@@ -22,10 +18,10 @@ export function AchievementToasts({
           <motion.article
             key={toast.id}
             layout
-            initial={{ opacity: 0, x: 40, scale: 0.92, filter: "blur(4px)" }}
+            initial={{ opacity: 0, x: 110, scale: 0.96, filter: "blur(4px)" }}
             animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, x: 56, scale: 0.94, filter: "blur(5px)" }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, x: 130, scale: 0.96, filter: "blur(5px)" }}
+            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
             className="pointer-events-auto relative overflow-hidden rounded-2xl border border-amber-300/45 bg-slate-900/95 p-3.5 shadow-[0_18px_40px_rgba(2,6,23,0.65)] backdrop-blur"
           >
             <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-amber-400/20 blur-2xl" />
