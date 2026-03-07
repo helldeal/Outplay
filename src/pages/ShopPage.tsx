@@ -149,23 +149,13 @@ export function ShopPage() {
   return (
     <>
       <section className="space-y-8">
-        <div className="relative overflow-hidden rounded-3xl border border-cyan-300/30 bg-slate-900/70 p-6 text-center shadow-[0_24px_80px_rgba(2,6,23,0.65)]">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.2),transparent_36%),radial-gradient(circle_at_82%_0%,rgba(251,191,36,0.2),transparent_28%),linear-gradient(120deg,rgba(56,189,248,0.08),transparent_44%,rgba(251,191,36,0.1))]" />
-          <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-cyan-300/20 blur-3xl" />
-          <div className="pointer-events-none absolute -left-16 -bottom-16 h-52 w-52 rounded-full bg-amber-300/15 blur-3xl" />
-
-          <div className="relative">
-            <p className="inline-flex rounded-full border border-cyan-200/50 bg-cyan-300/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">
-              Shop Hub
-            </p>
-            <h1 className="mt-3 flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
-              Boutique
-            </h1>
-            <p className="mx-auto mt-3 max-w-md text-sm text-slate-300">
-              Tous les boosters achetables par serie. Les daily restent
-              disponibles via le bouton du header.
-            </p>
-          </div>
+        <div className="text-center">
+          <h1 className="text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
+            Boutique
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
+            Tous les boosters achetables par serie.
+          </p>
         </div>
 
         {openingError ? (

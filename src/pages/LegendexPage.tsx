@@ -11,14 +11,15 @@ import {
 } from "../query/legendex";
 
 export function LegendexPage() {
-  const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const requestedSeries = searchParams.get("series")?.trim().toLowerCase();
-  const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
+  const requestedSeries = searchParams.get("series")?.toLowerCase() ?? "";
+  const { user } = useAuth();
+
   const seriesQuery = useLegendexSeriesQuery();
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
 
   useEffect(() => {
-    if (!seriesQuery.data || seriesQuery.data.length === 0) {
+    if (!seriesQuery.data?.length) {
       return;
     }
 
@@ -83,7 +84,9 @@ export function LegendexPage() {
     !areCardAssetsReady;
 
   if (isPageLoading) {
-    return <PageLoading title="Legendex" subtitle="Chargement du Legendex…" />;
+    return (
+      <PageLoading title="Legendex" subtitle="Chargement du Legendex..." />
+    );
   }
 
   if (seriesQuery.error || cardsQuery.error || ownedQuery.error) {
@@ -99,22 +102,13 @@ export function LegendexPage() {
 
   return (
     <section className="space-y-8">
-      <div className="relative overflow-hidden rounded-3xl border border-cyan-300/30 bg-slate-900/70 p-6 text-center shadow-[0_24px_80px_rgba(2,6,23,0.65)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_10%,rgba(56,189,248,0.2),transparent_35%),radial-gradient(circle_at_86%_0%,rgba(168,85,247,0.2),transparent_30%),linear-gradient(120deg,rgba(56,189,248,0.08),transparent_42%,rgba(168,85,247,0.1))]" />
-        <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-cyan-300/20 blur-3xl" />
-        <div className="pointer-events-none absolute -left-16 -bottom-16 h-52 w-52 rounded-full bg-purple-300/15 blur-3xl" />
-
-        <div className="relative">
-          <p className="inline-flex rounded-full border border-cyan-200/50 bg-cyan-300/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100">
-            Collection Index
-          </p>
-          <h1 className="mt-3 flex items-center justify-center gap-2 text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
-            Legendex
-          </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm text-slate-300">
-            Index des cartes avec visibilite claire de ta progression par serie.
-          </p>
-        </div>
+      <div className="text-center">
+        <h1 className="text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
+          Legendex
+        </h1>
+        <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
+          Explore toutes les cartes de la serie et vise le 100% de completion.
+        </p>
       </div>
 
       <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4 shadow-[0_10px_32px_rgba(2,6,23,0.4)]">
@@ -171,7 +165,7 @@ export function LegendexPage() {
         <p className="mt-2 text-sm text-slate-300">
           <span className="font-semibold text-white">{ownedCount}</span> /
           <span className="font-semibold text-white"> {totalCount}</span> cartes
-          possédées
+          possedees
         </p>
       </div>
 

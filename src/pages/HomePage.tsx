@@ -4,18 +4,13 @@ import {
   Award,
   BookMarked,
   Crown,
-  Library,
-  LogIn,
   ShoppingBag,
   Sparkles,
   Target,
   Trophy,
 } from "lucide-react";
-import { useAuth } from "../auth/AuthProvider";
 
 export function HomePage() {
-  const { user, profile } = useAuth();
-
   const hubItems = [
     {
       to: "/shop",
@@ -33,14 +28,6 @@ export function HomePage() {
       icon: BookMarked,
       tone: "from-sky-400/25 via-sky-300/10 to-transparent",
       ring: "border-sky-300/35",
-    },
-    {
-      to: "/collection",
-      title: "Ma Collection",
-      description: "Suis tes cartes possedees, ta value et tes doublons.",
-      icon: Library,
-      tone: "from-indigo-400/25 via-indigo-300/10 to-transparent",
-      ring: "border-indigo-300/35",
     },
     {
       to: "/achievements",
@@ -79,74 +66,43 @@ export function HomePage() {
             </h1>
             <p className="mt-3 max-w-xl text-sm text-slate-200/90 md:text-base">
               Ouvre des boosters, monte ton score, complete ton legendex et
-              debloque les achievements. La home devient ton tableau de bord.
+              debloque les achievements.
             </p>
-          </div>
-
-          <div className="w-full max-w-xs rounded-2xl border border-slate-600/70 bg-slate-950/70 p-4 backdrop-blur md:w-auto">
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-300">
-              Statut joueur
-            </p>
-            {user ? (
-              <>
-                <p className="mt-1 truncate text-lg font-bold text-white">
-                  {profile?.username ?? user.email?.split("@")[0] ?? "Player"}
-                </p>
-                <p className="text-xs text-slate-400">
-                  {profile?.pc_balance ?? 0} PC disponibles
-                </p>
-                <Link
-                  to="/collection"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-cyan-300/55 bg-cyan-300/15 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-cyan-100 transition hover:bg-cyan-300/25"
-                >
-                  Ouvrir mon espace
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </>
-            ) : (
-              <>
-                <p className="mt-1 text-sm text-slate-300">
-                  Connecte-toi pour activer daily, streak et progression.
-                </p>
-                <Link
-                  to="/login"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-cyan-400 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-slate-950 transition hover:bg-cyan-300"
-                >
-                  <LogIn className="h-3.5 w-3.5" />
-                  Login
-                </Link>
-              </>
-            )}
           </div>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {hubItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.to}
               to={item.to}
-              className={`group relative overflow-hidden rounded-2xl border bg-slate-900/65 p-4 shadow-[0_12px_36px_rgba(2,6,23,0.45)] transition hover:-translate-y-0.5 ${item.ring}`}
+              className={`group relative min-h-[196px] overflow-hidden rounded-2xl border bg-slate-900/70 p-5 shadow-[0_18px_42px_rgba(2,6,23,0.5)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_52px_rgba(2,6,23,0.62)] ${item.ring}`}
             >
               <div
                 className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${item.tone}`}
               />
+              <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10 blur-2xl transition duration-500 group-hover:scale-125" />
+              <div className="pointer-events-none absolute -left-8 bottom-0 h-24 w-24 rounded-full bg-cyan-300/10 blur-2xl transition duration-500 group-hover:translate-x-2" />
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.12)_50%,transparent_100%)]" />
+
               <div className="relative flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-base font-black uppercase italic text-white">
+                  <p className="text-lg font-black uppercase italic text-white md:text-xl">
                     {item.title}
                   </p>
-                  <p className="mt-1 text-xs text-slate-300">
+                  <p className="mt-2 text-sm text-slate-300">
                     {item.description}
                   </p>
                 </div>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-600 bg-slate-950/55 text-slate-100 transition group-hover:border-cyan-300/50 group-hover:text-cyan-200">
-                  <Icon className="h-4.5 w-4.5" />
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-600 bg-slate-950/55 text-slate-100 transition group-hover:border-cyan-300/50 group-hover:text-cyan-200">
+                  <Icon className="h-5 w-5" />
                 </span>
               </div>
-              <span className="relative mt-4 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-300 transition group-hover:text-white">
+
+              <span className="absolute bottom-5 left-5 inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.12em] text-slate-300 transition group-hover:text-white">
                 Ouvrir
                 <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
               </span>

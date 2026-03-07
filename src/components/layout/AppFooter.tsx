@@ -1,10 +1,10 @@
 import {
+  Copyright,
   ExternalLink,
   Heart,
   Info,
   Shield,
   Sparkles,
-  UserCircle2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -24,7 +24,6 @@ const sitemapSections = [
     links: [
       { to: "/about", label: "A propos", icon: Info },
       { to: "/privacy", label: "Confidentialite", icon: Shield },
-      { to: "/login", label: "Connexion", icon: UserCircle2 },
     ],
   },
   {
@@ -101,8 +100,8 @@ export function AppFooter() {
 
       <div className="relative mx-auto mt-6 flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 border-t border-slate-800/90 pt-4 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1">
-          <UserCircle2 className="h-4 w-4" />
-          Copyright Outplay 2026
+          <Copyright className="h-4 w-4" />
+          Outplay 2026
         </span>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -112,7 +111,10 @@ export function AppFooter() {
             rel="noreferrer"
             className="inline-flex items-center gap-1 rounded-md border border-cyan-300/45 bg-cyan-300/10 px-2 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-cyan-200 transition hover:bg-cyan-300/20"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <span className="relative inline-flex h-3 w-3">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-cyan-300" />
+            </span>
             Status infrastructure
           </a>
           <a
