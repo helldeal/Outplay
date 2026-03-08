@@ -39,10 +39,10 @@ export function AboutPage() {
             Outplay
           </p>
           <h1 className="mt-2 text-3xl font-black uppercase italic text-white md:text-4xl">
-            A Propos
+            À propos
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-300">
-            Le projet, son etat actuel et la vision pour la suite.
+            Le projet, son état actuel et la vision pour la suite.
           </p>
         </div>
       </header>
@@ -54,7 +54,7 @@ export function AboutPage() {
             Vision
           </p>
           <h2 className="text-base font-black uppercase tracking-[0.08em] text-white">
-            Recap du site
+            Récap du site
           </h2>
           <p className="mt-2 text-sm text-slate-300">
             Outplay est un hub de collection de cartes esport: ouverture de
@@ -96,7 +96,7 @@ export function AboutPage() {
           </h2>
           <p className="mt-2 text-sm text-slate-300">
             Frontend React + TypeScript, design Tailwind, backend Supabase
-            (PostgreSQL, Auth, RPC) et Prisma pour la gestion schema/migrations.
+            (PostgreSQL, Auth, RPC) et Prisma pour la gestion schéma/migrations.
           </p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -128,8 +128,8 @@ export function AboutPage() {
             En construction
           </h2>
           <p className="mt-2 text-sm text-slate-300">
-            Le site evolue en continu: nouvelles cartes, equilibrage economy,
-            ameliorations UX et features communautaires sont en preparation.
+            Le site évolue en continu: nouvelles cartes, équilibrage économie,
+            améliorations UX et fonctionnalités communautaires sont en préparation.
           </p>
         </article>
         <article className="rounded-2xl border border-cyan-300/35 bg-cyan-400/10 p-5">
@@ -138,7 +138,7 @@ export function AboutPage() {
             Feedback
           </h2>
           <p className="mt-2 text-sm text-cyan-50/95">
-            Pour les retours, bugs ou idees, envoie-moi un message
+            Pour les retours, bugs ou idées, envoie-moi un message
           </p>
           <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-100/90">
             <BadgeHelp className="h-3.5 w-3.5" />
@@ -155,12 +155,12 @@ export function AboutPage() {
             <Shield className="h-5 w-5" />
           </span>
           <h2 className="mt-4 text-2xl font-black text-white">
-            Note Importante
+            Note importante
           </h2>
           <p className="mx-auto mt-3 max-w-3xl text-base leading-relaxed text-slate-300">
             Outplay est un projet communautaire non-officiel développé de
-            manière independante. Nous ne sommes pas affiliés, associés,
-            autorisés, approuvés par, ou officiellement lies a Riot Games,
+            manière indépendante. Nous ne sommes pas affiliés, associés,
+            autorisés, approuvés par, ou officiellement liés à Riot Games,
             Valve, Blizzard, Epic Games ou toute autre organisation. Tous les
             logos, noms et marques cités appartiennent à leurs propriétaires
             respectifs.

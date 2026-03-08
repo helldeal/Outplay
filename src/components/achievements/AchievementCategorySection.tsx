@@ -80,7 +80,7 @@ export function AchievementCategorySection({
                     type="button"
                     disabled={claimingCode === row.code}
                     onClick={() => onClaim(row)}
-                    title="Claim reward"
+                    title="Réclamer la récompense"
                     className="group inline-flex h-8 w-8 items-center justify-center rounded-full border border-amber-300/70 bg-amber-300/20 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.28)] transition hover:scale-110 hover:bg-amber-300/30 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {claimingCode === row.code ? (

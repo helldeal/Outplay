@@ -19,7 +19,7 @@ export function LoginPage() {
     try {
       await loginWithDiscord();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Échec de la connexion");
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export function LoginPage() {
         className="flex w-full items-center justify-center gap-2 rounded-md bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <MessageCircle className="h-4 w-4" />
-        {loading ? "Redirecting..." : "Continue with Discord"}
+        {loading ? "Redirection..." : "Continuer avec Discord"}
       </button>
     </section>
   );

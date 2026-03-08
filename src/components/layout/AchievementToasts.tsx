@@ -28,7 +28,7 @@ export function AchievementToasts({
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(251,191,36,0.16),transparent_40%,rgba(56,189,248,0.08))]" />
 
             <p className="relative text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
-              Achievement debloque
+              Achievement débloqué
             </p>
             <p className="relative mt-1 text-sm font-black uppercase italic text-white">
               {toast.name}

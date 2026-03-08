@@ -89,7 +89,14 @@ const categoryTone: Record<string, string> = {
 };
 
 function categoryLabel(category: string): string {
-  return category;
+  const labels: Record<string, string> = {
+    Rarete: "Rareté",
+    Activite: "Activité",
+    Serie: "Série",
+    Economy: "Économie",
+  };
+
+  return labels[category] ?? category;
 }
 
 function sortByCategory(a: string, b: string): number {
@@ -221,7 +228,7 @@ export function AchievementsPage() {
           duplicateCardIndices,
           pcGained: result.opening.pcGained ?? 0,
           chargedPc: result.opening.chargedPc ?? 0,
-          boosterName: `${row.name} Reward`,
+          boosterName: `${row.name} Récompense`,
         },
       });
 

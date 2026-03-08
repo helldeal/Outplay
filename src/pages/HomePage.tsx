@@ -16,7 +16,7 @@ export function HomePage() {
       to: "/shop",
       title: "Booster Shop",
       description:
-        "Achete des boosters, check les drop rates et lance ton opening.",
+        "Achète des boosters, consulte les taux de drop et lance ton ouverture.",
       icon: ShoppingBag,
       tone: "from-cyan-400/25 via-cyan-300/10 to-transparent",
       ring: "border-cyan-300/35",
@@ -24,7 +24,7 @@ export function HomePage() {
     {
       to: "/legendex",
       title: "Legendex",
-      description: "Explore toutes les cartes de la serie et vise le 100%.",
+      description: "Explore toutes les cartes de la série et vise les 100%.",
       icon: BookMarked,
       tone: "from-sky-400/25 via-sky-300/10 to-transparent",
       ring: "border-sky-300/35",
@@ -32,7 +32,7 @@ export function HomePage() {
     {
       to: "/achievements",
       title: "Achievements",
-      description: "Debloque des objectifs et claim tes rewards bonus.",
+      description: "Débloque des objectifs et récupère tes récompenses bonus.",
       icon: Award,
       tone: "from-amber-400/25 via-amber-300/10 to-transparent",
       ring: "border-amber-300/35",
@@ -65,8 +65,8 @@ export function HomePage() {
               Choose Your Route
             </h1>
             <p className="mt-3 max-w-xl text-sm text-slate-200/90 md:text-base">
-              Ouvre des boosters, monte ton score, complete ton legendex et
-              debloque les achievements.
+              Ouvre des boosters, monte ton score, complète ton legendex et
+              débloque les achievements.
             </p>
           </div>
         </div>
@@ -134,8 +134,8 @@ export function HomePage() {
             Achievements + Streak
           </h3>
           <p className="mt-1 text-xs text-slate-300">
-            Enchaine les actions quotidiennes pour debloquer des rewards
-            supplementaires.
+            Enchaîne les actions quotidiennes pour débloquer des récompenses
+            supplémentaires.
           </p>
         </div>
         <div className="rounded-2xl border border-fuchsia-300/30 bg-slate-900/60 p-4">

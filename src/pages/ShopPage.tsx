@@ -167,10 +167,10 @@ export function ShopPage() {
       <section className="space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-black uppercase italic tracking-tight text-white md:text-6xl">
-            Boutique
+            Shop
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
-            Tous les boosters achetables par serie.
+            Tous les boosters achetables par série.
           </p>
         </div>
 
@@ -202,7 +202,7 @@ export function ShopPage() {
 
                 <div className="relative mb-4 space-y-1">
                   <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
-                    Series {entry.code}
+                    Série {entry.code}
                   </p>
                   <h2 className="text-xl font-black uppercase italic text-white">
                     {entry.name}
@@ -272,7 +272,7 @@ export function ShopPage() {
                               {openingBoosterId === booster.id ? (
                                 <>
                                   <LoaderCircle className="h-4 w-4 animate-spin" />
-                                  Opening...
+                                  Ouverture...
                                 </>
                               ) : (
                                 <>
@@ -333,13 +333,13 @@ export function ShopPage() {
             <div className="relative mb-4 flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <p className="inline-flex rounded-full border border-cyan-300/40 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200">
-                  Drop Rates
+                  Taux de drop
                 </p>
                 <h3 className="text-xl font-black uppercase italic text-white">
                   {dropRatesBooster.name}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Compare les probabilites par carte et par booster
+                  Compare les probabilités par carte et par booster
                 </p>
               </div>
               <button
@@ -434,14 +434,9 @@ export function ShopPage() {
 
             <p className="mt-3 text-xs text-slate-400">
               {dropRatesModalView === "CARD"
-                ? "Par carte: probabilite qu'une carte tiree soit de cette rarete."
-                : `Par booster: probabilite d'obtenir au moins une carte de la rarete sur ${BOOSTER_DRAW_COUNT} tirages.`}
+                ? "Par carte: probabilité qu'une carte tirée soit de cette rareté."
+                : `Par booster: probabilité d'obtenir au moins une carte de cette rareté sur ${BOOSTER_DRAW_COUNT} tirages.`}
             </p>
-
-            <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-[11px] uppercase tracking-wide text-slate-500">
-              <span>Data live</span>
-              <span>Outplay odds panel</span>
-            </div>
           </div>
         </div>
       ) : null}

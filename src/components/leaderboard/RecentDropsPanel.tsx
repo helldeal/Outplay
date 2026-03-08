@@ -32,12 +32,12 @@ export function RecentDropsPanel({
     <aside className="w-full space-y-3 lg:w-80 lg:shrink-0">
       <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-300">
         <Clock3 className="h-4 w-4 text-cyan-300" />
-        Dernieres ouvertures
+        Dernières ouvertures
       </h2>
 
       {drops.length === 0 ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
-          Aucune ouverture recente.
+          Aucune ouverture récente.
         </div>
       ) : (
         <div className="space-y-3">

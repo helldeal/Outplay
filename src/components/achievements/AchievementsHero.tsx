@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Award, Crown } from "lucide-react";
 
 export function AchievementsHero({
@@ -11,6 +13,33 @@ export function AchievementsHero({
   total: number;
   pct: number;
 }) {
+  const [animatedUnlocked, setAnimatedUnlocked] = useState(0);
+  const [animatedPct, setAnimatedPct] = useState(0);
+
+  useEffect(() => {
+    const durationMs = 800;
+    const startedAt = performance.now();
+    let frameId = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const eased = 1 - (1 - progress) ** 3;
+
+      setAnimatedUnlocked(Math.round(unlocked * eased));
+      setAnimatedPct(Math.round(pct * eased));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [unlocked, pct]);
+
   return (
     <div className="relative overflow-hidden rounded-3xl border border-amber-200/40 bg-slate-900/80 p-6 shadow-[0_28px_90px_rgba(2,6,23,0.72)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(250,204,21,0.2),transparent_42%),radial-gradient(circle_at_85%_0%,rgba(59,130,246,0.2),transparent_34%),linear-gradient(120deg,rgba(251,191,36,0.16)_0%,transparent_42%,rgba(56,189,248,0.1)_100%)]" />
@@ -28,13 +57,13 @@ export function AchievementsHero({
             Achievements
           </h1>
           <p className="mt-1 text-sm text-slate-200/90">
-            Debloque des objectifs, gagne des boosters et des PC bonus.
+            Débloque des objectifs, gagne des boosters et des PC bonus.
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/50 bg-slate-950/40 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-amber-100">
               <Crown className="h-3.5 w-3.5" />
-              {claimableCount} a claim
+              {claimableCount} à récupérer
             </span>
           </div>
         </div>
@@ -44,16 +73,18 @@ export function AchievementsHero({
             Progression
           </p>
           <p className="mt-1 text-2xl font-black text-white">
-            {unlocked}/{total}
+            {animatedUnlocked}/{total}
           </p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
-            <div
+            <motion.div
               className="h-full rounded-full bg-gradient-to-r from-amber-300 via-amber-200 to-cyan-300"
-              style={{ width: `${pct}%` }}
+              initial={{ width: 0 }}
+              animate={{ width: `${animatedPct}%` }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
             />
           </div>
           <p className="mt-1 text-xs font-semibold text-cyan-200">
-            {pct}% complete
+            {animatedPct}% complété
           </p>
         </div>
       </div>

@@ -88,13 +88,13 @@ export function StreakModal({
           <div>
             <p className="inline-flex items-center gap-1 rounded-full border border-amber-200/55 bg-amber-300/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-100">
               <Flame className="h-3.5 w-3.5" />
-              Login Streak
+              Streak de connexion
             </p>
             <h2 className="mt-2 text-2xl font-black uppercase italic text-white">
-              7-Day Streak
+              Streak 7 jours
             </h2>
             <p className="text-sm text-slate-300">
-              Claim quotidien. Si tu rates un jour, le cycle reset.
+              Récompense quotidienne. Si tu rates un jour, le cycle se réinitialise.
             </p>
           </div>
 
@@ -131,7 +131,7 @@ export function StreakModal({
               >
                 <div className="mb-1.5 flex items-center justify-between">
                   <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-200">
-                    Day {reward.day}
+                    Jour {reward.day}
                   </p>
                   {isCurrent ? (
                     <Crown className="h-4 w-4 text-amber-300" />
@@ -154,12 +154,12 @@ export function StreakModal({
 
         <div className="relative mt-4 rounded-xl border border-slate-700/70 bg-slate-950/65 p-3">
           <p className="text-xs text-slate-300">
-            Serie booster cible: {targetSeriesCode ?? "N/A"}
+            Série booster cible: {targetSeriesCode ?? "N/D"}
           </p>
           <p className="text-xs text-slate-400">
             {streakStatus?.can_claim_today
-              ? `Jour actuel claimable: Day ${streakStatus.next_day}`
-              : `Deja claim aujourd'hui. Prochain reset dans ${countdown}`}
+              ? `Jour actuel réclamable: Jour ${streakStatus.next_day}`
+              : `Déjà réclamé aujourd'hui. Prochaine réinitialisation dans ${countdown}`}
           </p>
         </div>
 
@@ -176,9 +176,9 @@ export function StreakModal({
               <Flame className="h-4 w-4" />
             )}
             {isClaiming
-              ? "Claim..."
+              ? "Réclamation..."
               : streakStatus?.can_claim_today
-                ? `Claim Day ${streakStatus.next_day}`
+                ? `Réclamer Jour ${streakStatus.next_day}`
                 : `Disponible dans ${countdown}`}
           </button>
         </div>

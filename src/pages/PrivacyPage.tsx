@@ -4,27 +4,27 @@ const privacySections = [
   {
     title: "1. Introduction",
     icon: Fingerprint,
-    body: "Outplay est un projet communautaire de collection de cartes esport. Nous minimisons les donnees stockees et privilegions la transparence.",
+    body: "Outplay est un projet communautaire de collection de cartes esport. Nous minimisons les données stockées et privilégions la transparence.",
   },
   {
-    title: "2. Donnees collectees",
+    title: "2. Données collectées",
     icon: Database,
-    body: "Lors de la connexion, nous pouvons traiter des informations de profil necessaires au fonctionnement: identifiant utilisateur, pseudo, avatar, progression de collection, historique d'ouverture, score, achievements et solde PC.",
+    body: "Lors de la connexion, nous pouvons traiter des informations de profil nécessaires au fonctionnement: identifiant utilisateur, pseudo, avatar, progression de collection, historique d'ouverture, score, achievements et solde PC.",
   },
   {
     title: "3. Infrastructure & Sous-traitants",
     icon: Server,
-    body: "Le service s'appuie sur une infrastructure cloud et des services tiers techniques (authentification, base de donnees, monitoring). Ces partenaires agissent comme sous-traitants pour assurer l'hebergement, la securite et la disponibilite de l'application.",
+    body: "Le service s'appuie sur une infrastructure cloud et des services tiers techniques (authentification, base de données, monitoring). Ces partenaires agissent comme sous-traitants pour assurer l'hébergement, la sécurité et la disponibilité de l'application.",
   },
   {
     title: "4. Utilisation des Cookies",
     icon: Cookie,
-    body: "Des cookies/session storage techniques peuvent etre utilises pour maintenir la session connectee et securiser l'authentification. Aucun cookie publicitaire n'est utilise par defaut dans le cadre actuel.",
+    body: "Des cookies/session storage techniques peuvent être utilisés pour maintenir la session connectée et sécuriser l'authentification. Aucun cookie publicitaire n'est utilisé par défaut dans le cadre actuel.",
   },
   {
     title: "5. Vos Droits (RGPD)",
     icon: Scale,
-    body: "Conformement au RGPD, tu peux demander l'acces, la rectification, l'effacement ou la limitation du traitement de tes donnees. Pour toute demande, contacte-nous via les canaux communautaires indiques sur la page A propos.",
+    body: "Conformément au RGPD, tu peux demander l'accès, la rectification, l'effacement ou la limitation du traitement de tes données. Pour toute demande, contacte-nous via les canaux communautaires indiqués sur la page À propos.",
   },
 ] as const;
 
@@ -38,10 +38,10 @@ export function PrivacyPage() {
             Legal
           </p>
           <h1 className="mt-2 text-3xl font-black uppercase italic text-white md:text-4xl">
-            Politique de Confidentialite
+            Politique de confidentialité
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-300">
-            Cette page explique quelles donnees sont utilisees sur Outplay, dans
+            Cette page explique quelles données sont utilisées sur Outplay, dans
             quel but, et comment exercer tes droits.
           </p>
         </div>

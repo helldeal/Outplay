@@ -22,7 +22,7 @@ export function LeaderboardTable({
       <div className="flex items-center gap-2 border-b border-slate-800 px-5 py-4">
         <Trophy className="h-5 w-5 text-amber-400" />
         <h2 className="text-lg font-black italic uppercase text-white">
-          Top Collection
+          Top collection
         </h2>
       </div>
 

@@ -274,7 +274,7 @@ export function AppHeader({
             <NavLink to="/shop" className={navItemClass}>
               <span className="inline-flex items-center gap-1.5">
                 <ShoppingBag className="h-4 w-4" />
-                Boutique
+                Shop
               </span>
             </NavLink>
             <NavLink to="/legendex" className={navItemClass}>
@@ -317,8 +317,8 @@ export function AppHeader({
                 }`}
                 title={
                   openedToday
-                    ? `Prochain daily dans ${dailyCountdown}`
-                    : "Ouvrir le daily"
+                    ? `Prochaine ouverture quotidienne dans ${dailyCountdown}`
+                    : "Ouvrir la récompense quotidienne"
                 }
               >
                 {isOpeningDaily ? (
@@ -327,7 +327,7 @@ export function AppHeader({
                   <CalendarClock className="h-4 w-4" />
                 )}
                 {isOpeningDaily
-                  ? "Opening..."
+                  ? "Ouverture..."
                   : openedToday
                     ? `Daily ${dailyCountdown}`
                     : "Daily"}
@@ -419,7 +419,7 @@ export function AppHeader({
                       className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
                     >
                       <LogOut className="h-4 w-4 text-red-400" />
-                      Logout
+                      Déconnexion
                     </button>
                   </div>
                 )}
@@ -431,7 +431,7 @@ export function AppHeader({
               className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-400 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
             >
               <LogIn className="h-4 w-4" />
-              Login
+              Connexion
             </Link>
           )}
         </div>
@@ -439,7 +439,7 @@ export function AppHeader({
 
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 overflow-x-auto px-4 pb-3 text-xs text-slate-400 md:hidden">
         <NavLink to="/shop" className={navItemClass}>
-          Boutique
+          Shop
         </NavLink>
         <NavLink to="/legendex" className={navItemClass}>
           Legendex

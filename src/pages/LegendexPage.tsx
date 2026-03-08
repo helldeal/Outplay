@@ -76,11 +76,46 @@ export function LegendexPage() {
     return Math.round((ownedCount / totalCount) * 100);
   }, [ownedCount, totalCount]);
 
+  const [animatedCompletion, setAnimatedCompletion] = useState(0);
+  const [animatedOwnedCount, setAnimatedOwnedCount] = useState(0);
+
   const isSeriesLoading = seriesQuery.isLoading;
   const isCardsLoading = Boolean(selectedSeriesId) && cardsQuery.isLoading;
   const isOwnedLoading =
     Boolean(user?.id && selectedSeriesId) && ownedQuery.isLoading;
   const isGridLoading = isCardsLoading || !areCardAssetsReady;
+
+  useEffect(() => {
+    if (isCardsLoading || isOwnedLoading) {
+      setAnimatedCompletion(0);
+      setAnimatedOwnedCount(0);
+      return;
+    }
+
+    const targetCompletion = completion;
+    const targetOwnedCount = ownedCount;
+    const durationMs = 800;
+    const startedAt = performance.now();
+    let frameId = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const eased = 1 - (1 - progress) ** 3;
+
+      setAnimatedCompletion(Math.round(targetCompletion * eased));
+      setAnimatedOwnedCount(Math.round(targetOwnedCount * eased));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [completion, ownedCount, isCardsLoading, isOwnedLoading]);
 
   if (seriesQuery.error || cardsQuery.error || ownedQuery.error) {
     return (
@@ -100,7 +135,7 @@ export function LegendexPage() {
           Legendex
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
-          Explore toutes les cartes de la serie et vise le 100% de completion.
+          Explore toutes les cartes de la série et vise les 100% de complétion.
         </p>
       </div>
 
@@ -151,7 +186,7 @@ export function LegendexPage() {
               Complétion
             </p>
             <p className="text-3xl font-black tracking-tight text-cyan-300">
-              {isOwnedLoading ? "..." : `${completion}%`}
+              {isOwnedLoading ? "..." : `${animatedCompletion}%`}
             </p>
           </div>
         </div>
@@ -159,14 +194,14 @@ export function LegendexPage() {
         <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-800/90">
           <div
             className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-cyan-400 to-purple-400 transition-all duration-500"
-            style={{ width: `${completion}%` }}
+            style={{ width: `${animatedCompletion}%` }}
           />
         </div>
 
         <p className="mt-2 text-sm text-slate-300">
-          <span className="font-semibold text-white">{ownedCount}</span> /
-          <span className="font-semibold text-white"> {totalCount}</span> cartes
-          possedees
+          <span className="font-semibold text-white">{animatedOwnedCount}</span>{" "}
+          /<span className="font-semibold text-white"> {totalCount}</span>{" "}
+          cartes possédées
         </p>
         {isOwnedLoading && (
           <p className="mt-1 text-xs text-slate-400">

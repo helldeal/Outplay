@@ -5,8 +5,8 @@ const sitemapSections = [
   {
     title: "Navigation",
     links: [
-      { to: "/", label: "Accueil" },
-      { to: "/shop", label: "Boutique" },
+      { to: "/", label: "Home" },
+      { to: "/shop", label: "Shop" },
       { to: "/legendex", label: "Legendex" },
       { to: "/leaderboard", label: "Leaderboard" },
       { to: "/achievements", label: "Achievements" },
@@ -15,8 +15,8 @@ const sitemapSections = [
   {
     title: "Informations",
     links: [
-      { to: "/about", label: "A propos", icon: Info },
-      { to: "/privacy", label: "Confidentialite", icon: Shield },
+      { to: "/about", label: "À propos", icon: Info },
+      { to: "/privacy", label: "Confidentialité", icon: Shield },
     ],
   },
   {
@@ -55,8 +55,8 @@ export function AppFooter() {
           <img src={logoSrc} alt="Outplay" className="h-8 w-auto" />
           <p className="max-w-sm text-sm leading-relaxed text-slate-300">
             Outplay est un hub communautaire de collection esport. Le projet
-            evolue en continu avec de nouvelles cartes, economies et
-            fonctionnalites.
+            évolue en continu avec de nouvelles cartes, économies et
+            fonctionnalités.
           </p>
         </div>
 

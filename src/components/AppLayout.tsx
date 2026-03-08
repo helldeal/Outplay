@@ -96,9 +96,9 @@ export function AppLayout() {
     (user?.user_metadata?.preferred_username as string | undefined) ??
     (user?.user_metadata?.full_name as string | undefined) ??
     user?.email?.split("@")[0] ??
-    "Player";
+    "Joueur";
 
-  const username = rawUsername.split("#")[0]?.trim() || "Player";
+  const username = rawUsername.split("#")[0]?.trim() || "Joueur";
 
   const avatarUrl =
     (user?.user_metadata?.avatar_url as string | undefined) ??
@@ -378,13 +378,13 @@ export function AppLayout() {
         streakTitle={
           streakStatus
             ? streakStatus.can_claim_today
-              ? `Jour ${streakStatus.next_day}: ${streakRewardLabel ?? "Reward"}`
-              : `Prochaine claim streak dans ${dailyCountdown}`
+              ? `Jour ${streakStatus.next_day}: ${streakRewardLabel ?? "Récompense"}`
+              : `Prochaine récompense de streak dans ${dailyCountdown}`
             : "Récompense streak"
         }
         streakButtonLabel={
           isClaimingStreak
-            ? "Claim..."
+            ? "Réclamation..."
             : streakStatus?.can_claim_today
               ? `Streak J${streakStatus.next_day}`
               : `Streak ${dailyCountdown}`

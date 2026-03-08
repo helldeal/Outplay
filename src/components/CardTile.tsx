@@ -156,7 +156,7 @@ function CardInner({
             <div className="flex items-center justify-between text-[4.6cqw] text-slate-500">
               {obtainedAt ? (
                 <span>
-                  Obtained {new Date(obtainedAt).toLocaleDateString()}
+                  Obtenue le {new Date(obtainedAt).toLocaleDateString()}
                 </span>
               ) : (
                 <span></span>

@@ -6,6 +6,8 @@ const podiumMeta = [
   {
     rank: 2,
     pillar: "h-36 md:h-48",
+    pillarBg:
+      "bg-gradient-to-b from-slate-300/25 via-slate-500/18 to-slate-800/70",
     ring: "border-slate-400/60 from-slate-300 to-slate-600",
     text: "text-slate-300",
     glow: "",
@@ -13,6 +15,8 @@ const podiumMeta = [
   {
     rank: 1,
     pillar: "h-48 md:h-64",
+    pillarBg:
+      "bg-gradient-to-b from-amber-300/35 via-amber-500/22 to-slate-800/78",
     ring: "border-amber-400/60 from-amber-300 to-amber-700",
     text: "text-amber-400",
     glow: "shadow-[0_0_30px_rgba(251,191,36,0.3)]",
@@ -20,6 +24,8 @@ const podiumMeta = [
   {
     rank: 3,
     pillar: "h-28 md:h-40",
+    pillarBg:
+      "bg-gradient-to-b from-orange-300/30 via-orange-500/20 to-slate-800/72",
     ring: "border-orange-400/60 from-orange-300 to-orange-700",
     text: "text-orange-400",
     glow: "",
@@ -61,13 +67,13 @@ export function LeaderboardPodium({
                   size="lg"
                 />
               </div>
-              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-0.5 text-[10px] font-black text-white">
+              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-0.5 text-[10px] font-black text-white text-nowrap">
                 {scoreFormatter.format(row.weightedScore)} pts
               </span>
             </div>
 
             <div
-              className={`w-full rounded-t-2xl border-x border-t border-slate-700/50 bg-slate-900/60 ${meta.pillar} flex flex-col items-center pt-5`}
+              className={`w-full rounded-t-2xl border-x border-t border-slate-700/50 ${meta.pillarBg} ${meta.pillar} flex flex-col items-center pt-5`}
             >
               <span className={`text-5xl font-black opacity-20 ${meta.text}`}>
                 {meta.rank}

@@ -200,7 +200,7 @@ function CardBack() {
   const logoIconSrc = `${import.meta.env.BASE_URL}logo-icon.png`;
 
   return (
-    <article className="card-content relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
+    <article className="card-content relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 select-none">
       <div className="relative overflow-hidden rounded-lg">
         <div className="relative aspect-[3/4] overflow-hidden ">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(56,189,248,0.15),transparent_55%)]" />
@@ -210,6 +210,7 @@ function CardBack() {
               <img
                 src={logoIconSrc}
                 alt="Outplay"
+                draggable={false}
                 className="h-full w-full object-contain opacity-85"
               />
             </div>
