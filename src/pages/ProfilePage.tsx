@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   BarChart3,
+  Clock3,
   Dices,
+  History,
   Medal,
   PencilLine,
   Save,
@@ -20,6 +22,8 @@ import {
   updateCurrentUserProfileIdentity,
   usePublicProfileCollectionQuery,
   usePublicProfileOverviewQuery,
+  usePublicProfileRecentAchievementsQuery,
+  usePublicProfileRecentOpeningsQuery,
 } from "../query/profile";
 import { rarityLabel, rarityTextColor } from "../utils/rarity";
 
@@ -41,11 +45,16 @@ export function ProfilePage() {
 
   const overviewQuery = usePublicProfileOverviewQuery(targetUserId);
   const collectionQuery = usePublicProfileCollectionQuery(targetUserId);
+  const recentOpeningsQuery = usePublicProfileRecentOpeningsQuery(targetUserId);
+  const recentAchievementsQuery =
+    usePublicProfileRecentAchievementsQuery(targetUserId);
   const achievementsQuery = useAchievementsProgressQuery(
     isOwnProfile ? user?.id : undefined,
   );
 
-  const [tab, setTab] = useState<"collection" | "stats">("collection");
+  const [tab, setTab] = useState<"collection" | "stats" | "activity">(
+    "collection",
+  );
   const [usernameDraft, setUsernameDraft] = useState("");
   const [titleDraft, setTitleDraft] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
@@ -154,9 +163,17 @@ export function ProfilePage() {
     setIsSaving(true);
 
     try {
+      const normalizedTitle =
+        !titleDraft.trim() ||
+        titleDraft.toLowerCase() === "null" ||
+        titleDraft.toLowerCase() === "undefined" ||
+        titleDraft.toLowerCase() === "aucun titre"
+          ? null
+          : titleDraft;
+
       await updateCurrentUserProfileIdentity({
         username: usernameDraft,
-        title: titleDraft.trim() ? titleDraft : null,
+        title: normalizedTitle,
       });
 
       await Promise.all([
@@ -316,7 +333,7 @@ export function ProfilePage() {
       )}
 
       <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-2">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => setTab("collection")}
             className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
@@ -339,12 +356,24 @@ export function ProfilePage() {
             <BarChart3 className="h-4 w-4" />
             Stats
           </button>
+          <button
+            onClick={() => setTab("activity")}
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+              tab === "activity"
+                ? "bg-fuchsia-300/20 text-fuchsia-100"
+                : "bg-slate-950/50 text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <History className="h-4 w-4" />
+            Activite
+          </button>
         </div>
       </div>
 
       {tab === "collection" ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {collection
+            .slice()
             .sort((a, b) => b.card.pc_value - a.card.pc_value)
             .map((row) => (
               <CardTile
@@ -356,7 +385,7 @@ export function ProfilePage() {
               />
             ))}
         </div>
-      ) : (
+      ) : tab === "stats" ? (
         <div className="grid gap-4 lg:grid-cols-2">
           <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
             <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
@@ -471,6 +500,140 @@ export function ProfilePage() {
                 est bas, plus le profil est considere "chanceux".
               </p>
             </div>
+          </article>
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+            <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
+              <Clock3 className="h-4 w-4 text-cyan-300" />
+              Dernieres ouvertures
+            </h2>
+
+            {recentOpeningsQuery.isLoading ? (
+              <p className="mt-3 text-sm text-slate-400">
+                Chargement des ouvertures...
+              </p>
+            ) : recentOpeningsQuery.error ? (
+              <p className="mt-3 text-sm text-rose-300">
+                {(recentOpeningsQuery.error as Error).message}
+              </p>
+            ) : (recentOpeningsQuery.data ?? []).length === 0 ? (
+              <p className="mt-3 text-sm text-slate-400">
+                Aucune ouverture recente.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {(recentOpeningsQuery.data ?? []).map((opening) => (
+                  <div
+                    key={opening.openingId}
+                    className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-white">
+                        {opening.boosterName ?? "Booster"}
+                        {opening.seriesName ? ` - ${opening.seriesName}` : ""}
+                      </p>
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(opening.openedAt).toLocaleString("fr-FR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {opening.openingType} · +
+                      {intFormatter.format(opening.pcGained)} PC ·{" "}
+                      {opening.duplicateCards} doublon(s)
+                    </p>
+                    {opening.bestCardName ? (
+                      <p className="mt-1 text-xs text-slate-300">
+                        Best pull:{" "}
+                        <span className="font-semibold text-white">
+                          {opening.bestCardName}
+                        </span>
+                        {opening.bestCardRarity ? (
+                          <span
+                            className={`ml-2 font-semibold ${rarityTextColor(opening.bestCardRarity)}`}
+                          >
+                            {rarityLabel(opening.bestCardRarity)}
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+            <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              Derniers achievements
+            </h2>
+
+            {recentAchievementsQuery.isLoading ? (
+              <p className="mt-3 text-sm text-slate-400">
+                Chargement des achievements...
+              </p>
+            ) : recentAchievementsQuery.error ? (
+              <p className="mt-3 text-sm text-rose-300">
+                {(recentAchievementsQuery.error as Error).message}
+              </p>
+            ) : (recentAchievementsQuery.data ?? []).length === 0 ? (
+              <p className="mt-3 text-sm text-slate-400">
+                Aucun achievement recent.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {(recentAchievementsQuery.data ?? []).map((achievement) => (
+                  <div
+                    key={`${achievement.code}-${achievement.unlockedAt}`}
+                    className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-white">
+                        {achievement.name}
+                      </p>
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(achievement.unlockedAt).toLocaleString(
+                          "fr-FR",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs uppercase tracking-[0.1em] text-amber-300/90">
+                      {achievement.category}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-300">
+                      Reward:
+                      {achievement.rewardPc > 0
+                        ? ` ${intFormatter.format(achievement.rewardPc)} PC`
+                        : ""}
+                      {achievement.rewardBoosterType
+                        ? ` · ${achievement.rewardBoosterType} Booster`
+                        : ""}
+                      {achievement.rewardTitle
+                        ? ` · Titre: ${achievement.rewardTitle}`
+                        : ""}
+                      {achievement.rewardPc === 0 &&
+                      !achievement.rewardBoosterType &&
+                      !achievement.rewardTitle
+                        ? " Aucune recompense"
+                        : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </article>
         </div>
       )}
