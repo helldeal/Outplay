@@ -1,4 +1,5 @@
 import { Crown } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { LeaderboardRow } from "../../query/leaderboard";
 import { PlayerAvatar } from "./PlayerAvatar";
 
@@ -54,7 +55,10 @@ export function LeaderboardPodium({
             key={row.userId}
             className="flex w-1/3 max-w-[220px] flex-col items-center"
           >
-            <div className="relative mb-4">
+            <Link
+              to={`/profile/${row.userId}`}
+              className="relative mb-4 transition hover:scale-[1.02]"
+            >
               {meta.rank === 1 && (
                 <Crown className="absolute -top-8 left-1/2 h-8 w-8 -translate-x-1/2 text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]" />
               )}
@@ -70,7 +74,7 @@ export function LeaderboardPodium({
               <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-0.5 text-[10px] font-black text-white text-nowrap">
                 {scoreFormatter.format(row.weightedScore)} pts
               </span>
-            </div>
+            </Link>
 
             <div
               className={`w-full rounded-t-2xl border-x border-t border-slate-700/50 ${meta.pillarBg} ${meta.pillar} flex flex-col items-center pt-5`}

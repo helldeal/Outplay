@@ -10,6 +10,7 @@ import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { ShopPage } from "./pages/ShopPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -86,6 +87,22 @@ export default function App() {
           element={
             <RequireAuth>
               <AchievementsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile/:userId"
+          element={
+            <RequireAuth>
+              <ProfilePage />
             </RequireAuth>
           }
         />

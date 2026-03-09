@@ -1,4 +1,5 @@
 import { Clock3, LoaderCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { RecentDrop } from "../../query/leaderboard";
 import {
   rarityBorderColor,
@@ -46,7 +47,10 @@ export function RecentDropsPanel({
               key={drop.openingId}
               className="rounded-xl border border-slate-800 bg-slate-900/60 p-3"
             >
-              <div className="flex items-center gap-2.5">
+              <Link
+                to={`/profile/${drop.userId}`}
+                className="flex items-center gap-2.5 transition hover:text-cyan-100"
+              >
                 <PlayerAvatar
                   avatarUrl={drop.avatarUrl}
                   username={drop.username}
@@ -60,7 +64,7 @@ export function RecentDropsPanel({
                     {drop.boosterName} · {formatRelativeDate(drop.openedAt)}
                   </p>
                 </div>
-              </div>
+              </Link>
 
               {drop.bestCardName && (
                 <div

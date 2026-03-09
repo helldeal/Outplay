@@ -395,6 +395,7 @@ export function AppLayout() {
         profileMenuRef={profileMenuRef}
         isProfileMenuOpen={isProfileMenuOpen}
         onToggleProfileMenu={() => setIsProfileMenuOpen((open) => !open)}
+        onCloseProfileMenu={() => setIsProfileMenuOpen(false)}
         avatarUrl={avatarUrl}
         username={username}
         userEmail={user?.email}

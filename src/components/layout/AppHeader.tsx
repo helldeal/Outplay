@@ -10,6 +10,7 @@ import {
   LogOut,
   ShoppingBag,
   Trophy,
+  UserRound,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
@@ -42,6 +43,7 @@ type AppHeaderProps = {
   profileMenuRef: RefObject<HTMLDivElement | null>;
   isProfileMenuOpen: boolean;
   onToggleProfileMenu: () => void;
+  onCloseProfileMenu: () => void;
   avatarUrl: string | null;
   username: string;
   userEmail?: string | null;
@@ -75,6 +77,7 @@ export function AppHeader({
   profileMenuRef,
   isProfileMenuOpen,
   onToggleProfileMenu,
+  onCloseProfileMenu,
   avatarUrl,
   username,
   userEmail,
@@ -413,6 +416,14 @@ export function AppHeader({
                         {userEmail}
                       </p>
                     </div>
+                    <Link
+                      to="/profile"
+                      onClick={onCloseProfileMenu}
+                      className="mb-1 inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-cyan-200 transition hover:bg-cyan-400/10 hover:text-cyan-100"
+                    >
+                      <UserRound className="h-4 w-4 text-cyan-300" />
+                      Mon profil
+                    </Link>
                     <button
                       type="button"
                       onClick={onLogout}

@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { LeaderboardRow } from "../../query/leaderboard";
 import { PlayerAvatar } from "./PlayerAvatar";
 
@@ -57,7 +58,10 @@ export function LeaderboardTable({
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-2.5">
+                  <Link
+                    to={`/profile/${row.userId}`}
+                    className="inline-flex items-center gap-2.5 transition hover:text-cyan-100"
+                  >
                     <PlayerAvatar
                       avatarUrl={row.avatarUrl}
                       username={row.username}
@@ -66,7 +70,7 @@ export function LeaderboardTable({
                     <span className="truncate font-semibold text-white">
                       {row.username}
                     </span>
-                  </span>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-bold text-indigo-300">
                   {scoreFormatter.format(row.weightedScore)}
