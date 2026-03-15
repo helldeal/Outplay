@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import type { Rarity } from "../types";
 import { resolveAssetUrl } from "../utils/asset-url";
 
 /* ── helpers ── */
@@ -142,4 +143,159 @@ export async function fetchMoreRecentDrops(
 
   if (error) throw error;
   return ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
+}
+
+/* ── Leaderboard global stats ── */
+
+interface LeaderboardGlobalStatsRpcRow {
+  total_pc_spent: number | string | null;
+  total_cards_opened: number | string | null;
+  total_openings: number | string | null;
+  booster_distribution: unknown;
+  top_drop_cards: unknown;
+}
+
+interface BoosterDistributionRpcItem {
+  booster_type: string;
+  openings_count: number | string;
+}
+
+interface TopDropCardRpcItem {
+  card_id: string;
+  card_name: string;
+  card_rarity: Rarity | null;
+  card_image_url: string | null;
+  drops_count: number | string;
+}
+
+export interface BoosterDistributionItem {
+  boosterType: string;
+  openingsCount: number;
+  share: number;
+}
+
+export interface TopDropCard {
+  cardId: string;
+  cardName: string;
+  cardRarity: Rarity | null;
+  cardImageUrl: string | null;
+  dropsCount: number;
+}
+
+export interface LeaderboardGlobalStats {
+  totalPcSpent: number;
+  totalCardsOpened: number;
+  totalOpenings: number;
+  boosterDistribution: BoosterDistributionItem[];
+  topDropCards: TopDropCard[];
+}
+
+export const leaderboardGlobalStatsQueryKey = [
+  "leaderboard",
+  "global-stats",
+] as const;
+
+function toNumber(value: number | string | null | undefined): number {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function toBoosterDistributionArray(
+  value: unknown,
+): BoosterDistributionRpcItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(
+    (item): item is BoosterDistributionRpcItem =>
+      typeof item === "object" &&
+      item !== null &&
+      "booster_type" in item &&
+      "openings_count" in item,
+  );
+}
+
+function toTopDropCardsArray(value: unknown): TopDropCardRpcItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(
+    (item): item is TopDropCardRpcItem =>
+      typeof item === "object" &&
+      item !== null &&
+      "card_id" in item &&
+      "card_name" in item &&
+      "drops_count" in item,
+  );
+}
+
+export function useLeaderboardGlobalStatsQuery(isEnabled: boolean) {
+  return useQuery({
+    queryKey: leaderboardGlobalStatsQueryKey,
+    enabled: isEnabled,
+    queryFn: async (): Promise<LeaderboardGlobalStats> => {
+      const { data, error } = await supabase.rpc(
+        "get_leaderboard_global_stats",
+      );
+      if (error) {
+        throw error;
+      }
+
+      const row = ((data ?? []) as LeaderboardGlobalStatsRpcRow[])[0];
+
+      if (!row) {
+        return {
+          totalPcSpent: 0,
+          totalCardsOpened: 0,
+          totalOpenings: 0,
+          boosterDistribution: [],
+          topDropCards: [],
+        };
+      }
+
+      const totalOpenings = toNumber(row.total_openings);
+
+      const boosterDistribution = toBoosterDistributionArray(
+        row.booster_distribution,
+      ).map((item) => {
+        const openingsCount = toNumber(item.openings_count);
+        const share =
+          totalOpenings > 0
+            ? Number(((openingsCount * 100) / totalOpenings).toFixed(2))
+            : 0;
+
+        return {
+          boosterType: item.booster_type,
+          openingsCount,
+          share,
+        };
+      });
+
+      const topDropCards = toTopDropCardsArray(row.top_drop_cards).map(
+        (item) => ({
+          cardId: item.card_id,
+          cardName: item.card_name,
+          cardRarity: item.card_rarity,
+          cardImageUrl: resolveAssetUrl(item.card_image_url),
+          dropsCount: toNumber(item.drops_count),
+        }),
+      );
+
+      return {
+        totalPcSpent: toNumber(row.total_pc_spent),
+        totalCardsOpened: toNumber(row.total_cards_opened),
+        totalOpenings,
+        boosterDistribution,
+        topDropCards,
+      };
+    },
+  });
 }

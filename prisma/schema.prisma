@@ -9,13 +9,16 @@ datasource db {
 }
 
 model User {
-  id            String   @id @db.Uuid
-  createdAt     DateTime @default(now())
-  username      String?
-  avatarUrl     String?  @map("avatar_url")
-  pcBalance     Int      @default(0) @map("pc_balance")
-  totalPcEarned BigInt   @default(0) @map("total_pc_earned")
-  title         String?
+  id              String   @id @db.Uuid
+  createdAt       DateTime @default(now())
+  username        String?
+  avatarUrl       String?  @map("avatar_url")
+  pcBalance       Int      @default(0) @map("pc_balance")
+  totalPcEarned   BigInt   @default(0) @map("total_pc_earned")
+  title           String?
+  signatureCardId String?  @map("signature_card_id")
+
+  signatureCard Card? @relation("UserSignatureCard", fields: [signatureCardId], references: [id])
 
   userCards       UserCard[]
   boosterOpenings BoosterOpening[]
@@ -118,7 +121,8 @@ model Card {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  userCards UserCard[]
+  userCards      UserCard[]
+  signatureUsers User[]     @relation("UserSignatureCard")
 
   @@index([seriesId])
   @@index([rarity])

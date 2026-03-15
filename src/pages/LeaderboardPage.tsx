@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
 import { useAuth } from "../auth/AuthProvider";
+import { LeaderboardGlobalStats } from "../components/leaderboard/LeaderboardGlobalStats";
 import { LeaderboardPodium } from "../components/leaderboard/LeaderboardPodium";
 import { LeaderboardTable } from "../components/leaderboard/LeaderboardTable";
 import { RecentDropsPanel } from "../components/leaderboard/RecentDropsPanel";
 import { PageLoading } from "../components/PageLoading";
 import {
   useLeaderboardQuery,
+  useLeaderboardGlobalStatsQuery,
   useRecentDropsQuery,
   fetchMoreRecentDrops,
   type RecentDrop,
@@ -20,6 +22,9 @@ export function LeaderboardPage() {
   const { user } = useAuth();
   const leaderboardQuery = useLeaderboardQuery(Boolean(user));
   const recentDropsQuery = useRecentDropsQuery(Boolean(user));
+  const leaderboardGlobalStatsQuery = useLeaderboardGlobalStatsQuery(
+    Boolean(user),
+  );
 
   /* pagination state */
   const [page, setPage] = useState(0);
@@ -106,6 +111,21 @@ export function LeaderboardPage() {
           }}
         />
       </div>
+
+      {leaderboardGlobalStatsQuery.isLoading ? (
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400">
+          Chargement des global stats...
+        </div>
+      ) : leaderboardGlobalStatsQuery.error ? (
+        <div className="rounded-2xl border border-rose-800/70 bg-rose-950/30 p-4 text-sm text-rose-300">
+          Impossible de charger les global stats.
+        </div>
+      ) : leaderboardGlobalStatsQuery.data ? (
+        <LeaderboardGlobalStats
+          stats={leaderboardGlobalStatsQuery.data}
+          scoreFormatter={scoreFormatter}
+        />
+      ) : null}
     </section>
   );
 }
