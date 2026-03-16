@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   BarChart3,
   Clock3,
@@ -34,6 +34,54 @@ const percentFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("fr-FR", {
+  numeric: "always",
+});
+
+function formatFullDate(value: string): string {
+  return new Date(value).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatRelativeTime(value: string): string {
+  const targetTime = new Date(value).getTime();
+
+  if (Number.isNaN(targetTime)) {
+    return "Date inconnue";
+  }
+
+  const diffInSeconds = Math.round((targetTime - Date.now()) / 1000);
+  const absDiffInSeconds = Math.abs(diffInSeconds);
+
+  if (absDiffInSeconds < 45) {
+    return "A l'instant";
+  }
+
+  const units: Array<{
+    unit: Intl.RelativeTimeFormatUnit;
+    seconds: number;
+  }> = [
+    { unit: "year", seconds: 60 * 60 * 24 * 365 },
+    { unit: "month", seconds: 60 * 60 * 24 * 30 },
+    { unit: "week", seconds: 60 * 60 * 24 * 7 },
+    { unit: "day", seconds: 60 * 60 * 24 },
+    { unit: "hour", seconds: 60 * 60 },
+    { unit: "minute", seconds: 60 },
+  ];
+
+  const selectedUnit =
+    units.find(({ seconds }) => absDiffInSeconds >= seconds) ??
+    units[units.length - 1];
+
+  return relativeTimeFormatter.format(
+    Math.round(diffInSeconds / selectedUnit.seconds),
+    selectedUnit.unit,
+  );
+}
 
 function formatPercent(value: number): string {
   return `${Math.max(0, Math.round(value * 10) / 10)}%`;
@@ -77,9 +125,9 @@ export function ProfilePage() {
       return;
     }
 
-    setUsernameDraft(
-      (prev) => prev || profile?.username || overviewQuery.data.username,
-    );
+    const rawUsername = profile?.username ?? overviewQuery.data.username;
+    const cleanUsername = rawUsername.split("#")[0] || rawUsername;
+    setUsernameDraft((prev) => prev || cleanUsername);
     setTitleDraft((prev) => (prev ? prev : (overviewQuery.data.title ?? "")));
     setSignatureCardIdDraft(
       (prev) => prev || overviewQuery.data.signatureCardId || "",
@@ -153,7 +201,7 @@ export function ProfilePage() {
     .sort((a, b) => b.card.pc_value - a.card.pc_value)
     .map((row) => ({
       value: row.card_id,
-      label: `${row.card.name} · ${rarityLabel(row.card.rarity)} · ${intFormatter.format(row.card.pc_value)} PC`,
+      label: `${row.card_id} · ${rarityLabel(row.card.rarity)} · ${row.card.name}`,
     }));
 
   const luckyPullRate = overview.bigPullRate;
@@ -278,25 +326,15 @@ export function ProfilePage() {
                   ? `Titre: ${overview.title}`
                   : "Aucun titre equipé"}
               </p>
-              <p className="mt-1 text-xs text-slate-400">
-                Carte signature: {overview.signatureCardName ?? "Aucune"}
-              </p>
               {isOwnProfile ? (
                 <p className="mt-1 text-xs text-cyan-200/90">
                   Modifie ton username et ton titre ci-dessous.
                 </p>
-              ) : (
-                <Link
-                  to="/leaderboard"
-                  className="mt-1 inline-flex text-xs font-semibold text-cyan-200 transition hover:text-cyan-100"
-                >
-                  Retour au leaderboard
-                </Link>
-              )}
+              ) : null}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex gap-3">
             <div className="rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2">
               <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
                 Position
@@ -331,6 +369,42 @@ export function ProfilePage() {
               <p className="text-lg font-black text-amber-300">
                 {intFormatter.format(overview.achievementsUnlocked)}
               </p>
+            </div>
+            <div className="rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                Porte Monnaie
+              </p>
+              <p className="text-lg font-black text-amber-300">
+                {intFormatter.format(overview.pcBalance)} PC
+              </p>
+            </div>
+            <div className="col-span-2 flex gap-3 rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2 sm:col-span-1">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                  Signature
+                </p>
+                {overview.signatureCardName ? (
+                  <>
+                    <p
+                      className={`truncate text-sm font-black uppercase tracking-wider ${rarityTextColor(overview.signatureCardRarity)}`}
+                    >
+                      {overview.signatureCardName}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm font-black text-slate-500">Aucune</p>
+                )}
+              </div>
+              {overview.signatureCardImageUrl ? (
+                <div className="h-10 aspect-[3/4] shrink-0 overflow-hidden rounded border border-slate-700/60 bg-black">
+                  <img
+                    src={overview.signatureCardImageUrl}
+                    alt={overview.signatureCardName ?? "Carte signature"}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -753,13 +827,11 @@ export function ProfilePage() {
                         {opening.boosterName ?? "Booster"}
                         {opening.seriesName ? ` - ${opening.seriesName}` : ""}
                       </p>
-                      <span className="text-[11px] text-slate-400">
-                        {new Date(opening.openedAt).toLocaleString("fr-FR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      <span
+                        className="text-[11px] text-slate-400"
+                        title={formatFullDate(opening.openedAt)}
+                      >
+                        {formatRelativeTime(opening.openedAt)}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-slate-400">
@@ -817,16 +889,11 @@ export function ProfilePage() {
                       <p className="text-sm font-semibold text-white">
                         {achievement.name}
                       </p>
-                      <span className="text-[11px] text-slate-400">
-                        {new Date(achievement.unlockedAt).toLocaleString(
-                          "fr-FR",
-                          {
-                            day: "2-digit",
-                            month: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          },
-                        )}
+                      <span
+                        className="text-[11px] text-slate-400"
+                        title={formatFullDate(achievement.unlockedAt)}
+                      >
+                        {formatRelativeTime(achievement.unlockedAt)}
                       </span>
                     </div>
                     <p className="mt-1 text-xs uppercase tracking-[0.1em] text-amber-300/90">

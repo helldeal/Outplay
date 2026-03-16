@@ -83,13 +83,13 @@ export function LeaderboardPodium({
                 {meta.rank}
               </span>
               <div className="mt-auto pb-4 text-center">
-                <p className="truncate px-2 text-sm font-bold text-white">
+                <p className="truncate px-2 text-lg font-bold text-white">
                   {row.username}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs font-semibold text-slate-400 uppercase">
                   {row.totalCards} cartes
                 </p>
-                <p className="text-xs text-amber-300">
+                <p className="text-xs font-semibold text-amber-300 uppercase">
                   {row.achievementsUnlocked} achievements
                 </p>
               </div>
