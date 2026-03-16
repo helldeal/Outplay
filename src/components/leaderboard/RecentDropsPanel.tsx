@@ -1,5 +1,5 @@
 import { Clock3, LoaderCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { RecentDrop } from "../../query/leaderboard";
 import {
   rarityBorderColor,
@@ -19,6 +19,8 @@ export function RecentDropsPanel({
   loadingMore: boolean;
   onLoadMore: () => void;
 }) {
+  const navigate = useNavigate();
+
   const formatRelativeDate = (dateIso: string) => {
     const d = new Date(dateIso);
     return d.toLocaleString("fr-FR", {
@@ -45,11 +47,25 @@ export function RecentDropsPanel({
           {drops.map((drop) => (
             <article
               key={drop.openingId}
-              className="rounded-xl border border-slate-800 bg-slate-900/60 p-3"
+              className="cursor-pointer rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:border-cyan-300/40"
+              onClick={() => {
+                navigate(`/opening/${drop.openingId}`);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  navigate(`/opening/${drop.openingId}`);
+                }
+              }}
+              role="button"
+              tabIndex={0}
             >
               <Link
                 to={`/profile/${drop.userId}`}
                 className="flex items-center gap-2.5 transition hover:text-cyan-100"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
               >
                 <PlayerAvatar
                   avatarUrl={drop.avatarUrl}

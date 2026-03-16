@@ -8,7 +8,7 @@ export function PlayerAvatar({
   size?: "sm" | "md" | "lg";
 }) {
   const dim =
-    size === "lg" ? "h-20 w-20" : size === "md" ? "h-10 w-10" : "h-7 w-7";
+    size === "lg" ? "h-20 w-20" : size === "md" ? "h-16 w-16" : "h-7 w-7";
   const textSize =
     size === "lg" ? "text-xl" : size === "md" ? "text-sm" : "text-[10px]";
 

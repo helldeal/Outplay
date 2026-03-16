@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   BarChart3,
   Clock3,
@@ -93,6 +93,7 @@ function formatPercent2(value: number): string {
 
 export function ProfilePage() {
   const { userId: routeUserId } = useParams();
+  const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
 
@@ -820,7 +821,18 @@ export function ProfilePage() {
                 {(recentOpeningsQuery.data ?? []).map((opening) => (
                   <div
                     key={opening.openingId}
-                    className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3"
+                    className="cursor-pointer rounded-xl border border-slate-700/70 bg-slate-950/55 p-3 transition hover:border-cyan-300/40"
+                    onClick={() => {
+                      navigate(`/opening/${opening.openingId}`);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate(`/opening/${opening.openingId}`);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-white">

@@ -9,6 +9,7 @@ import { HomePage } from "./pages/HomePage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
 import { LoginPage } from "./pages/LoginPage";
+import { OpeningRecapPage } from "./pages/OpeningRecapPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ShopPage } from "./pages/ShopPage";
@@ -71,6 +72,14 @@ export default function App() {
           element={
             <RequireAuth>
               <LeaderboardPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/opening/:openingId"
+          element={
+            <RequireAuth>
+              <OpeningRecapPage />
             </RequireAuth>
           }
         />
