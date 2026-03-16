@@ -387,7 +387,7 @@ export function ProfilePage() {
                 {overview.signatureCardName ? (
                   <>
                     <p
-                      className={`truncate text-sm font-black uppercase tracking-wider ${rarityTextColor(overview.signatureCardRarity)}`}
+                      className={`text-lg truncate font-black uppercase tracking-tighter ${rarityTextColor(overview.signatureCardRarity)}`}
                     >
                       {overview.signatureCardName}
                     </p>
@@ -422,7 +422,7 @@ export function ProfilePage() {
 
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             <label className="space-y-1">
-              <span className="text-xs font-semibold text-slate-300">
+              <span className="ml-1 text-xs font-semibold text-slate-300">
                 Username
               </span>
               <input
@@ -434,7 +434,7 @@ export function ProfilePage() {
             </label>
 
             <label className="space-y-1">
-              <span className="text-xs font-semibold text-slate-300">
+              <span className="ml-1 text-xs font-semibold text-slate-300">
                 Titre
               </span>
               <select
@@ -452,7 +452,7 @@ export function ProfilePage() {
             </label>
 
             <label className="space-y-1">
-              <span className="text-xs font-semibold text-slate-300">
+              <span className="ml-1 text-xs font-semibold text-slate-300">
                 Carte signature
               </span>
               <select
@@ -685,13 +685,13 @@ export function ProfilePage() {
 
             <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-lg border border-slate-700/70 bg-slate-950/55 p-2 text-slate-300">
-                <p className="text-slate-500">PC depense</p>
+                <p className="text-slate-500">PC dépensé</p>
                 <p className="mt-0.5 font-black text-amber-300">
                   {intFormatter.format(overview.totalPcSpent)}
                 </p>
               </div>
               <div className="rounded-lg border border-slate-700/70 bg-slate-950/55 p-2 text-slate-300">
-                <p className="text-slate-500">Nombre d'openings</p>
+                <p className="text-slate-500">Nombre d&apos;ouvertures</p>
                 <p className="mt-0.5 font-black text-fuchsia-300">
                   {intFormatter.format(overview.totalOpenings)}
                 </p>

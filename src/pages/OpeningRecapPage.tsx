@@ -74,7 +74,9 @@ export function OpeningRecapPage() {
   }, [cardsQuery.data]);
 
   if (!openingId) {
-    return <p className="text-sm text-rose-300">ID d'ouverture invalide.</p>;
+    return (
+      <p className="text-sm text-rose-300">ID d&apos;ouverture invalide.</p>
+    );
   }
 
   if (openingQuery.isLoading) {
