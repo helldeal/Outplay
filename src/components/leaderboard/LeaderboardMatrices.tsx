@@ -218,8 +218,8 @@ export function LeaderboardMatrices({
     sortedPlayers,
     currentUserId,
     (player) => player.avgPcSpent,
-    (player) => player.avgPcGained,
-    { x: 20, y: 20 },
+    (player) => player.bigPullRate,
+    { x: 20, y: 8 },
   );
 
   const current = sortedPlayers.find(
@@ -274,7 +274,7 @@ export function LeaderboardMatrices({
 
         <MatrixCard
           title="Matrice de rentabilité"
-          subtitle="Argent gagné moyen (Y) vs argent dépensé moyen (X)"
+          subtitle="Taux de gros pull (Y) vs argent dépensé moyen (X)"
           icon={<Coins className="h-4 w-4 text-amber-300" />}
           points={profitPoints}
           cornerLabels={{
@@ -284,7 +284,7 @@ export function LeaderboardMatrices({
             bottomRight: "Déficit",
           }}
           tooltipFormatter={(point) =>
-            `${point.username} · ${formatPc(point.xValue)} dépensés / ${formatPc(point.yValue)} gagnés`
+            `${point.username} · ${formatPc(point.xValue)} dépensés / ${formatPercent(point.yValue)} gros pulls`
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}

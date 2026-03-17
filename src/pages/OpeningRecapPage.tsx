@@ -46,6 +46,58 @@ function rarityOrder(rarity: Rarity): number {
   }
 }
 
+function computeDuplicateCardIndices(
+  cards: Array<{ id: string; pc_value: number }>,
+  duplicateCount: number,
+  pcGained: number,
+): number[] {
+  if (duplicateCount <= 0 || cards.length === 0) {
+    return [];
+  }
+
+  const repeatedIndices: number[] = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < cards.length; index++) {
+    const cardId = cards[index].id;
+    if (seen.has(cardId)) {
+      repeatedIndices.push(index);
+    }
+    seen.add(cardId);
+  }
+
+  if (repeatedIndices.length === duplicateCount) {
+    const repeatedPc = repeatedIndices.reduce(
+      (sum, index) => sum + cards[index].pc_value,
+      0,
+    );
+    if (repeatedPc === pcGained) {
+      return repeatedIndices;
+    }
+  }
+
+  const solutions: number[][] = [];
+  const current: number[] = [];
+
+  const search = (start: number, left: number, sum: number) => {
+    if (left === 0) {
+      if (sum === pcGained) {
+        solutions.push([...current]);
+      }
+      return;
+    }
+
+    for (let index = start; index <= cards.length - left; index++) {
+      current.push(index);
+      search(index + 1, left - 1, sum + cards[index].pc_value);
+      current.pop();
+    }
+  };
+
+  search(0, duplicateCount, 0);
+
+  return solutions[0] ?? [];
+}
+
 export function OpeningRecapPage() {
   const { openingId } = useParams();
   const openingQuery = usePublicOpeningRecapQuery(openingId);
@@ -96,6 +148,20 @@ export function OpeningRecapPage() {
   if (!opening) {
     return <p className="text-sm text-slate-400">Ouverture introuvable.</p>;
   }
+
+  const cards = cardsQuery.data ?? [];
+
+  const duplicateCardIndexSet = new Set(
+    computeDuplicateCardIndices(
+      cards,
+      opening.duplicateCards,
+      opening.pcGained,
+    ),
+  );
+
+  const sortedCards = [...cards]
+    .map((card, index) => ({ card, index }))
+    .sort((a, b) => rarityOrder(a.card.rarity) - rarityOrder(b.card.rarity));
 
   const wasPaidOpening =
     opening.openingType === "SHOP" && opening.boosterPricePc > 0;
@@ -254,16 +320,17 @@ export function OpeningRecapPage() {
           </p>
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {(cardsQuery.data ?? [])
-              .sort((a, b) => rarityOrder(a.rarity) - rarityOrder(b.rarity))
-              .map((card) => (
-                <CardTile
-                  key={card.id}
-                  card={card}
-                  isOwned
-                  disableExpand={false}
-                />
-              ))}
+            {sortedCards.map(({ card, index }) => (
+              <div key={`${card.id}-${index}`} className="relative">
+                <CardTile card={card} isOwned disableExpand={false} />
+                {duplicateCardIndexSet.has(index) && (
+                  <div className="absolute -top-3 -right-3 z-30 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-lg shadow-emerald-500/30">
+                    <Coins className="h-3.5 w-3.5" />+
+                    {intFormatter.format(card.pc_value)} PC
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </article>
