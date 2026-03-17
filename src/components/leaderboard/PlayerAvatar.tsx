@@ -5,12 +5,24 @@ export function PlayerAvatar({
 }: {
   avatarUrl: string | null;
   username: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }) {
   const dim =
-    size === "lg" ? "h-20 w-20" : size === "md" ? "h-16 w-16" : "h-7 w-7";
+    size === "lg"
+      ? "h-20 w-20"
+      : size === "md"
+        ? "h-16 w-16"
+        : size === "xs"
+          ? "h-5 w-5"
+          : "h-7 w-7";
   const textSize =
-    size === "lg" ? "text-xl" : size === "md" ? "text-sm" : "text-[10px]";
+    size === "lg"
+      ? "text-xl"
+      : size === "md"
+        ? "text-sm"
+        : size === "xs"
+          ? "text-[9px]"
+          : "text-[10px]";
 
   if (avatarUrl) {
     return (

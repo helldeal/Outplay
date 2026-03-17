@@ -299,3 +299,67 @@ export function useLeaderboardGlobalStatsQuery(isEnabled: boolean) {
     },
   });
 }
+
+/* ── Leaderboard matrix players ── */
+
+interface LeaderboardMatrixPlayerRpcRow {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  leaderboard_position: number;
+  weighted_score: number;
+  duplicate_rate: number | string | null;
+  big_pull_rate: number | string | null;
+  avg_pc_gained: number | string | null;
+  avg_pc_spent: number | string | null;
+}
+
+export interface LeaderboardMatrixPlayer {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  leaderboardPosition: number;
+  weightedScore: number;
+  duplicateRate: number;
+  bigPullRate: number;
+  avgPcGained: number;
+  avgPcSpent: number;
+}
+
+export const leaderboardMatrixPlayersQueryKey = (userId?: string) =>
+  ["leaderboard", "matrix-players", userId] as const;
+
+export function useLeaderboardMatrixPlayersQuery(
+  userId: string | undefined,
+  isEnabled: boolean,
+) {
+  return useQuery({
+    queryKey: leaderboardMatrixPlayersQueryKey(userId),
+    enabled: Boolean(userId) && isEnabled,
+    staleTime: 1000 * 60 * 5,
+    queryFn: async (): Promise<LeaderboardMatrixPlayer[]> => {
+      const { data, error } = await supabase.rpc(
+        "get_leaderboard_matrix_players",
+        {
+          p_user_id: userId!,
+        },
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      return ((data ?? []) as LeaderboardMatrixPlayerRpcRow[]).map((row) => ({
+        userId: row.user_id,
+        username: displayName(row.username),
+        avatarUrl: row.avatar_url,
+        leaderboardPosition: row.leaderboard_position,
+        weightedScore: row.weighted_score,
+        duplicateRate: toNumber(row.duplicate_rate),
+        bigPullRate: toNumber(row.big_pull_rate),
+        avgPcGained: toNumber(row.avg_pc_gained),
+        avgPcSpent: toNumber(row.avg_pc_spent),
+      }));
+    },
+  });
+}

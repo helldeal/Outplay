@@ -1,12 +1,14 @@
 import { useState, useCallback } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { LeaderboardGlobalStats } from "../components/leaderboard/LeaderboardGlobalStats";
+import { LeaderboardMatrices } from "../components/leaderboard/LeaderboardMatrices";
 import { LeaderboardPodium } from "../components/leaderboard/LeaderboardPodium";
 import { LeaderboardTable } from "../components/leaderboard/LeaderboardTable";
 import { RecentDropsPanel } from "../components/leaderboard/RecentDropsPanel";
 import { PageLoading } from "../components/PageLoading";
 import {
   useLeaderboardQuery,
+  useLeaderboardMatrixPlayersQuery,
   useLeaderboardGlobalStatsQuery,
   useRecentDropsQuery,
   fetchMoreRecentDrops,
@@ -23,6 +25,10 @@ export function LeaderboardPage() {
   const leaderboardQuery = useLeaderboardQuery(Boolean(user));
   const recentDropsQuery = useRecentDropsQuery(Boolean(user));
   const leaderboardGlobalStatsQuery = useLeaderboardGlobalStatsQuery(
+    Boolean(user),
+  );
+  const leaderboardMatrixPlayersQuery = useLeaderboardMatrixPlayersQuery(
+    user?.id,
     Boolean(user),
   );
 
@@ -124,6 +130,21 @@ export function LeaderboardPage() {
         <LeaderboardGlobalStats
           stats={leaderboardGlobalStatsQuery.data}
           scoreFormatter={scoreFormatter}
+        />
+      ) : null}
+
+      {leaderboardMatrixPlayersQuery.isLoading ? (
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400">
+          Chargement des matrices du leaderboard...
+        </div>
+      ) : leaderboardMatrixPlayersQuery.error ? (
+        <div className="rounded-2xl border border-rose-800/70 bg-rose-950/30 p-4 text-sm text-rose-300">
+          Impossible de charger les matrices du leaderboard.
+        </div>
+      ) : leaderboardMatrixPlayersQuery.data && user?.id ? (
+        <LeaderboardMatrices
+          players={leaderboardMatrixPlayersQuery.data}
+          currentUserId={user.id}
         />
       ) : null}
     </section>
