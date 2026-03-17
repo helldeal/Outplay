@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface ImagePreloadState {
   isReady: boolean;
@@ -34,21 +34,15 @@ export function useImagePreload(urls: (string | null | undefined)[]) {
       ),
     [urls],
   );
+  const urlsKey = useMemo(() => normalizedUrls.join("||"), [normalizedUrls]);
+
   const [state, setState] = useState<ImagePreloadState>({
     isReady: normalizedUrls.length === 0,
     total: normalizedUrls.length,
     loaded: normalizedUrls.length === 0 ? 0 : 0,
   });
-  const previousUrlsKeyRef = useRef<string>("");
 
   useEffect(() => {
-    const urlsKey = normalizedUrls.join("||");
-
-    if (previousUrlsKeyRef.current === urlsKey) {
-      return;
-    }
-    previousUrlsKeyRef.current = urlsKey;
-
     let cancelled = false;
     const total = normalizedUrls.length;
 
@@ -82,7 +76,7 @@ export function useImagePreload(urls: (string | null | undefined)[]) {
     return () => {
       cancelled = true;
     };
-  }, [normalizedUrls]);
+  }, [urlsKey]);
 
   return state;
 }

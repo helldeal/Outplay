@@ -22,6 +22,17 @@ export function LegendexPage() {
       return;
     }
 
+    if (!selectedSeriesId && !requestedSeries) {
+      setSelectedSeriesId(
+        seriesQuery.data.sort((a, b) => a.code.localeCompare(b.code))[0].id,
+      );
+      return;
+    }
+
+    if (!requestedSeries) {
+      return;
+    }
+
     const targetSeries = requestedSeries
       ? seriesQuery.data.find(
           (series) =>
@@ -157,11 +168,14 @@ export function LegendexPage() {
             disabled={isSeriesLoading || (seriesQuery.data ?? []).length === 0}
             className="rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-semibold text-slate-100 shadow-[0_6px_18px_rgba(2,6,23,0.35)]"
           >
-            {(seriesQuery.data ?? []).map((series) => (
-              <option key={series.id} value={series.id}>
-                {series.name} ({series.code})
-              </option>
-            ))}
+            {(seriesQuery.data ?? [])
+              .slice()
+              .sort((a, b) => a.code.localeCompare(b.code))
+              .map((series) => (
+                <option key={series.id} value={series.id}>
+                  {series.name} ({series.code})
+                </option>
+              ))}
           </select>
           {isSeriesLoading && (
             <span className="text-xs text-slate-400">
