@@ -40,7 +40,10 @@ export function LegendexPage() {
   const cardsQuery = useLegendexCardsQuery(selectedSeriesId);
   const ownedQuery = useLegendexOwnedCardsQuery(user?.id, selectedSeriesId);
 
-  const cards = cardsQuery.data?.sort((a, b) => b.id.localeCompare(a.id)) ?? [];
+  const cards = useMemo(
+    () => [...(cardsQuery.data ?? [])].sort((a, b) => b.id.localeCompare(a.id)),
+    [cardsQuery.data],
+  );
   const ownedData = ownedQuery.data;
   const owned =
     ownedData instanceof Map ? ownedData : new Map<string, string>();
