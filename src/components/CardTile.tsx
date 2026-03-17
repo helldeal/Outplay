@@ -4,12 +4,31 @@ import "../cards.css";
 import type { CSSProperties } from "react";
 import type { CardWithRelations, Rarity } from "../types";
 import { useCardHolo } from "../hooks/useCardHolo";
+import { usePublicCardStatsQuery } from "../query/card-stats";
 
 interface CardTileProps {
   card: CardWithRelations;
   obtainedAt?: string;
   isOwned?: boolean;
   disableExpand?: boolean;
+}
+
+const integerFormatter = new Intl.NumberFormat("fr-FR");
+const percentFormatter = new Intl.NumberFormat("fr-FR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatInt(value: number): string {
+  return integerFormatter.format(Math.round(value));
+}
+
+function formatOneIn(value: number | null): string {
+  if (value == null) {
+    return "—";
+  }
+
+  return `1 / ${formatInt(Math.max(1, value))}`;
 }
 
 function rarityNameGradient(rarity: CardWithRelations["rarity"]) {
@@ -188,10 +207,50 @@ export function CardTile({
 }: CardTileProps) {
   const { cardRef, interacting, active, closing, close, handlers } =
     useCardHolo({ disabled: !isOwned || disableExpand });
+  const statsQuery = usePublicCardStatsQuery(card.id, active && isOwned);
   const cssRarity = mapRarityToCSS(card.rarity);
   const glowStyle = rarityGlowVars(card.rarity);
   const hasHolo = card.rarity !== "ROOKIE";
   const showOverlay = active || closing;
+  const stats = statsQuery.data;
+
+  const statItems = stats
+    ? [
+        {
+          slot: "top-left",
+          label: "Chance",
+          value: `${percentFormatter.format(stats.dropRatePct)}% · ${formatOneIn(stats.oneIn)}`,
+          kind: "default" as const,
+        },
+        {
+          slot: "top-right",
+          label: "Collection",
+          value: `${formatInt(stats.ownersCount)} · ${formatInt(stats.totalCardDrops)}`,
+          meta: "Possesseurs · Drops",
+          kind: "default" as const,
+        },
+        {
+          slot: "bottom-left",
+          label: "Top drop",
+          value: stats.topHolder?.username ?? "—",
+          avatarUrl: stats.topHolder?.avatarUrl ?? null,
+          meta: stats.topHolder
+            ? `${formatInt(stats.topHolder.drops)} drops`
+            : null,
+          kind: "profile" as const,
+        },
+        {
+          slot: "bottom-right",
+          label: "Premier drop",
+          value: stats.firstHolder?.username ?? "—",
+          avatarUrl: stats.firstHolder?.avatarUrl ?? null,
+          meta: stats.firstHolder?.obtainedAt
+            ? new Date(stats.firstHolder.obtainedAt).toLocaleDateString()
+            : null,
+          kind: "profile" as const,
+        },
+      ]
+    : [];
 
   return (
     <>
@@ -214,6 +273,73 @@ export function CardTile({
         onDragStart={(event) => event.preventDefault()}
         {...handlers}
       >
+        {active && !closing && (
+          <div className="card-stats-orbit" aria-live="polite">
+            {statsQuery.isLoading && (
+              <div className="card-stats-badge card-stats-badge--center card-stats-badge--delay-1">
+                <span className="card-stats-badge__label">Stats</span>
+                <span className="card-stats-badge__value">Chargement…</span>
+              </div>
+            )}
+
+            {statsQuery.isError && (
+              <div className="card-stats-badge card-stats-badge--center card-stats-badge--delay-1">
+                <span className="card-stats-badge__label">Stats</span>
+                <span className="card-stats-badge__value">Indisponibles</span>
+              </div>
+            )}
+
+            {!statsQuery.isLoading &&
+              !statsQuery.isError &&
+              statItems.map((item, index) => (
+                <div
+                  key={`${card.id}-${item.slot}`}
+                  className={`card-stats-badge card-stats-badge--${item.slot} card-stats-badge--delay-${index + 1}`}
+                >
+                  <span className="card-stats-badge__label">{item.label}</span>
+                  {item.kind === "profile" ? (
+                    <div className="card-stats-profile">
+                      {item.avatarUrl ? (
+                        <img
+                          src={item.avatarUrl}
+                          alt={item.value}
+                          className="card-stats-profile__avatar"
+                          loading="lazy"
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="card-stats-profile__avatar card-stats-profile__avatar--placeholder">
+                          ?
+                        </div>
+                      )}
+                      <div className="card-stats-profile__text">
+                        <span className="card-stats-badge__value">
+                          {item.value}
+                        </span>
+                        {item.meta ? (
+                          <span className="card-stats-profile__meta">
+                            {item.meta}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="card-stats-badge__value">
+                        {item.value}
+                      </span>
+                      {item.meta ? (
+                        <span className="card-stats-profile__meta">
+                          {item.meta}
+                        </span>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              ))}
+          </div>
+        )}
+
         <div className="card__translater">
           <div className="card__rotator">
             <CardInner
