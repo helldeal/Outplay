@@ -207,7 +207,10 @@ export function CardTile({
 }: CardTileProps) {
   const { cardRef, interacting, active, closing, close, handlers } =
     useCardHolo({ disabled: !isOwned || disableExpand });
-  const statsQuery = usePublicCardStatsQuery(card.id, active && isOwned);
+  const statsQuery = usePublicCardStatsQuery(
+    active ? card.id : undefined,
+    active && isOwned,
+  );
   const cssRarity = mapRarityToCSS(card.rarity);
   const glowStyle = rarityGlowVars(card.rarity);
   const hasHolo = card.rarity !== "ROOKIE";
