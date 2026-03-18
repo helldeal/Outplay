@@ -227,6 +227,10 @@ export function AppLayout() {
         rewardBoosterType: streakStatus.next_reward_booster_type,
       })
     : null;
+  const targetSeriesCode =
+    (seriesQuery.data ?? []).find(
+      (series) => series.id === profile?.target_series_id,
+    )?.code ?? dailyTargetQuery.data?.series.code;
 
   const nextStreakTone = resolveRewardTone({
     rewardPc:
@@ -439,7 +443,7 @@ export function AppLayout() {
         }}
         countdown={dailyCountdown}
         streakStatus={streakStatus}
-        targetSeriesCode={dailyTargetQuery.data?.series.code}
+        targetSeriesCode={targetSeriesCode}
       />
 
       <main className="relative mx-auto mt-28 w-full max-w-7xl px-4 py-6 md:mt-20">

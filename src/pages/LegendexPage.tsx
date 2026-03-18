@@ -16,7 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export function LegendexPage() {
   const [searchParams] = useSearchParams();
   const requestedSeries = searchParams.get("series")?.toLowerCase() ?? "";
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
 
   const seriesQuery = useLegendexSeriesQuery();
@@ -226,9 +226,28 @@ export function LegendexPage() {
                   onClick={() => {
                     updateTargetSeriesMutation.mutate(selectedSeries.id, {
                       onSuccess: () => {
-                        void queryClient.invalidateQueries({
-                          queryKey: ["user-target-series", user.id],
-                        });
+                        if (!user?.id) {
+                          return;
+                        }
+
+                        void Promise.all([
+                          queryClient.invalidateQueries({
+                            queryKey: ["user-target-series", user.id],
+                          }),
+                          queryClient.invalidateQueries({
+                            queryKey: ["login-streak-status", user.id],
+                          }),
+                          queryClient.invalidateQueries({
+                            queryKey: ["achievements-progress", user.id],
+                          }),
+                          queryClient.invalidateQueries({
+                            queryKey: ["achievements-unseen-count", user.id],
+                          }),
+                          queryClient.invalidateQueries({
+                            queryKey: ["achievements-notifications", user.id],
+                          }),
+                          refreshProfile(),
+                        ]).catch(() => undefined);
                       },
                     });
                   }}
