@@ -7,6 +7,7 @@ import { displayName } from "./leaderboard";
 interface PublicProfileOverviewRpcRow {
   user_id: string;
   username: string;
+  description: string | null;
   avatar_url: string | null;
   title: string | null;
   leaderboard_position: number | null;
@@ -58,6 +59,7 @@ interface PublicProfileOverviewRpcRow {
 export interface PublicProfileOverview {
   userId: string;
   username: string;
+  description: string | null;
   avatarUrl: string | null;
   title: string | null;
   leaderboardPosition: number | null;
@@ -260,6 +262,7 @@ function mapOverview(row: PublicProfileOverviewRpcRow): PublicProfileOverview {
   return {
     userId: row.user_id,
     username: displayName(row.username),
+    description: row.description,
     avatarUrl: row.avatar_url,
     title: row.title,
     leaderboardPosition: row.leaderboard_position,
@@ -366,7 +369,23 @@ export function usePublicProfileOverviewQuery(userId?: string) {
         throw new Error("Profil introuvable");
       }
 
-      return mapOverview(first);
+      const { data: descriptionData, error: descriptionError } =
+        await supabase.rpc("get_public_profile_description", {
+          p_user_id: userId!,
+        });
+
+      if (descriptionError) {
+        throw descriptionError;
+      }
+
+      const descriptionRow =
+        ((descriptionData ?? []) as Array<{ description: string | null }>)[0] ??
+        null;
+
+      return {
+        ...mapOverview(first),
+        description: descriptionRow?.description ?? null,
+      };
     },
   });
 }
@@ -488,18 +507,19 @@ function normalizeTitleInput(title: string | null): string | null {
 }
 
 export async function updateCurrentUserProfileIdentity(params: {
-  username: string;
   title: string | null;
   signatureCardId: string | null;
+  description: string | null;
 }) {
   const normalizedTitle = normalizeTitleInput(params.title);
+  const normalizedDescription = params.description?.trim() || null;
 
   const { data, error } = await supabase.rpc(
     "update_current_user_profile_identity",
     {
-      p_username: params.username,
       p_title: normalizedTitle,
       p_signature_card_id: params.signatureCardId,
+      p_description: normalizedDescription,
     },
   );
 
@@ -514,6 +534,7 @@ export async function updateCurrentUserProfileIdentity(params: {
         username: string;
         title: string | null;
         signature_card_id: string | null;
+        description: string | null;
       }>
     )[0] ?? null
   );

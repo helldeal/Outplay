@@ -94,7 +94,7 @@ function formatPercent2(value: number): string {
 export function ProfilePage() {
   const { userId: routeUserId } = useParams();
   const navigate = useNavigate();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
 
   const targetUserId = routeUserId ?? user?.id;
@@ -114,7 +114,7 @@ export function ProfilePage() {
   const [tab, setTab] = useState<"collection" | "stats" | "activity">(
     "collection",
   );
-  const [usernameDraft, setUsernameDraft] = useState("");
+  const [descriptionDraft, setDescriptionDraft] = useState("");
   const [titleDraft, setTitleDraft] = useState<string>("");
   const [signatureCardIdDraft, setSignatureCardIdDraft] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
@@ -126,14 +126,14 @@ export function ProfilePage() {
       return;
     }
 
-    const rawUsername = profile?.username ?? overviewQuery.data.username;
-    const cleanUsername = rawUsername.split("#")[0] || rawUsername;
-    setUsernameDraft((prev) => prev || cleanUsername);
+    setDescriptionDraft(
+      (prev) => prev || (overviewQuery.data.description ?? ""),
+    );
     setTitleDraft((prev) => (prev ? prev : (overviewQuery.data.title ?? "")));
     setSignatureCardIdDraft(
       (prev) => prev || overviewQuery.data.signatureCardId || "",
     );
-  }, [isOwnProfile, overviewQuery.data, profile?.username]);
+  }, [isOwnProfile, overviewQuery.data]);
 
   const availableTitles = useMemo(() => {
     if (!isOwnProfile) {
@@ -282,9 +282,9 @@ export function ProfilePage() {
           : titleDraft;
 
       await updateCurrentUserProfileIdentity({
-        username: usernameDraft,
         title: normalizedTitle,
         signatureCardId: signatureCardIdDraft || null,
+        description: descriptionDraft || null,
       });
 
       await Promise.all([
@@ -327,9 +327,14 @@ export function ProfilePage() {
                   ? `Titre: ${overview.title}`
                   : "Aucun titre equipé"}
               </p>
+              <p className="mt-1 max-w-xl text-sm text-slate-400">
+                {overview.description?.trim()
+                  ? overview.description
+                  : "Aucune description"}
+              </p>
               {isOwnProfile ? (
                 <p className="mt-1 text-xs text-cyan-200/90">
-                  Modifie ton username et ton titre ci-dessous.
+                  Modifie ton titre, ta description et ta carte signature.
                 </p>
               ) : null}
             </div>
@@ -420,19 +425,7 @@ export function ProfilePage() {
             </h2>
           </div>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
-            <label className="space-y-1">
-              <span className="ml-1 text-xs font-semibold text-slate-300">
-                Username
-              </span>
-              <input
-                value={usernameDraft}
-                onChange={(event) => setUsernameDraft(event.target.value)}
-                maxLength={24}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60"
-              />
-            </label>
-
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
             <label className="space-y-1">
               <span className="ml-1 text-xs font-semibold text-slate-300">
                 Titre
@@ -469,6 +462,19 @@ export function ProfilePage() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="space-y-1 col-span-2">
+              <span className="ml-1 text-xs font-semibold text-slate-300">
+                Description
+              </span>
+              <textarea
+                value={descriptionDraft}
+                onChange={(event) => setDescriptionDraft(event.target.value)}
+                maxLength={240}
+                rows={3}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60"
+                placeholder="Ajoute une description de ton profil"
+              />
             </label>
           </div>
 

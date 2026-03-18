@@ -12,6 +12,7 @@ model User {
   id              String   @id @db.Uuid
   createdAt       DateTime @default(now())
   username        String?
+  description     String?
   avatarUrl       String?  @map("avatar_url")
   pcBalance       Int      @default(0) @map("pc_balance")
   totalPcEarned   BigInt   @default(0) @map("total_pc_earned")
