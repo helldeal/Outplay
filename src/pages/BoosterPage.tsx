@@ -1,12 +1,21 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronsUp, Coins, Sparkles } from "lucide-react";
+import { ChevronsUp, Coins, LoaderCircle, Sparkles } from "lucide-react";
 import { CardTile } from "../components/CardTile";
 import { PageLoading } from "../components/PageLoading";
+import { useAuth } from "../auth/AuthProvider";
+import { resolveBoosterTone } from "../components/rewards/reward-theme";
 import type { CardWithRelations, Rarity } from "../types";
 import { rarityRank } from "../utils/rarity";
 import { useImagePreload } from "../hooks/useImagePreload";
+import {
+  computeDuplicateIndices,
+  fetchCardsByIds,
+  getOwnedCardIds,
+  openBoosterRpc,
+} from "../query/booster";
 
 /* ─────────────────────── Types ─────────────────────── */
 
@@ -16,9 +25,13 @@ export interface BoosterOpeningNavigationState {
   pcGained: number;
   chargedPc: number;
   boosterName?: string;
+  boosterType?: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK";
+  shopBoosterPricePc?: number;
   seriesName?: string;
   seriesSlug?: string;
   seriesCode?: string;
+  source?: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  shopBoosterId?: string;
 }
 
 interface CardEntry {
@@ -234,13 +247,23 @@ function CardBack() {
 /* ─────────────────────── Page ─────────────────────── */
 
 export function BoosterPage() {
+  const { user, profile, refreshProfile } = useAuth();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
   const opening =
     (location.state as BoosterOpeningNavigationState | null) ?? null;
   const pcGained = opening?.pcGained ?? 0;
   const chargedPc = opening?.chargedPc ?? 0;
+  const boosterType = opening?.boosterType;
+  const rebuyCostPc = opening?.shopBoosterPricePc ?? chargedPc;
+  const source = opening?.source;
+  const shopBoosterId = opening?.shopBoosterId ?? null;
   const legendexSeriesParam = opening?.seriesSlug ?? opening?.seriesCode;
+  const canRebuyFromShop = source === "SHOP" && Boolean(shopBoosterId);
+  const rebuyTone = resolveBoosterTone(boosterType);
+  const currentPcBalance = profile?.pc_balance ?? 0;
+  const canAffordRebuy = rebuyCostPc <= currentPcBalance;
 
   /* Build sorted card entries: low rarity → high rarity for dramatic reveal */
   const cards: CardEntry[] = useMemo(() => {
@@ -264,6 +287,17 @@ export function BoosterPage() {
   const [flipped, setFlipped] = useState<Set<number>>(new Set());
   const [futRevealed, setFutRevealed] = useState<Set<number>>(new Set());
   const [futIdx, setFutIdx] = useState<number | null>(null);
+  const [isRebuying, setIsRebuying] = useState(false);
+  const [rebuyError, setRebuyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPhase("stack");
+    setFlipped(new Set());
+    setFutRevealed(new Set());
+    setFutIdx(null);
+    setIsRebuying(false);
+    setRebuyError(null);
+  }, [opening?.openedCards, opening?.duplicateCardIndices]);
 
   /* Responsive dimensions – avoid transform on ancestors so active CardTile can stack above backdrop */
   const [cardW, setCardW] = useState(CARD_W_MAX);
@@ -335,6 +369,80 @@ export function BoosterPage() {
 
     navigate(-1);
   }, [navigate, netPcDelta]);
+
+  const onRebuy = useCallback(async () => {
+    if (!shopBoosterId || !user || isRebuying) {
+      return;
+    }
+
+    if (rebuyCostPc > 0 && currentPcBalance < rebuyCostPc) {
+      setRebuyError(
+        `PC insuffisants: il faut ${rebuyCostPc} PC pour ré-acheter ce booster.`,
+      );
+      return;
+    }
+
+    setRebuyError(null);
+    setIsRebuying(true);
+
+    try {
+      const ownedBefore = await getOwnedCardIds(user.id);
+      const result = await openBoosterRpc(shopBoosterId, user.id);
+      const cardIds = result.cards ?? [];
+      const openedCards = await fetchCardsByIds(cardIds);
+      const duplicateCardIndices = computeDuplicateIndices(
+        cardIds,
+        ownedBefore,
+      );
+
+      navigate("/booster-opening", {
+        replace: true,
+        state: {
+          openedCards,
+          duplicateCardIndices,
+          pcGained: result.pcGained ?? 0,
+          chargedPc: result.chargedPc ?? 0,
+          boosterName: opening?.boosterName,
+          boosterType: opening?.boosterType,
+          shopBoosterPricePc: opening?.shopBoosterPricePc,
+          seriesName: opening?.seriesName,
+          seriesSlug: opening?.seriesSlug,
+          seriesCode: opening?.seriesCode,
+          source: "SHOP",
+          shopBoosterId,
+        } as BoosterOpeningNavigationState,
+      });
+
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        refreshProfile(),
+      ]).catch(() => undefined);
+    } catch (error) {
+      setRebuyError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de ré-acheter ce booster.",
+      );
+    } finally {
+      setIsRebuying(false);
+    }
+  }, [
+    shopBoosterId,
+    user,
+    isRebuying,
+    rebuyCostPc,
+    currentPcBalance,
+    navigate,
+    opening?.boosterName,
+    opening?.boosterType,
+    opening?.shopBoosterPricePc,
+    opening?.seriesName,
+    opening?.seriesSlug,
+    opening?.seriesCode,
+    queryClient,
+    refreshProfile,
+  ]);
 
   /* ─── Empty state ─── */
   if (!opening || count === 0) {
@@ -588,6 +696,32 @@ export function BoosterPage() {
                 >
                   Legendex
                 </Link>
+                {canRebuyFromShop && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void onRebuy();
+                    }}
+                    disabled={!user || isRebuying || !canAffordRebuy}
+                    title={
+                      canAffordRebuy
+                        ? `Ré-acheter pour ${rebuyCostPc} PC`
+                        : `PC insuffisants (${rebuyCostPc} requis)`
+                    }
+                    className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${rebuyTone.shopBuyButtonClass}`}
+                  >
+                    {isRebuying ? (
+                      <>
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                        Ré-achat...
+                      </>
+                    ) : !canAffordRebuy ? (
+                      "PC insuffisants"
+                    ) : (
+                      "Ré-acheter"
+                    )}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={onContinue}
@@ -596,6 +730,15 @@ export function BoosterPage() {
                   Continuer
                 </button>
               </motion.div>
+              {rebuyError && (
+                <motion.p
+                  className="text-xs text-rose-300"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  {rebuyError}
+                </motion.p>
+              )}
             </motion.div>
           </motion.footer>
         )}

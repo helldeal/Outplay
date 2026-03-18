@@ -132,9 +132,13 @@ export function ShopPage() {
           pcGained: result.pcGained ?? 0,
           chargedPc: result.chargedPc ?? 0,
           boosterName: booster.name,
+          boosterType: booster.type,
+          shopBoosterPricePc: booster.price_pc,
           seriesName: booster.series.name,
           seriesSlug: booster.series.slug,
           seriesCode: booster.series.code,
+          source: "SHOP",
+          shopBoosterId: booster.id,
         },
       });
 
