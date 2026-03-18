@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BarChart3,
+  Check,
   Clock3,
+  Copy,
   Crown,
   Dices,
   History,
@@ -94,7 +96,7 @@ function formatPercent2(value: number): string {
 export function ProfilePage() {
   const { userId: routeUserId } = useParams();
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
 
   const targetUserId = routeUserId ?? user?.id;
@@ -120,6 +122,7 @@ export function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [isReferralCodeCopied, setIsReferralCodeCopied] = useState(false);
 
   useEffect(() => {
     if (!overviewQuery.data || !isOwnProfile) {
@@ -303,6 +306,22 @@ export function ProfilePage() {
     }
   };
 
+  const handleCopyReferralCode = async () => {
+    if (!profile?.referral_code) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(profile.referral_code);
+      setIsReferralCodeCopied(true);
+      window.setTimeout(() => {
+        setIsReferralCodeCopied(false);
+      }, 1500);
+    } catch {
+      setIsReferralCodeCopied(false);
+    }
+  };
+
   return (
     <section className="space-y-6">
       <div className="relative overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/75 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.55)] md:p-7">
@@ -332,10 +351,33 @@ export function ProfilePage() {
                   ? overview.description
                   : "Aucune description"}
               </p>
-              {isOwnProfile ? (
-                <p className="mt-1 text-xs text-cyan-200/90">
-                  Modifie ton titre, ta description et ta carte signature.
-                </p>
+
+              {isOwnProfile && profile?.referral_code ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">
+                    Code de parrainage
+                  </span>
+                  <span className="rounded-md border border-amber-300/50 bg-amber-400/10 px-2 py-1 font-mono text-xs text-amber-100">
+                    {profile.referral_code}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleCopyReferralCode();
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-600 bg-slate-900/80 px-2 py-1 text-xs text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
+                  >
+                    {isReferralCodeCopied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
               ) : null}
             </div>
           </div>

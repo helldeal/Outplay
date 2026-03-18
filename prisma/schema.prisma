@@ -9,16 +9,18 @@ datasource db {
 }
 
 model User {
-  id              String   @id @db.Uuid
-  createdAt       DateTime @default(now())
-  username        String?
-  description     String?
-  avatarUrl       String?  @map("avatar_url")
-  pcBalance       Int      @default(0) @map("pc_balance")
-  totalPcEarned   BigInt   @default(0) @map("total_pc_earned")
-  title           String?
-  signatureCardId String?  @map("signature_card_id")
-  targetSeriesId  String?  @map("target_series_id") @db.Uuid
+  id               String   @id @db.Uuid
+  createdAt        DateTime @default(now())
+  username         String?
+  description      String?
+  avatarUrl        String?  @map("avatar_url")
+  referralCode     String   @unique @map("referral_code")
+  referredByUserId String?  @map("referred_by_user_id") @db.Uuid
+  pcBalance        Int      @default(0) @map("pc_balance")
+  totalPcEarned    BigInt   @default(0) @map("total_pc_earned")
+  title            String?
+  signatureCardId  String?  @map("signature_card_id")
+  targetSeriesId   String?  @map("target_series_id") @db.Uuid
 
   signatureCard Card?   @relation("UserSignatureCard", fields: [signatureCardId], references: [id])
   targetSeries  Series? @relation(fields: [targetSeriesId], references: [id])

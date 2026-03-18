@@ -15,6 +15,7 @@ interface UserProfile {
   id: string;
   username: string | null;
   pc_balance: number;
+  referral_code?: string | null;
   target_series_id?: string | null;
 }
 
@@ -23,7 +24,7 @@ interface AuthContextValue {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  loginWithDiscord: () => Promise<void>;
+  loginWithDiscord: (referralCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, username, pc_balance, target_series_id")
+      .select("id, username, pc_balance, referral_code, target_series_id")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -231,27 +232,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [invalidateUserQueries, refreshProfile, userId]);
 
-  const loginWithDiscord = useCallback(async () => {
-    if (!isSupabaseConfigured) {
+  const loginWithDiscord = useCallback(
+    async (referralCode?: string) => {
+      if (!isSupabaseConfigured) {
+        return;
+      }
+
+      const redirectTarget =
+        authRedirectOverride && authRedirectOverride.length > 0
+          ? new URL(authRedirectOverride)
+          : new URL(
+              `${appBasePath}/legendex`.replace(/\/{2,}/g, "/"),
+              window.location.origin,
+            );
+
+      const normalizedReferralCode = referralCode?.trim().toUpperCase() ?? "";
+      if (normalizedReferralCode) {
+        redirectTarget.searchParams.set("ref", normalizedReferralCode);
+      }
+
+      const redirectTo = redirectTarget.toString();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: { redirectTo },
+      });
+
+      if (error) {
+        throw error;
+      }
+    },
+    [appBasePath, authRedirectOverride],
+  );
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user) {
       return;
     }
 
-    const redirectTo =
-      authRedirectOverride && authRedirectOverride.length > 0
-        ? authRedirectOverride
-        : new URL(
-            `${appBasePath}/legendex`.replace(/\/{2,}/g, "/"),
-            window.location.origin,
-          ).toString();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "discord",
-      options: { redirectTo },
-    });
-
-    if (error) {
-      throw error;
+    const currentUrl = new URL(window.location.href);
+    const rawReferralCode = currentUrl.searchParams.get("ref")?.trim() ?? "";
+    if (!rawReferralCode) {
+      return;
     }
-  }, [appBasePath, authRedirectOverride]);
+
+    currentUrl.searchParams.delete("ref");
+    const nextSearch = currentUrl.searchParams.toString();
+    const nextUrl = `${currentUrl.pathname}${nextSearch ? `?${nextSearch}` : ""}${currentUrl.hash}`;
+    window.history.replaceState(window.history.state, "", nextUrl);
+
+    const normalizedReferralCode = rawReferralCode.toUpperCase();
+
+    const claimReferralFromUrl = async () => {
+      try {
+        await ensureCurrentUserProfile(user);
+
+        const { error } = await supabase.rpc("claim_referral_code", {
+          p_referral_code: normalizedReferralCode,
+          p_user_id: user.id,
+        });
+
+        if (error) {
+          return;
+        }
+
+        await Promise.all([refreshProfile(), invalidateUserQueries()]);
+      } catch {
+        return;
+      }
+    };
+
+    void claimReferralFromUrl();
+  }, [invalidateUserQueries, refreshProfile, user]);
 
   const logout = useCallback(async () => {
     if (!isSupabaseConfigured) {

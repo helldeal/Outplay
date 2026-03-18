@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import { AlertTriangle, MessageCircle, ShieldCheck } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { isSupabaseConfigured } from "../lib/supabase";
 
 export function LoginPage() {
+  const [searchParams] = useSearchParams();
   const { user, loginWithDiscord } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState("");
+
+  useEffect(() => {
+    const urlReferralCode = searchParams.get("ref")?.trim().toUpperCase() ?? "";
+    if (urlReferralCode) {
+      setReferralCode(urlReferralCode);
+    }
+  }, [searchParams]);
 
   if (user) {
     return <Navigate to="/legendex" replace />;
@@ -17,7 +27,7 @@ export function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await loginWithDiscord();
+      await loginWithDiscord(referralCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de la connexion");
     } finally {
@@ -52,6 +62,27 @@ export function LoginPage() {
           {error}
         </div>
       ) : null}
+
+      <div className="space-y-1">
+        <label
+          htmlFor="referral-code"
+          className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400"
+        >
+          Code de parrainage (optionnel)
+        </label>
+        <input
+          id="referral-code"
+          type="text"
+          value={referralCode}
+          onChange={(event) => {
+            setReferralCode(event.target.value.toUpperCase().trim());
+          }}
+          placeholder="Ex: A1B2C3D4E5F6"
+          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
+          maxLength={40}
+          autoComplete="off"
+        />
+      </div>
 
       <button
         onClick={() => void handleLogin()}
