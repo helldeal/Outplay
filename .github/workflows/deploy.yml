@@ -44,13 +44,16 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_BASE_PATH: /Outplay/
-          VITE_AUTH_REDIRECT_URL: https://helldeal.github.io/Outplay/collection
+          VITE_BASE_PATH: /
+          VITE_AUTH_REDIRECT_URL: https://outplaycards.fr/collection
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Prepare SPA fallback
         run: cp dist/index.html dist/404.html
+
+      - name: Add custom domain CNAME
+        run: echo 'outplaycards.fr' > dist/CNAME
 
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v4
