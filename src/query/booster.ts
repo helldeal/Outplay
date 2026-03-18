@@ -52,10 +52,15 @@ export interface ShopBoosterWithSeries {
   series: Pick<Series, "id" | "name" | "slug" | "code" | "coverImage">;
 }
 
-export async function openBoosterRpc(boosterId: string, userId: string) {
+export async function openBoosterRpc(
+  boosterId: string,
+  userId: string,
+  targetSeriesId?: string,
+) {
   const { data, error } = await supabase.rpc("open_booster", {
     p_booster_id: boosterId,
     p_user_id: userId,
+    p_target_series_id: targetSeriesId ?? null,
   });
 
   if (error) {
@@ -65,10 +70,15 @@ export async function openBoosterRpc(boosterId: string, userId: string) {
   return data as OpenBoosterResponse;
 }
 
-export async function openDailyBoosterRpc(seriesCode: string, userId: string) {
+export async function openDailyBoosterRpc(
+  seriesCode: string,
+  userId: string,
+  targetSeriesId?: string,
+) {
   const { data, error } = await supabase.rpc("open_daily_booster", {
     p_series_code: seriesCode,
     p_user_id: userId,
+    p_target_series_id: targetSeriesId ?? null,
   });
 
   if (error) {
@@ -78,9 +88,13 @@ export async function openDailyBoosterRpc(seriesCode: string, userId: string) {
   return data as OpenBoosterResponse;
 }
 
-export async function claimLoginStreakRewardRpc(userId: string) {
+export async function claimLoginStreakRewardRpc(
+  userId: string,
+  targetSeriesId?: string,
+) {
   const { data, error } = await supabase.rpc("claim_login_streak_reward", {
     p_user_id: userId,
+    p_target_series_id: targetSeriesId ?? null,
   });
 
   if (error) {

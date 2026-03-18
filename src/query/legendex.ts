@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { rarityRank } from "../utils/rarity";
 import { normalizeCard } from "../utils/normalize";
 import { supabase } from "../lib/supabase";
@@ -16,6 +16,40 @@ export function useLegendexSeriesQuery() {
         throw error;
       }
       return (data ?? []) as Series[];
+    },
+  });
+}
+
+export function useUserTargetSeriesQuery(userId?: string) {
+  return useQuery({
+    queryKey: ["user-target-series", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      if (!userId) {
+        return null;
+      }
+
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("target_series_id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (userError || !userData?.target_series_id) {
+        return null;
+      }
+
+      const { data: seriesData, error: seriesError } = await supabase
+        .from("series")
+        .select("id, name, slug, code")
+        .eq("id", userData.target_series_id)
+        .maybeSingle();
+
+      if (seriesError) {
+        return null;
+      }
+
+      return seriesData as Series | null;
     },
   });
 }
@@ -74,6 +108,27 @@ export function useLegendexOwnedCardsQuery(
           entry.obtained_at as string,
         ]),
       );
+    },
+  });
+}
+
+export function useUpdateUserTargetSeriesMutation(userId?: string) {
+  return useMutation({
+    mutationFn: async (targetSeriesId: string) => {
+      if (!userId) {
+        throw new Error("User ID required");
+      }
+
+      const { error } = await supabase
+        .from("users")
+        .update({ target_series_id: targetSeriesId })
+        .eq("id", userId);
+
+      if (error) {
+        throw error;
+      }
+
+      return targetSeriesId;
     },
   });
 }

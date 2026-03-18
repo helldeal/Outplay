@@ -11,6 +11,7 @@ import {
   useAchievementsProgressQuery,
   type AchievementProgressRow,
 } from "../query/achievements";
+import { useLegendexSeriesQuery } from "../query/legendex";
 import {
   computeDuplicateIndices,
   fetchCardsByIds,
@@ -110,9 +111,10 @@ function sortByCategory(a: string, b: string): number {
 }
 
 export function AchievementsPage() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const seriesQuery = useLegendexSeriesQuery();
   const progressQuery = useAchievementsProgressQuery(user?.id);
   const [claimingCode, setClaimingCode] = useState<string | null>(null);
 
@@ -192,7 +194,11 @@ export function AchievementsPage() {
     setClaimingCode(row.code);
     try {
       const ownedBefore = await getOwnedCardIds(user.id);
-      const result = await claimAchievementRewardRpc(user.id, row.code);
+      const result = await claimAchievementRewardRpc(
+        user.id,
+        row.code,
+        profile?.target_series_id ?? undefined,
+      );
 
       const syncPostClaim = () =>
         Promise.all([
@@ -222,13 +228,30 @@ export function AchievementsPage() {
         ownedBefore,
       );
 
+      const openingSeriesId = result.opening.seriesId;
+      const openingSeries = (seriesQuery.data ?? []).find(
+        (series) => series.id === openingSeriesId,
+      );
+
+      const rewardBoosterLabel =
+        result.rewardBoosterType === "PREMIUM"
+          ? "Premium Booster"
+          : result.rewardBoosterType === "LUCK"
+            ? "Luck Booster"
+            : result.rewardBoosterType === "GODPACK"
+              ? "Godpack"
+              : "Normal Booster";
+
       navigate("/booster-opening", {
         state: {
           openedCards,
           duplicateCardIndices,
           pcGained: result.opening.pcGained ?? 0,
           chargedPc: result.opening.chargedPc ?? 0,
-          boosterName: `${row.name} Récompense`,
+          boosterName: `${row.name} · ${rewardBoosterLabel}`,
+          seriesName: openingSeries?.name,
+          seriesSlug: openingSeries?.slug,
+          seriesCode: openingSeries?.code,
         },
       });
 

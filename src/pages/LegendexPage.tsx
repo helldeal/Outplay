@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { LoaderCircle, Target } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
 import { useImagePreload } from "../hooks/useImagePreload";
@@ -7,15 +8,23 @@ import {
   useLegendexCardsQuery,
   useLegendexOwnedCardsQuery,
   useLegendexSeriesQuery,
+  useUserTargetSeriesQuery,
+  useUpdateUserTargetSeriesMutation,
 } from "../query/legendex";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function LegendexPage() {
   const [searchParams] = useSearchParams();
   const requestedSeries = searchParams.get("series")?.toLowerCase() ?? "";
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const seriesQuery = useLegendexSeriesQuery();
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
+  const targetSeriesQuery = useUserTargetSeriesQuery(user?.id);
+  const updateTargetSeriesMutation = useUpdateUserTargetSeriesMutation(
+    user?.id,
+  );
 
   useEffect(() => {
     if (!seriesQuery.data?.length) {
@@ -75,6 +84,9 @@ export function LegendexPage() {
   const selectedSeries =
     (seriesQuery.data ?? []).find((series) => series.id === selectedSeriesId) ??
     null;
+  const isSelectedSeriesTargeted =
+    Boolean(selectedSeries?.id) &&
+    targetSeriesQuery.data?.id === selectedSeries?.id;
 
   const ownedCount = useMemo(
     () => cards.filter((card) => owned.has(card.id)).length,
@@ -154,34 +166,38 @@ export function LegendexPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4 shadow-[0_10px_32px_rgba(2,6,23,0.4)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <label
-            htmlFor="series-select"
-            className="text-xs font-black uppercase tracking-[0.14em] text-slate-300"
-          >
-            Série
-          </label>
-          <select
-            id="series-select"
-            value={selectedSeriesId}
-            onChange={(event) => setSelectedSeriesId(event.target.value)}
-            disabled={isSeriesLoading || (seriesQuery.data ?? []).length === 0}
-            className="rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-semibold text-slate-100 shadow-[0_6px_18px_rgba(2,6,23,0.35)]"
-          >
-            {(seriesQuery.data ?? [])
-              .slice()
-              .sort((a, b) => a.code.localeCompare(b.code))
-              .map((series) => (
-                <option key={series.id} value={series.id}>
-                  {series.name} ({series.code})
-                </option>
-              ))}
-          </select>
-          {isSeriesLoading && (
-            <span className="text-xs text-slate-400">
-              Chargement des séries...
-            </span>
-          )}
+        <div className="space-y-4 mb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <label
+              htmlFor="series-select"
+              className="text-xs font-black uppercase tracking-[0.14em] text-slate-300"
+            >
+              Série à explorer
+            </label>
+            <select
+              id="series-select"
+              value={selectedSeriesId}
+              onChange={(event) => setSelectedSeriesId(event.target.value)}
+              disabled={
+                isSeriesLoading || (seriesQuery.data ?? []).length === 0
+              }
+              className="rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-semibold text-slate-100 shadow-[0_6px_18px_rgba(2,6,23,0.35)]"
+            >
+              {(seriesQuery.data ?? [])
+                .slice()
+                .sort((a, b) => a.code.localeCompare(b.code))
+                .map((series) => (
+                  <option key={series.id} value={series.id}>
+                    {series.name} ({series.code})
+                  </option>
+                ))}
+            </select>
+            {isSeriesLoading && (
+              <span className="text-xs text-slate-400">
+                Chargement des séries...
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -192,11 +208,54 @@ export function LegendexPage() {
             <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
               Progression série
             </p>
-            <h2 className="mt-1 text-lg font-black uppercase italic text-white">
-              {isCardsLoading
-                ? "Chargement..."
-                : (selectedSeries?.name ?? "Série")}
-            </h2>
+            <div className="mt-1 flex items-center gap-2">
+              <h2 className="text-lg font-black uppercase italic text-white">
+                {isCardsLoading
+                  ? "Chargement..."
+                  : (selectedSeries?.name ?? "Série")}
+              </h2>
+
+              {user && selectedSeries && (
+                <button
+                  type="button"
+                  title={
+                    isSelectedSeriesTargeted
+                      ? "Série déjà ciblée"
+                      : "Cibler cette série"
+                  }
+                  onClick={() => {
+                    updateTargetSeriesMutation.mutate(selectedSeries.id, {
+                      onSuccess: () => {
+                        void queryClient.invalidateQueries({
+                          queryKey: ["user-target-series", user.id],
+                        });
+                      },
+                    });
+                  }}
+                  disabled={
+                    updateTargetSeriesMutation.isPending ||
+                    isSelectedSeriesTargeted
+                  }
+                  className={`group inline-flex items-center justify-center rounded-full  shadow-[0_0_20px_rgba(251,191,36,0.28)] transition ${
+                    isSelectedSeriesTargeted
+                      ? "cursor-default border-emerald-400/60 bg-emerald-500/15 text-emerald-300"
+                      : "border-amber-300/70 bg-amber-300/20 text-amber-200 hover:scale-110 hover:bg-amber-300/30"
+                  }`}
+                >
+                  {updateTargetSeriesMutation.isPending ? (
+                    <LoaderCircle className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <Target
+                      className={`h-6 w-6 transition ${
+                        isSelectedSeriesTargeted
+                          ? ""
+                          : "animate-pulse group-hover:-rotate-6"
+                      }`}
+                    />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
@@ -207,6 +266,10 @@ export function LegendexPage() {
             </p>
           </div>
         </div>
+
+        {user && updateTargetSeriesMutation.isError && (
+          <p className="mt-2 text-xs text-rose-400">Erreur de mise à jour</p>
+        )}
 
         <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-800/90">
           <div

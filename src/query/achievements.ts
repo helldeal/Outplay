@@ -134,10 +134,12 @@ export async function markAchievementsSeenRpc(userId: string) {
 export async function claimAchievementRewardRpc(
   userId: string,
   achievementCode: string,
+  targetSeriesId?: string,
 ) {
   const { data, error } = await supabase.rpc("claim_achievement_reward", {
     p_user_id: userId,
     p_achievement_code: achievementCode,
+    p_target_series_id: targetSeriesId ?? null,
   });
 
   if (error) {

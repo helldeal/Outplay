@@ -17,8 +17,10 @@ model User {
   totalPcEarned   BigInt   @default(0) @map("total_pc_earned")
   title           String?
   signatureCardId String?  @map("signature_card_id")
+  targetSeriesId  String?  @map("target_series_id") @db.Uuid
 
-  signatureCard Card? @relation("UserSignatureCard", fields: [signatureCardId], references: [id])
+  signatureCard Card?   @relation("UserSignatureCard", fields: [signatureCardId], references: [id])
+  targetSeries  Series? @relation(fields: [targetSeriesId], references: [id])
 
   userCards       UserCard[]
   boosterOpenings BoosterOpening[]
@@ -91,6 +93,7 @@ model Series {
   cards           Card[]
   boosters        Booster[]
   boosterOpenings BoosterOpening[]
+  users           User[]
 
   @@map("series")
   @@schema("public")

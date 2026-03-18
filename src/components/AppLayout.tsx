@@ -1,3 +1,4 @@
+import { useLegendexSeriesQuery } from "../query/legendex";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthProvider";
@@ -70,6 +71,7 @@ function formatStreakRewardLabel(params: {
 export function AppLayout() {
   const { user, profile, logout, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
+  const seriesQuery = useLegendexSeriesQuery();
   const navigate = useNavigate();
   const [isOpeningDaily, setIsOpeningDaily] = useState(false);
   const [isClaimingStreak, setIsClaimingStreak] = useState(false);
@@ -246,6 +248,7 @@ export function AppLayout() {
       const result = await openDailyBoosterRpc(
         dailyTargetQuery.data.series.code,
         user.id,
+        profile?.target_series_id ?? undefined,
       );
       const cardIds = result.cards ?? [];
       const openedCards = await fetchCardsByIds(cardIds);
@@ -254,6 +257,16 @@ export function AppLayout() {
         ownedBefore,
       );
 
+      // Use target series if available, otherwise use default daily series
+      const targetSeries =
+        (seriesQuery.data ?? []).find(
+          (series) => series.id === result.seriesId,
+        ) ??
+        (seriesQuery.data ?? []).find(
+          (series) => series.code === dailyTargetQuery.data?.series.code,
+        ) ??
+        dailyTargetQuery.data.series;
+
       navigate("/booster-opening", {
         state: {
           openedCards,
@@ -261,9 +274,9 @@ export function AppLayout() {
           pcGained: result.pcGained ?? 0,
           chargedPc: result.chargedPc ?? 0,
           boosterName: "Daily Booster",
-          seriesName: dailyTargetQuery.data.series.name,
-          seriesSlug: dailyTargetQuery.data.series.slug,
-          seriesCode: dailyTargetQuery.data.series.code,
+          seriesName: targetSeries.name,
+          seriesSlug: targetSeries.slug,
+          seriesCode: targetSeries.code,
         },
       });
 
@@ -297,7 +310,10 @@ export function AppLayout() {
     setIsClaimingStreak(true);
     try {
       const ownedBefore = await getOwnedCardIds(user.id);
-      const result = await claimLoginStreakRewardRpc(user.id);
+      const result = await claimLoginStreakRewardRpc(
+        user.id,
+        profile?.target_series_id ?? undefined,
+      );
 
       const syncPostClaim = () =>
         Promise.all([
@@ -339,6 +355,11 @@ export function AppLayout() {
             ? "Luck Booster"
             : "Normal Booster";
 
+      const targetSeriesId = result.opening.seriesId;
+      const targetSeries = (seriesQuery.data ?? []).find(
+        (series) => series.id === targetSeriesId,
+      );
+
       navigate("/booster-opening", {
         state: {
           openedCards,
@@ -346,9 +367,9 @@ export function AppLayout() {
           pcGained: result.opening.pcGained ?? 0,
           chargedPc: result.opening.chargedPc ?? 0,
           boosterName: `Streak ${boosterLabel}`,
-          seriesName: dailyTargetQuery.data?.series.name,
-          seriesSlug: dailyTargetQuery.data?.series.slug,
-          seriesCode: dailyTargetQuery.data?.series.code,
+          seriesName: targetSeries?.name ?? dailyTargetQuery.data?.series.name,
+          seriesSlug: targetSeries?.slug ?? dailyTargetQuery.data?.series.slug,
+          seriesCode: targetSeries?.code ?? dailyTargetQuery.data?.series.code,
         },
       });
 
