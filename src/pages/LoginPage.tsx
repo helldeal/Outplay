@@ -10,7 +10,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (user) {
-    return <Navigate to="/collection" replace />;
+    return <Navigate to="/legendex" replace />;
   }
 
   const handleLogin = async () => {

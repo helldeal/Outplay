@@ -240,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authRedirectOverride && authRedirectOverride.length > 0
         ? authRedirectOverride
         : new URL(
-            `${appBasePath}/collection`.replace(/\/+/g, "/"),
+            `${appBasePath}/legendex`.replace(/\/{2,}/g, "/"),
             window.location.origin,
           ).toString();
     const { error } = await supabase.auth.signInWithOAuth({
