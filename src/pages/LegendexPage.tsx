@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { LoaderCircle, Target } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
-import { useImagePreload } from "../hooks/useImagePreload";
 import {
   useLegendexCardsQuery,
   useLegendexOwnedCardsQuery,
@@ -14,7 +13,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 export function LegendexPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedSeries = searchParams.get("series")?.toLowerCase() ?? "";
   const { user, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
@@ -26,36 +25,76 @@ export function LegendexPage() {
     user?.id,
   );
 
+  const sortedSeries = useMemo(
+    () =>
+      (seriesQuery.data ?? [])
+        .slice()
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [seriesQuery.data],
+  );
+
   useEffect(() => {
-    if (!seriesQuery.data?.length) {
+    if (!sortedSeries.length) {
       return;
     }
 
-    if (!selectedSeriesId && !requestedSeries) {
-      setSelectedSeriesId(
-        seriesQuery.data.sort((a, b) => a.code.localeCompare(b.code))[0].id,
-      );
-      return;
-    }
-
-    if (!requestedSeries) {
-      return;
-    }
-
-    const targetSeries = requestedSeries
-      ? seriesQuery.data.find(
+    const matchedSeries = requestedSeries
+      ? sortedSeries.find(
           (series) =>
             series.slug.toLowerCase() === requestedSeries ||
-            series.code.toLowerCase() === requestedSeries,
+            series.code.toLowerCase() === requestedSeries ||
+            series.id.toLowerCase() === requestedSeries,
         )
       : null;
 
-    const nextSeriesId = targetSeries?.id ?? seriesQuery.data[0].id;
-
-    if (selectedSeriesId !== nextSeriesId) {
-      setSelectedSeriesId(nextSeriesId);
+    if (matchedSeries) {
+      if (selectedSeriesId !== matchedSeries.id) {
+        setSelectedSeriesId(matchedSeries.id);
+      }
+      return;
     }
-  }, [requestedSeries, selectedSeriesId, seriesQuery.data]);
+
+    const fallbackSeries =
+      sortedSeries.find((series) => series.id === selectedSeriesId) ??
+      sortedSeries[0];
+
+    if (selectedSeriesId !== fallbackSeries.id) {
+      setSelectedSeriesId(fallbackSeries.id);
+    }
+
+    const nextSeriesParam = fallbackSeries.slug.toLowerCase();
+    if (requestedSeries !== nextSeriesParam) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.set("series", nextSeriesParam);
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [
+    selectedSeriesId,
+    requestedSeries,
+    sortedSeries,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  const handleSeriesChange = (nextSeriesId: string) => {
+    setSelectedSeriesId(nextSeriesId);
+
+    const nextSeries = sortedSeries.find(
+      (series) => series.id === nextSeriesId,
+    );
+    if (!nextSeries) {
+      return;
+    }
+
+    const nextSeriesParam = nextSeries.slug.toLowerCase();
+    if (requestedSeries === nextSeriesParam) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set("series", nextSeriesParam);
+    setSearchParams(nextSearchParams, { replace: true });
+  };
 
   const cardsQuery = useLegendexCardsQuery(selectedSeriesId);
   const ownedQuery = useLegendexOwnedCardsQuery(user?.id, selectedSeriesId);
@@ -67,19 +106,6 @@ export function LegendexPage() {
   const ownedData = ownedQuery.data;
   const owned =
     ownedData instanceof Map ? ownedData : new Map<string, string>();
-
-  const preloadUrls = useMemo(
-    () =>
-      cards.flatMap((card) => [
-        card.imageUrl,
-        card.game?.logoUrl,
-        card.nationality?.flagUrl,
-        card.team?.logoUrl,
-        card.role?.iconUrl,
-      ]),
-    [cards],
-  );
-  const { isReady: areCardAssetsReady } = useImagePreload(preloadUrls);
 
   const selectedSeries =
     (seriesQuery.data ?? []).find((series) => series.id === selectedSeriesId) ??
@@ -109,7 +135,7 @@ export function LegendexPage() {
   const isCardsLoading = Boolean(selectedSeriesId) && cardsQuery.isLoading;
   const isOwnedLoading =
     Boolean(user?.id && selectedSeriesId) && ownedQuery.isLoading;
-  const isGridLoading = isCardsLoading || !areCardAssetsReady;
+  const isGridLoading = isCardsLoading;
 
   useEffect(() => {
     if (isCardsLoading || isOwnedLoading) {
@@ -177,20 +203,17 @@ export function LegendexPage() {
             <select
               id="series-select"
               value={selectedSeriesId}
-              onChange={(event) => setSelectedSeriesId(event.target.value)}
+              onChange={(event) => handleSeriesChange(event.target.value)}
               disabled={
                 isSeriesLoading || (seriesQuery.data ?? []).length === 0
               }
               className="rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-semibold text-slate-100 shadow-[0_6px_18px_rgba(2,6,23,0.35)]"
             >
-              {(seriesQuery.data ?? [])
-                .slice()
-                .sort((a, b) => a.code.localeCompare(b.code))
-                .map((series) => (
-                  <option key={series.id} value={series.id}>
-                    {series.name} ({series.code})
-                  </option>
-                ))}
+              {sortedSeries.map((series) => (
+                <option key={series.id} value={series.id}>
+                  {series.name} ({series.code})
+                </option>
+              ))}
             </select>
             {isSeriesLoading && (
               <span className="text-xs text-slate-400">
