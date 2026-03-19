@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { LeaderboardRow } from "../../query/leaderboard";
+import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
 
 export function LeaderboardTable({
@@ -73,7 +74,17 @@ export function LeaderboardTable({
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-bold text-indigo-300">
-                  {scoreFormatter.format(row.weightedScore)}
+                  <ScoreBreakdownTooltip
+                    totalScore={row.weightedScore}
+                    cardScore={row.cardScore}
+                    achievementScore={row.achievementScore}
+                    className="inline-flex"
+                    tooltipPositionClassName="right-0 top-full"
+                  >
+                    <span className="cursor-help rounded px-1">
+                      {scoreFormatter.format(row.weightedScore)}
+                    </span>
+                  </ScoreBreakdownTooltip>
                 </td>
                 <td className="px-4 py-3 text-center text-slate-400">
                   {row.totalCards}

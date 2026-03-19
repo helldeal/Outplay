@@ -19,6 +19,7 @@ export interface CardWithRelations {
   rarity: Rarity;
   imageUrl: string;
   pc_value: number;
+  series?: LinkedEntity | null;
   game: LinkedEntity;
   team: LinkedEntity | null;
   nationality: LinkedEntity;

@@ -19,6 +19,8 @@ interface LeaderboardRpcRow {
   avatar_url: string | null;
   total_cards: number;
   weighted_score: number;
+  card_score: number;
+  achievement_score: number;
   achievements_unlocked: number;
 }
 
@@ -28,6 +30,8 @@ export interface LeaderboardRow {
   avatarUrl: string | null;
   totalCards: number;
   weightedScore: number;
+  cardScore: number;
+  achievementScore: number;
   achievementsUnlocked: number;
 }
 
@@ -49,6 +53,8 @@ export function useLeaderboardQuery(isEnabled: boolean) {
         avatarUrl: row.avatar_url,
         totalCards: row.total_cards,
         weightedScore: row.weighted_score,
+        cardScore: row.card_score,
+        achievementScore: row.achievement_score,
         achievementsUnlocked: row.achievements_unlocked,
       }));
     },

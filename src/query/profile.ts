@@ -127,6 +127,8 @@ interface PublicProfileCollectionRpcRow {
   card_rarity: "LEGENDS" | "WORLD_CLASS" | "CHAMPION" | "CHALLENGER" | "ROOKIE";
   card_image_url: string;
   card_pc_value: number;
+  series_name: string | null;
+  series_code: string | null;
   game_name: string;
   game_logo_url: string | null;
   team_name: string | null;
@@ -314,6 +316,12 @@ function mapCollectionRow(row: PublicProfileCollectionRpcRow): UserCardRow {
       rarity: row.card_rarity,
       imageUrl: resolveAssetUrl(row.card_image_url),
       pc_value: row.card_pc_value,
+      series: row.series_name
+        ? {
+            name: row.series_name,
+            code: row.series_code ?? undefined,
+          }
+        : null,
       game: {
         name: row.game_name,
         logoUrl: row.game_logo_url

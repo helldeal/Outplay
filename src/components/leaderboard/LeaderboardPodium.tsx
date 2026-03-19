@@ -1,6 +1,7 @@
 import { Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { LeaderboardRow } from "../../query/leaderboard";
+import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
 
 const podiumMeta = [
@@ -71,9 +72,17 @@ export function LeaderboardPodium({
                   size="lg"
                 />
               </div>
-              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-0.5 text-[10px] font-black text-white text-nowrap">
-                {scoreFormatter.format(row.weightedScore)} pts
-              </span>
+              <ScoreBreakdownTooltip
+                totalScore={row.weightedScore}
+                cardScore={row.cardScore}
+                achievementScore={row.achievementScore}
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2"
+                tooltipPositionClassName="left-1/2 top-full -translate-x-1/2"
+              >
+                <span className="cursor-help rounded-full border border-slate-700 bg-slate-900 px-2.5 py-0.5 text-[10px] font-black text-white text-nowrap">
+                  {scoreFormatter.format(row.weightedScore)} pts
+                </span>
+              </ScoreBreakdownTooltip>
             </Link>
 
             <div
