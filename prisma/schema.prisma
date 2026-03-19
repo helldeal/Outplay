@@ -214,6 +214,7 @@ model AchievementDefinition {
   description       String
   metricKey         String       @map("metric_key")
   targetValue       Decimal      @map("target_value") @db.Decimal
+  leaderboardPoints Int          @default(0) @map("leaderboard_points")
   rewardPc          Int          @default(0) @map("reward_pc")
   rewardBoosterType BoosterType? @map("reward_booster_type")
   rewardTitle       String?      @map("reward_title")
