@@ -961,7 +961,9 @@ export function ProfilePage() {
                       {opening.boosterType ? (
                         <>
                           <span className="mx-1 text-slate-500">·</span>
-                          <span className={getBoosterTypeTone(opening.boosterType)}>
+                          <span
+                            className={getBoosterTypeTone(opening.boosterType)}
+                          >
                             {opening.boosterType}
                           </span>
                         </>
@@ -1056,6 +1058,11 @@ export function ProfilePage() {
                         )}
                       >
                         {achievement.category}
+                      </span>
+
+                      <span className="mx-1 text-slate-500">·</span>
+                      <span className="text-cyan-200">
+                        {intFormatter.format(achievement.leaderboardPoints)} AP
                       </span>
 
                       {achievement.rewardPc > 0 ? (

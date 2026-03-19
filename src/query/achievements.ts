@@ -8,9 +8,11 @@ export interface AchievementProgressRow {
   name: string;
   category: string;
   description: string;
+  metric_key: string;
   target_value: number;
   current_value: number;
   progress_pct: number;
+  leaderboard_points: number;
   unlocked: boolean;
   unlocked_at: string | null;
   reward_label: string;
@@ -56,9 +58,13 @@ async function fetchAchievementsProgress(userId: string) {
     name: String(row.name),
     category: String(row.category),
     description: String(row.description),
+    metric_key: String(row.metric_key ?? ""),
     target_value: Number(row.target_value ?? 0),
     current_value: Number(row.current_value ?? 0),
     progress_pct: Number(row.progress_pct ?? 0),
+    leaderboard_points: Number(
+      row.leaderboard_points ?? row.leaderboardPoints ?? 0,
+    ),
     unlocked: Boolean(row.unlocked),
     unlocked_at: typeof row.unlocked_at === "string" ? row.unlocked_at : null,
     reward_label: String(row.reward_label ?? "Reward"),

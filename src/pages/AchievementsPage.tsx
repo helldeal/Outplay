@@ -29,55 +29,6 @@ const categoryOrder = [
   "Esport",
 ] as const;
 
-const achievementCodeOrder = [
-  "FIRST_CARD",
-  "COLLECTOR_I",
-  "COLLECTOR_II",
-  "COLLECTOR_III",
-  "COLLECTOR_IV",
-  "COMPLETIONIST",
-  "ARCHIVIST",
-  "CHALLENGER_RISING",
-  "CHALLENGER_ELITE",
-  "CHAMPION_RISING",
-  "CHAMPION_ELITE",
-  "WORLD_CLASS",
-  "WORLD_CLASS_ELITE",
-  "LEGEND_HUNTER",
-  "LEGEND_COLLECTOR",
-  "LEGEND_ARCHIVE",
-  "PACK_OPENER_I",
-  "PACK_OPENER_II",
-  "PACK_OPENER_III",
-  "PACK_OPENER_IV",
-  "PACK_MANIAC",
-  "LUCKY_PULL",
-  "INSANE_LUCK",
-  "LEGENDARY_MOMENT",
-  "GOD_OF_LUCK",
-  "FIRST_DUPLICATE",
-  "SCRAP_DEALER",
-  "PC_COLLECTOR",
-  "PC_INVESTOR",
-  "PC_TYCOON",
-  "DAILY_PLAYER",
-  "DEDICATED_FAN",
-  "LOYAL_COLLECTOR",
-  "ESPORT_ADDICT",
-  "SERIES_STARTER",
-  "SERIES_CHALLENGER",
-  "SERIES_CHAMPION",
-  "SERIES_LEGEND",
-  "LEC_COLLECTOR",
-  "GLOBAL_TALENT",
-  "TEAM_BUILDER",
-  "ROLE_MASTER",
-] as const;
-
-const achievementOrderIndex = new Map<string, number>(
-  achievementCodeOrder.map((code, index) => [code, index]),
-);
-
 const categoryTone: Record<string, string> = {
   Collection: "from-cyan-400/30 via-cyan-300/10 to-transparent",
   Rarete: "from-fuchsia-400/30 via-fuchsia-300/10 to-transparent",
@@ -152,20 +103,26 @@ export function AchievementsPage() {
       .map(([category, entries]) => ({
         category,
         entries: [...entries].sort((a, b) => {
-          const aOrder =
-            achievementOrderIndex.get(a.code) ?? Number.MAX_SAFE_INTEGER;
-          const bOrder =
-            achievementOrderIndex.get(b.code) ?? Number.MAX_SAFE_INTEGER;
-
-          if (aOrder !== bOrder) {
-            return aOrder - bOrder;
+          const byName = a.name.localeCompare(b.name, "fr", {
+            sensitivity: "base",
+          });
+          if (byName !== 0) {
+            return byName;
           }
 
           if (a.target_value !== b.target_value) {
             return a.target_value - b.target_value;
           }
 
-          return a.name.localeCompare(b.name);
+          if (a.leaderboard_points !== b.leaderboard_points) {
+            return a.leaderboard_points - b.leaderboard_points;
+          }
+
+          if (a.code !== b.code) {
+            return a.code.localeCompare(b.code);
+          }
+
+          return 0;
         }),
         unlockedCount: entries.filter((entry) => entry.unlocked).length,
       }));

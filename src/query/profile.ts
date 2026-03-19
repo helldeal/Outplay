@@ -176,6 +176,7 @@ export interface PublicProfileRecentAchievement {
   code: string;
   name: string;
   category: string;
+  leaderboardPoints: number;
   rewardTitle: string | null;
   rewardPc: number;
   rewardBoosterType: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
@@ -208,6 +209,7 @@ interface PublicProfileRecentAchievementRpcRow {
   code: string;
   name: string;
   category: string;
+  leaderboard_points: number;
   reward_title: string | null;
   reward_pc: number;
   reward_booster_type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
@@ -475,6 +477,11 @@ export function usePublicProfileRecentAchievementsQuery(userId?: string) {
           code: row.code,
           name: row.name,
           category: row.category,
+          leaderboardPoints: Number(
+            row.leaderboard_points ??
+              (row as { leaderboardPoints?: number }).leaderboardPoints ??
+              0,
+          ),
           rewardTitle: row.reward_title,
           rewardPc: row.reward_pc,
           rewardBoosterType: row.reward_booster_type,

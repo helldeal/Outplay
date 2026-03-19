@@ -118,12 +118,23 @@ export function AchievementCategorySection({
                   <Target className="h-3.5 w-3.5" />
                   {progressLabel}
                 </span>
+                <span className="text-[11px] font-semibold text-cyan-200">
+                  {row.leaderboard_points} AP
+                </span>
+              </div>
+
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
                 <RewardTypeBadge
                   rewardPc={row.reward_pc}
                   rewardBoosterType={row.reward_booster_type}
                   label={row.reward_label}
                   className="px-0 py-0 text-xs border-0 bg-transparent"
                 />
+                {row.reward_title ? (
+                  <span className="text-[11px] font-semibold text-indigo-200">
+                    Titre: {row.reward_title}
+                  </span>
+                ) : null}
               </div>
             </article>
           );
