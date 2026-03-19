@@ -421,7 +421,7 @@ export function usePublicProfileRecentOpeningsQuery(userId?: string) {
         "get_public_profile_recent_openings",
         {
           p_user_id: userId!,
-          p_limit: 8,
+          p_limit: 4,
         },
       );
 

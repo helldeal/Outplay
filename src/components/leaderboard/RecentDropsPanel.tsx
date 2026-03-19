@@ -1,12 +1,40 @@
 import { Clock3, LoaderCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import type { RecentDrop } from "../../query/leaderboard";
+import { resolveBoosterTone } from "../rewards/reward-theme";
 import {
   rarityBorderColor,
   rarityLabel,
   rarityTextColor,
 } from "../../utils/rarity";
 import { PlayerAvatar } from "./PlayerAvatar";
+
+function inferBoosterType(
+  boosterName: string,
+): "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null {
+  const value = boosterName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (value.includes("godpack") || value.includes("god pack")) {
+    return "GODPACK";
+  }
+
+  if (value.includes("premium")) {
+    return "PREMIUM";
+  }
+
+  if (value.includes("luck")) {
+    return "LUCK";
+  }
+
+  if (value.includes("normal")) {
+    return "NORMAL";
+  }
+
+  return null;
+}
 
 export function RecentDropsPanel({
   drops,
@@ -60,6 +88,22 @@ export function RecentDropsPanel({
               role="button"
               tabIndex={0}
             >
+              {(() => {
+                const boosterType = inferBoosterType(drop.boosterName);
+                const boosterTone = resolveBoosterTone(boosterType);
+
+                return (
+                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em]">
+                    {boosterType ? (
+                      <span className={boosterTone.rewardTextClass}>
+                        {boosterType}
+                      </span>
+                    ) : null}
+                    <span className="text-slate-400">{drop.boosterName}</span>
+                  </div>
+                );
+              })()}
+
               <Link
                 to={`/profile/${drop.userId}`}
                 className="flex items-center gap-2.5 transition hover:text-cyan-100"
@@ -77,7 +121,7 @@ export function RecentDropsPanel({
                     {drop.username}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    {drop.boosterName} · {formatRelativeDate(drop.openedAt)}
+                    {formatRelativeDate(drop.openedAt)}
                   </p>
                 </div>
               </Link>

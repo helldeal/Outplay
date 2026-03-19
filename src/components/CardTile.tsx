@@ -138,7 +138,7 @@ function CardInner({
                 <img
                   src={card.nationality.flagUrl}
                   alt={card.nationality.code ?? "flag"}
-                  className="h-[7cqw] w-[7cqw] rounded-full object-cover"
+                  className="h-[7cqw] w-[7cqw] rounded-full object-contain"
                   draggable={false}
                 />
               ) : null}
@@ -156,7 +156,7 @@ function CardInner({
                 <img
                   src={card.role.iconUrl}
                   alt={card.role.name}
-                  className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-cover"
+                  className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-contain"
                   draggable={false}
                 />
               ) : null}

@@ -23,13 +23,18 @@ import { PageLoading } from "../components/PageLoading";
 import { useAchievementsProgressQuery } from "../query/achievements";
 import {
   publicProfileOverviewQueryKey,
+  type PublicProfileRecentAchievement,
   updateCurrentUserProfileIdentity,
   usePublicProfileCollectionQuery,
   usePublicProfileOverviewQuery,
   usePublicProfileRecentAchievementsQuery,
   usePublicProfileRecentOpeningsQuery,
 } from "../query/profile";
-import { rarityLabel, rarityTextColor } from "../utils/rarity";
+import {
+  rarityBorderColor,
+  rarityLabel,
+  rarityTextColor,
+} from "../utils/rarity";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
 const percentFormatter = new Intl.NumberFormat("fr-FR", {
@@ -91,6 +96,58 @@ function formatPercent(value: number): string {
 
 function formatPercent2(value: number): string {
   return `${percentFormatter.format(Math.max(0, value))}%`;
+}
+
+function getOpeningTypeTone(openingType: string): string {
+  switch (openingType) {
+    case "SHOP":
+      return "text-cyan-200";
+    case "DAILY":
+      return "text-emerald-200";
+    case "STREAK":
+      return "text-fuchsia-200";
+    case "ACHIEVEMENT":
+      return "text-amber-200";
+    default:
+      return "text-slate-300";
+  }
+}
+
+function getBoosterTypeTone(boosterType: string | null): string {
+  switch (boosterType) {
+    case "NORMAL":
+      return "text-cyan-200";
+    case "LUCK":
+      return "text-emerald-200";
+    case "PREMIUM":
+      return "text-fuchsia-200";
+    case "GODPACK":
+      return "text-rose-200";
+    default:
+      return "text-slate-300";
+  }
+}
+
+function getAchievementCategoryTone(
+  category: PublicProfileRecentAchievement["category"],
+): string {
+  const normalized = category
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const categoryColors: Record<string, string> = {
+    collection: "text-cyan-200",
+    rarete: "text-fuchsia-200",
+    booster: "text-amber-200",
+    chance: "text-violet-200",
+    economy: "text-emerald-200",
+    activite: "text-orange-200",
+    serie: "text-sky-200",
+    esport: "text-rose-200",
+  };
+
+  return categoryColors[normalized] ?? "text-slate-300";
 }
 
 export function ProfilePage() {
@@ -353,30 +410,32 @@ export function ProfilePage() {
               </p>
 
               {isOwnProfile && profile?.referral_code ? (
-                <div className="mt-2 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex flex-col gap-1">
                   <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">
                     Code de parrainage
                   </span>
-                  <span className="rounded-md border border-amber-300/50 bg-amber-400/10 px-2 py-1 font-mono text-xs text-amber-100">
-                    {profile.referral_code}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleCopyReferralCode();
-                    }}
-                    className="inline-flex items-center gap-1 rounded-md border border-slate-600 bg-slate-900/80 px-2 py-1 text-xs text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
-                  >
-                    {isReferralCodeCopied ? (
-                      <>
-                        <Check className="h-3.5 w-3.5" />
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-md border border-amber-300/50 bg-amber-400/10 px-2 py-1 font-mono text-xs text-amber-100">
+                      {profile.referral_code}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleCopyReferralCode();
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-600 bg-slate-900/80 px-2 py-1 text-xs text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
+                    >
+                      {isReferralCodeCopied ? (
+                        <>
+                          <Check className="h-3.5 w-3.5" />
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -422,7 +481,7 @@ export function ProfilePage() {
               <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
                 Porte Monnaie
               </p>
-              <p className="text-lg font-black text-amber-300">
+              <p className="text-lg font-black text-amber-300 ">
                 {intFormatter.format(overview.pcBalance)} PC
               </p>
             </div>
@@ -869,7 +928,7 @@ export function ProfilePage() {
                 {(recentOpeningsQuery.data ?? []).map((opening) => (
                   <div
                     key={opening.openingId}
-                    className="cursor-pointer rounded-xl border border-slate-700/70 bg-slate-950/55 p-3 transition hover:border-cyan-300/40"
+                    className="cursor-pointer rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:border-cyan-300/40"
                     onClick={() => {
                       navigate(`/opening/${opening.openingId}`);
                     }}
@@ -894,25 +953,58 @@ export function ProfilePage() {
                         {formatRelativeTime(opening.openedAt)}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {opening.openingType} · +
-                      {intFormatter.format(opening.pcGained)} PC ·{" "}
-                      {opening.duplicateCards} doublon(s)
-                    </p>
-                    {opening.bestCardName ? (
-                      <p className="mt-1 text-xs text-slate-300">
-                        Best pull:{" "}
-                        <span className="font-semibold text-white">
-                          {opening.bestCardName}
-                        </span>
-                        {opening.bestCardRarity ? (
-                          <span
-                            className={`ml-2 font-semibold ${rarityTextColor(opening.bestCardRarity)}`}
-                          >
-                            {rarityLabel(opening.bestCardRarity)}
+
+                    <div className="mt-2 flex flex-wrap items-center text-[10px] font-black uppercase tracking-[0.1em]">
+                      <span className={getOpeningTypeTone(opening.openingType)}>
+                        {opening.openingType}
+                      </span>
+                      {opening.boosterType ? (
+                        <>
+                          <span className="mx-1 text-slate-500">·</span>
+                          <span className={getBoosterTypeTone(opening.boosterType)}>
+                            {opening.boosterType}
                           </span>
-                        ) : null}
-                      </p>
+                        </>
+                      ) : null}
+                      <span className="mx-1 text-slate-500">·</span>
+                      <span className="text-amber-200">
+                        +{intFormatter.format(opening.pcGained)} PC
+                      </span>
+                      <span className="mx-1 text-slate-500">·</span>
+                      <span className="text-slate-300">
+                        {intFormatter.format(opening.duplicateCards)} doublon(s)
+                      </span>
+                    </div>
+
+                    {opening.bestCardName ? (
+                      <div
+                        className={`mt-2 flex items-center gap-3 rounded-lg border bg-slate-950/60 p-2 ${rarityBorderColor(
+                          opening.bestCardRarity,
+                        )}`}
+                      >
+                        <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-black">
+                          {opening.bestCardImageUrl ? (
+                            <img
+                              src={opening.bestCardImageUrl}
+                              alt={opening.bestCardName}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0">
+                          {opening.bestCardRarity ? (
+                            <p
+                              className={`text-[9px] font-black uppercase tracking-wider ${rarityTextColor(opening.bestCardRarity)}`}
+                            >
+                              {rarityLabel(opening.bestCardRarity)}
+                            </p>
+                          ) : null}
+                          <p className="truncate text-xs font-bold text-white">
+                            {opening.bestCardName}
+                          </p>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 ))}
@@ -943,7 +1035,7 @@ export function ProfilePage() {
                 {(recentAchievementsQuery.data ?? []).map((achievement) => (
                   <div
                     key={`${achievement.code}-${achievement.unlockedAt}`}
-                    className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3"
+                    className="rounded-xl border border-slate-800 bg-slate-900/60 p-3"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-white">
@@ -956,26 +1048,58 @@ export function ProfilePage() {
                         {formatRelativeTime(achievement.unlockedAt)}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs uppercase tracking-[0.1em] text-amber-300/90">
-                      {achievement.category}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-300">
-                      Reward:
-                      {achievement.rewardPc > 0
-                        ? ` ${intFormatter.format(achievement.rewardPc)} PC`
-                        : ""}
-                      {achievement.rewardBoosterType
-                        ? ` · ${achievement.rewardBoosterType} Booster`
-                        : ""}
-                      {achievement.rewardTitle
-                        ? ` · Titre: ${achievement.rewardTitle}`
-                        : ""}
+
+                    <div className="mt-2 flex flex-wrap items-center text-[10px] font-black uppercase tracking-[0.1em]">
+                      <span
+                        className={getAchievementCategoryTone(
+                          achievement.category,
+                        )}
+                      >
+                        {achievement.category}
+                      </span>
+
+                      {achievement.rewardPc > 0 ? (
+                        <>
+                          <span className="mx-1 text-slate-500">·</span>
+                          <span className="text-amber-200">
+                            {intFormatter.format(achievement.rewardPc)} PC
+                          </span>
+                        </>
+                      ) : null}
+
+                      {achievement.rewardBoosterType ? (
+                        <>
+                          <span className="mx-1 text-slate-500">·</span>
+                          <span
+                            className={getBoosterTypeTone(
+                              achievement.rewardBoosterType,
+                            )}
+                          >
+                            {achievement.rewardBoosterType} Booster
+                          </span>
+                        </>
+                      ) : null}
+
+                      {achievement.rewardTitle ? (
+                        <>
+                          <span className="mx-1 text-slate-500">·</span>
+                          <span className="text-indigo-200">
+                            Titre: {achievement.rewardTitle}
+                          </span>
+                        </>
+                      ) : null}
+
                       {achievement.rewardPc === 0 &&
                       !achievement.rewardBoosterType &&
-                      !achievement.rewardTitle
-                        ? " Aucune recompense"
-                        : ""}
-                    </p>
+                      !achievement.rewardTitle ? (
+                        <>
+                          <span className="mx-1 text-slate-500">·</span>
+                          <span className="text-slate-300">
+                            Aucune recompense
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </div>
