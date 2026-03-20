@@ -52,6 +52,41 @@ export function AchievementCategorySection({
           const target = Math.max(0, Number(row.target_value ?? 0));
           const current = Math.max(0, Number(row.current_value ?? 0));
           const progressLabel = `${Math.round(Math.min(current, target) * 100) / 100}/${target}`;
+          const rewardBadges = [] as Array<{
+            key: string;
+            rewardPc: number;
+            rewardBoosterType:
+              | AchievementProgressRow["reward_booster_type"]
+              | undefined;
+            label: string;
+          }>;
+
+          if (row.reward_pc > 0) {
+            rewardBadges.push({
+              key: `${row.achievement_id}-pc`,
+              rewardPc: row.reward_pc,
+              rewardBoosterType: undefined,
+              label: `${row.reward_pc} PC`,
+            });
+          }
+
+          if (row.reward_booster_type) {
+            rewardBadges.push({
+              key: `${row.achievement_id}-booster`,
+              rewardPc: 0,
+              rewardBoosterType: row.reward_booster_type,
+              label: `${row.reward_booster_type} Booster`,
+            });
+          }
+
+          if (row.reward_title) {
+            rewardBadges.push({
+              key: `${row.achievement_id}-title`,
+              rewardPc: 0,
+              rewardBoosterType: undefined,
+              label: `Titre: ${row.reward_title}`,
+            });
+          }
 
           return (
             <article
@@ -124,17 +159,15 @@ export function AchievementCategorySection({
               </div>
 
               <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-                <RewardTypeBadge
-                  rewardPc={row.reward_pc}
-                  rewardBoosterType={row.reward_booster_type}
-                  label={row.reward_label}
-                  className="px-0 py-0 text-xs border-0 bg-transparent"
-                />
-                {row.reward_title ? (
-                  <span className="text-[11px] font-semibold text-indigo-200">
-                    Titre: {row.reward_title}
-                  </span>
-                ) : null}
+                {rewardBadges.map((badge) => (
+                  <RewardTypeBadge
+                    key={badge.key}
+                    rewardPc={badge.rewardPc}
+                    rewardBoosterType={badge.rewardBoosterType}
+                    label={badge.label}
+                    className="text-[11px] bg-transparent"
+                  />
+                ))}
               </div>
             </article>
           );

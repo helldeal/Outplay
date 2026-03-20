@@ -58,7 +58,7 @@ INSERT INTO public.achievement_definitions (
 VALUES (
   'BETA_TESTER',
   'Beta Tester',
-  'Other',
+  'Outplay',
   'Réservé aux beta testeurs Outplay.',
   'manual_only',
   1,
