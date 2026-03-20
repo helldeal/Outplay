@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Award,
   BookMarked,
+  GitCommitHorizontal,
   Crown,
   ShoppingBag,
   Sparkles,
@@ -54,6 +55,14 @@ export function HomePage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_15%,rgba(56,189,248,0.24),transparent_34%),radial-gradient(circle_at_94%_0%,rgba(251,191,36,0.2),transparent_28%),linear-gradient(135deg,rgba(56,189,248,0.08),transparent_44%,rgba(244,114,182,0.12))]" />
         <div className="pointer-events-none absolute -left-12 -top-14 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-amber-300/15 blur-3xl" />
+
+        <Link
+          to="/patch-notes"
+          className="absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-fuchsia-300/45 bg-fuchsia-300/12 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-100 transition hover:border-fuchsia-200/70 hover:bg-fuchsia-300/22"
+        >
+          <GitCommitHorizontal className="h-3.5 w-3.5" />
+          Patch Notes 1.0
+        </Link>
 
         <div className="relative flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-2xl">
