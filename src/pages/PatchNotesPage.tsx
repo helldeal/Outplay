@@ -21,6 +21,7 @@ const milestones = [
       "Profil joueur enrichi: activité récente, statistiques plus claires et meilleure présentation des informations.",
       "Ajout d'un récapitulatif public des ouvertures pour mieux suivre les tirages importants.",
       "Classement amélioré avec un podium plus lisible et une progression plus compréhensible.",
+      "Ajout de statistiques globales pour mieux suivre sa progression et comparer avec les autres joueurs.",
       "Arrivée de la série S2 avec de nouvelles cartes et plusieurs corrections sur la boutique et le Legendex.",
       "Améliorations de stabilité et de fiabilité pour limiter les bugs pendant la phase de test.",
     ],
@@ -31,6 +32,7 @@ const milestones = [
     title: "Version actuelle",
     tone: "border-fuchsia-300/35 bg-fuchsia-400/10 text-fuchsia-100",
     updates: [
+      "Système de parainage introduit pour récompenser les joueurs qui invitent leurs amis à rejoindre Outplay.",
       "Système d'achievements renforcé avec une progression mieux suivie et des récompenses plus lisibles.",
       "Expérience collection améliorée: filtres plus pratiques et score plus simple à comprendre.",
       "Équilibrage du gameplay et de l'économie pour une progression plus cohérente au quotidien.",
