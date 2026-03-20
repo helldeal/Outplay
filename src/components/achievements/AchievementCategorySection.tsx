@@ -45,12 +45,13 @@ export function AchievementCategorySection({
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {group.entries.map((row) => {
-          const progressPct = Math.max(
-            0,
-            Math.min(100, Math.floor(row.progress_pct)),
-          );
+          const progressPct = row.unlocked
+            ? 100
+            : Math.max(0, Math.min(100, Math.floor(row.progress_pct)));
           const target = Math.max(0, Number(row.target_value ?? 0));
-          const current = Math.max(0, Number(row.current_value ?? 0));
+          const current = row.unlocked
+            ? target
+            : Math.max(0, Number(row.current_value ?? 0));
           const progressLabel = `${Math.round(Math.min(current, target) * 100) / 100}/${target}`;
           const rewardBadges = [] as Array<{
             key: string;
