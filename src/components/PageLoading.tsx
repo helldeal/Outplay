@@ -6,7 +6,7 @@ interface PageLoadingProps {
 }
 
 export function PageLoading({
-  title = "Leaderboard",
+  title = "",
   subtitle = "Chargement en cours…",
 }: PageLoadingProps) {
   return (
