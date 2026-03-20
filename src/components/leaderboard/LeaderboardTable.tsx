@@ -73,7 +73,7 @@ export function LeaderboardTable({
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-right font-mono font-bold text-indigo-300">
+                <td className="relative px-4 py-3 text-right text-indigo-300">
                   <ScoreBreakdownTooltip
                     totalScore={row.weightedScore}
                     cardScore={row.cardScore}
@@ -81,7 +81,7 @@ export function LeaderboardTable({
                     className="inline-flex"
                     tooltipPositionClassName="right-0 top-full"
                   >
-                    <span className="cursor-help rounded px-1">
+                    <span className="font-mono font-bold cursor-help rounded px-1">
                       {scoreFormatter.format(row.weightedScore)}
                     </span>
                   </ScoreBreakdownTooltip>

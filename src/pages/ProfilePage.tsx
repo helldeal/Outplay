@@ -211,8 +211,8 @@ export function ProfilePage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/75 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.55)] md:p-7">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(34,211,238,0.26),transparent_36%),radial-gradient(circle_at_95%_20%,rgba(251,191,36,0.18),transparent_34%),linear-gradient(120deg,rgba(56,189,248,0.08),transparent_45%,rgba(244,114,182,0.08))]" />
+      <div className="relative rounded-3xl border border-slate-700/70 bg-slate-900/75 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.55)] md:p-7">
+        <div className="pointer-events-none absolute rounded-3xl inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(34,211,238,0.26),transparent_36%),radial-gradient(circle_at_95%_20%,rgba(251,191,36,0.18),transparent_34%),linear-gradient(120deg,rgba(56,189,248,0.08),transparent_45%,rgba(244,114,182,0.08))]" />
 
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
@@ -283,7 +283,7 @@ export function ProfilePage() {
                   : "N/A"}
               </p>
             </div>
-            <div className="rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2">
+            <div className="relative rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2">
               <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
                 Score
               </p>

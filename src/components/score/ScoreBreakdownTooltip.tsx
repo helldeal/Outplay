@@ -31,7 +31,7 @@ export function ScoreBreakdownTooltip({
   const adjustment = safeTotal - computedTotal;
 
   return (
-    <div className={`group relative inline-flex ${className ?? ""}`.trim()}>
+    <div className={`group ${className ?? ""}`.trim()}>
       {children}
 
       <div
