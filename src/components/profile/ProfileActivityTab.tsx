@@ -33,7 +33,7 @@ function formatRelativeTime(value: string): string {
   const absDiffInSeconds = Math.abs(diffInSeconds);
 
   if (absDiffInSeconds < 45) {
-    return "A l'instant";
+    return "À l'instant";
   }
 
   const units: Array<{
@@ -134,7 +134,7 @@ export function ProfileActivityTab({
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <Clock3 className="h-4 w-4 text-cyan-300" />
-          Dernieres ouvertures
+          Dernières ouvertures
         </h2>
 
         {recentOpeningsLoading ? (
@@ -145,7 +145,7 @@ export function ProfileActivityTab({
           <p className="mt-3 text-sm text-rose-300">{recentOpeningsError}</p>
         ) : recentOpenings.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">
-            Aucune ouverture recente.
+            Aucune ouverture récente.
           </p>
         ) : (
           <div className="mt-3 space-y-2">
@@ -254,7 +254,7 @@ export function ProfileActivityTab({
           </p>
         ) : recentAchievements.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">
-            Aucun achievement recent.
+            Aucun achievement récent.
           </p>
         ) : (
           <div className="mt-3 space-y-2">
@@ -323,7 +323,7 @@ export function ProfileActivityTab({
                   !achievement.rewardTitle ? (
                     <>
                       <span className="mx-1 text-slate-500">·</span>
-                      <span className="text-slate-300">Aucune recompense</span>
+                      <span className="text-slate-300">Aucune récompense</span>
                     </>
                   ) : null}
                 </div>

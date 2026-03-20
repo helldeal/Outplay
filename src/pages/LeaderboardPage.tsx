@@ -120,11 +120,11 @@ export function LeaderboardPage() {
 
       {leaderboardGlobalStatsQuery.isLoading ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400">
-          Chargement des global stats...
+          Chargement des statistiques globales...
         </div>
       ) : leaderboardGlobalStatsQuery.error ? (
         <div className="rounded-2xl border border-rose-800/70 bg-rose-950/30 p-4 text-sm text-rose-300">
-          Impossible de charger les global stats.
+          Impossible de charger les statistiques globales.
         </div>
       ) : leaderboardGlobalStatsQuery.data ? (
         <LeaderboardGlobalStats

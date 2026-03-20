@@ -97,7 +97,7 @@ export function ProfileStatsTab({
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <Dices className="h-4 w-4 text-emerald-300" />
-          Chance matrix
+          Matrice de chance
         </h2>
         <div className="mt-3 rounded-xl border border-slate-700/70 bg-slate-950/55 p-3">
           <div className="relative h-64 overflow-hidden rounded-lg border border-slate-800 bg-[radial-gradient(circle_at_18%_10%,rgba(16,185,129,0.12),transparent_35%),radial-gradient(circle_at_82%_85%,rgba(244,63,94,0.12),transparent_35%)]">
@@ -109,7 +109,7 @@ export function ProfileStatsTab({
             </div>
 
             <p className="absolute left-2 top-2 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-300/90">
-              Beni
+              Béni
             </p>
             <p className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-[0.1em] text-amber-300/90">
               Abondant
@@ -127,7 +127,7 @@ export function ProfileStatsTab({
                 left: `${Math.min(100, Math.max(0, playerMatrixX))}%`,
                 bottom: `${Math.min(100, Math.max(0, playerMatrixY))}%`,
               }}
-              title={`Joueur: ${formatPercent(playerDuplicateRate)} doublons / ${formatPercent(playerBigPullRate)} gros pull`}
+              title={`Joueur: ${formatPercent(playerDuplicateRate)} doublons / ${formatPercent(playerBigPullRate)} gros tirages`}
             />
 
             <div
@@ -136,7 +136,7 @@ export function ProfileStatsTab({
                 left: `${Math.min(100, Math.max(0, averageMatrixX))}%`,
                 bottom: `${Math.min(100, Math.max(0, averageMatrixY))}%`,
               }}
-              title={`Moyenne: ${formatPercent(averageDuplicateRate)} doublons / ${formatPercent(averageBigPullRate)} gros pull`}
+              title={`Moyenne: ${formatPercent(averageDuplicateRate)} doublons / ${formatPercent(averageBigPullRate)} gros tirages`}
             />
           </div>
 
@@ -144,12 +144,12 @@ export function ProfileStatsTab({
             <span className="inline-flex items-center gap-1 text-cyan-200">
               <span className="h-2.5 w-2.5 rounded-full bg-cyan-300" />
               Joueur ({formatPercent(playerDuplicateRate)} doublons /{" "}
-              {formatPercent(playerBigPullRate)} gros pull)
+              {formatPercent(playerBigPullRate)} gros tirages)
             </span>
             <span className="inline-flex items-center gap-1 text-amber-200">
               <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
               Moyenne ({formatPercent(averageDuplicateRate)} doublons /{" "}
-              {formatPercent(averageBigPullRate)} gros pull)
+              {formatPercent(averageBigPullRate)} gros tirages)
             </span>
           </div>
         </div>
@@ -169,7 +169,7 @@ export function ProfileStatsTab({
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <BarChart3 className="h-4 w-4 text-cyan-300" />
-          Distribution boosters
+          Répartition des boosters
         </h2>
 
         <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
@@ -228,7 +228,7 @@ export function ProfileStatsTab({
 
         <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
           <div className="rounded-lg border border-slate-700/70 bg-slate-950/55 p-2 text-slate-300">
-            <p className="text-slate-500">PC depense</p>
+            <p className="text-slate-500">PC dépensés</p>
             <p className="mt-0.5 font-black text-amber-300">
               {intFormatter.format(overview.totalPcSpent)}
             </p>
@@ -272,7 +272,7 @@ export function ProfileStatsTab({
             </span>
           </p>
           <p>
-            Valeur moyenne recuperee par ouverture:
+            Valeur moyenne récupérée par ouverture:
             <span className="ml-2 font-black text-cyan-200">
               {intFormatter.format(Math.round(overview.avgPcGained))} PC
             </span>
@@ -296,11 +296,11 @@ export function ProfileStatsTab({
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <ScanSearch className="h-4 w-4 text-fuchsia-300" />
-          Top drop cards
+          Cartes les plus tirées
         </h2>
 
         {(overview.topDropCards ?? []).length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">Aucune data de drops.</p>
+          <p className="mt-3 text-sm text-slate-400">Aucune donnée de tirage.</p>
         ) : (
           <div className="mt-3 space-y-2">
             {(overview.topDropCards ?? []).map((card) => (

@@ -24,7 +24,7 @@ export function LeaderboardTable({
       <div className="flex items-center gap-2 border-b border-slate-800 px-5 py-4">
         <Trophy className="h-5 w-5 text-amber-400" />
         <h2 className="text-lg font-black italic uppercase text-white">
-          Top collection
+          Top collectionneurs
         </h2>
       </div>
 
@@ -33,7 +33,7 @@ export function LeaderboardTable({
           <tr className="border-b border-slate-800 text-[10px] uppercase tracking-widest text-slate-500">
             <th className="px-4 py-3 text-center font-bold">#</th>
             <th className="px-4 py-3 text-left font-bold">Joueur</th>
-            <th className="px-4 py-3 text-right font-bold">Score</th>
+            <th className="px-4 py-3 text-center font-bold">Score</th>
             <th className="px-4 py-3 text-center font-bold">Cartes</th>
             <th className="px-4 py-3 text-center font-bold">Achv.</th>
           </tr>
@@ -73,7 +73,7 @@ export function LeaderboardTable({
                     </span>
                   </Link>
                 </td>
-                <td className="relative px-4 py-3 text-right text-indigo-300">
+                <td className="relative px-4 py-3 text-center text-indigo-300">
                   <ScoreBreakdownTooltip
                     totalScore={row.weightedScore}
                     cardScore={row.cardScore}

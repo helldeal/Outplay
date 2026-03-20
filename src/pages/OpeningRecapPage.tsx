@@ -132,7 +132,7 @@ export function OpeningRecapPage() {
   }
 
   if (openingQuery.isLoading) {
-    return <PageLoading subtitle="Chargement du recap d'ouverture..." />;
+    return <PageLoading subtitle="Chargement du récap d'ouverture..." />;
   }
 
   if (openingQuery.error) {
@@ -176,13 +176,13 @@ export function OpeningRecapPage() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-cyan-200">
-                Recap ouverture
+                Récap d&apos;ouverture
               </p>
               <h1 className="mt-1 text-2xl font-black text-white md:text-3xl">
                 {opening.boosterName ?? "Booster"}
               </h1>
               <p className="mt-1 text-sm text-slate-300">
-                {opening.seriesName ?? "Serie inconnue"} · {opening.openingType}
+                {opening.seriesName ?? "Série inconnue"} · {opening.openingType}
               </p>
             </div>
 
@@ -220,7 +220,7 @@ export function OpeningRecapPage() {
             <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
               <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
                 <Coins className="h-3.5 w-3.5 text-amber-300" />
-                PC recuperes
+                PC récupérés
               </p>
               <p className="mt-2 text-sm font-black text-amber-300">
                 +{intFormatter.format(opening.pcGained)} PC
@@ -240,7 +240,7 @@ export function OpeningRecapPage() {
             <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
               <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
                 <TrendingUp className="h-3.5 w-3.5 text-emerald-300" />
-                Rentabilite
+                Rentabilité
               </p>
               {wasPaidOpening ? (
                 <div className="mt-2 flex flex-row items-end gap-3">
@@ -271,17 +271,17 @@ export function OpeningRecapPage() {
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <BarChart3 className="h-4 w-4 text-emerald-300" />
-          Distribution des raretes
+          Distribution des raretés
         </h2>
 
         {cardsQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-400">Calcul des raretes...</p>
+          <p className="mt-3 text-sm text-slate-400">Calcul des raretés...</p>
         ) : cardsQuery.error ? (
           <p className="mt-3 text-sm text-rose-300">
             {(cardsQuery.error as Error).message}
           </p>
         ) : rarityDistribution.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">Aucune carte trouvee.</p>
+          <p className="mt-3 text-sm text-slate-400">Aucune carte trouvée.</p>
         ) : (
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {rarityDistribution.map((entry) => (

@@ -68,7 +68,7 @@ export function LeaderboardGlobalStats({
       <div className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-cyan-300" />
         <h2 className="text-lg font-black uppercase italic text-white md:text-xl">
-          Global stats
+          Statistiques globales
         </h2>
       </div>
 
@@ -76,7 +76,7 @@ export function LeaderboardGlobalStats({
         <article className="rounded-xl border border-slate-800 bg-slate-950/65 p-4">
           <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
             <Coins className="h-4 w-4 text-amber-300" />
-            PC depense
+            PC dépensés
           </p>
           <p className="mt-2 text-2xl font-black text-amber-300">
             {scoreFormatter.format(stats.totalPcSpent)}
@@ -102,11 +102,11 @@ export function LeaderboardGlobalStats({
         <article className="rounded-xl border border-slate-800 bg-slate-950/65 p-4">
           <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-300">
             <PieChart className="h-4 w-4 text-cyan-300" />
-            Booster distribution
+            Répartition des boosters
           </h3>
 
           {stats.boosterDistribution.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Aucune data.</p>
+            <p className="mt-3 text-sm text-slate-500">Aucune donnée.</p>
           ) : (
             <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
               <div className="relative h-64 overflow-hidden rounded-lg border border-slate-800/80 bg-slate-900/70">
@@ -169,11 +169,11 @@ export function LeaderboardGlobalStats({
 
         <article className="rounded-xl border border-slate-800 bg-slate-950/65 p-4">
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-300">
-            Top drop cards
+            Cartes les plus tirées
           </h3>
 
           {stats.topDropCards.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Aucune data.</p>
+            <p className="mt-3 text-sm text-slate-500">Aucune donnée.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {stats.topDropCards.map((card) => {

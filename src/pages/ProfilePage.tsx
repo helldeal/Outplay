@@ -185,7 +185,7 @@ export function ProfilePage() {
         refreshProfile(),
       ]);
 
-      setSaveSuccess("Profil mis a jour.");
+      setSaveSuccess("Profil mis à jour.");
     } catch (error) {
       setSaveError((error as Error).message);
     } finally {
@@ -230,8 +230,8 @@ export function ProfilePage() {
               </h1>
               <p className="mt-1 text-sm text-slate-300">
                 {overview.title
-                  ? `Titre: ${overview.title}`
-                  : "Aucun titre equipé"}
+                  ? `Titre : ${overview.title}`
+                  : "Aucun titre équipé"}
               </p>
               <p className="mt-1 max-w-xl text-sm text-slate-400">
                 {overview.description?.trim()
@@ -280,7 +280,7 @@ export function ProfilePage() {
                 <Crown className="h-4 w-4 text-amber-300" />
                 {overview.leaderboardPosition
                   ? `#${intFormatter.format(overview.leaderboardPosition)}`
-                  : "N/A"}
+                  : "Non classé"}
               </p>
             </div>
             <div className="relative rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2">
@@ -317,7 +317,7 @@ export function ProfilePage() {
             </div>
             <div className="rounded-xl border border-slate-700/80 bg-slate-950/55 px-3 py-2">
               <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
-                Porte Monnaie
+                Porte-monnaie
               </p>
               <p className="text-lg font-black text-amber-300 ">
                 {intFormatter.format(overview.pcBalance)} PC
@@ -360,7 +360,7 @@ export function ProfilePage() {
           <div className="flex items-center gap-2">
             <PencilLine className="h-4 w-4 text-cyan-300" />
             <h2 className="text-sm font-black uppercase tracking-[0.11em] text-white">
-              Editer le profil
+              Éditer le profil
             </h2>
           </div>
 
@@ -473,7 +473,7 @@ export function ProfilePage() {
             }`}
           >
             <History className="h-4 w-4" />
-            Activite
+            Activité
           </button>
         </div>
       </div>

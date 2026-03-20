@@ -256,7 +256,7 @@ export function LeaderboardMatrices({
       <div className="grid gap-4 lg:grid-cols-2">
         <MatrixCard
           title="Matrice de chance"
-          subtitle="Taux de gros pull (Y) vs taux de doublons (X)"
+          subtitle="Taux de gros tirages (Y) vs taux de doublons (X)"
           icon={<Dices className="h-4 w-4 text-emerald-300" />}
           points={chancePoints}
           cornerLabels={{
@@ -266,7 +266,7 @@ export function LeaderboardMatrices({
             bottomRight: "Poissard",
           }}
           tooltipFormatter={(point) =>
-            `${point.username} · ${formatPercent(point.xValue)} doublons / ${formatPercent(point.yValue)} gros pulls`
+            `${point.username} · ${formatPercent(point.xValue)} doublons / ${formatPercent(point.yValue)} gros tirages`
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}
@@ -274,7 +274,7 @@ export function LeaderboardMatrices({
 
         <MatrixCard
           title="Matrice de rentabilité"
-          subtitle="Taux de gros pull (Y) vs argent dépensé moyen (X)"
+          subtitle="Taux de gros tirages (Y) vs dépense moyenne (X)"
           icon={<Coins className="h-4 w-4 text-amber-300" />}
           points={profitPoints}
           cornerLabels={{
@@ -284,7 +284,7 @@ export function LeaderboardMatrices({
             bottomRight: "Déficit",
           }}
           tooltipFormatter={(point) =>
-            `${point.username} · ${formatPc(point.xValue)} dépensés / ${formatPercent(point.yValue)} gros pulls`
+            `${point.username} · ${formatPc(point.xValue)} dépensés / ${formatPercent(point.yValue)} gros tirages`
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}

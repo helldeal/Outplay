@@ -7,15 +7,15 @@ import type { UserCardRow } from "../../types";
 const ALL = "__ALL__";
 
 function getSeriesName(row: UserCardRow): string {
-  return row.card.series?.name ?? "Sans serie";
+  return row.card.series?.name ?? "Sans série";
 }
 
 function getTeamName(row: UserCardRow): string {
-  return row.card.team?.name ?? "Sans team";
+  return row.card.team?.name ?? "Sans équipe";
 }
 
 function getRoleName(row: UserCardRow): string {
-  return row.card.role?.name ?? "Sans role";
+  return row.card.role?.name ?? "Sans rôle";
 }
 
 function normalizeSelectValues(values: string[]): string[] {
@@ -203,7 +203,7 @@ export function ProfileCollectionTab({
                 className="inline-flex items-center gap-1 rounded-md border border-slate-600/80 bg-slate-950/85 px-2 py-1 text-[11px] font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
               >
                 <X className="h-3.5 w-3.5" />
-                Reset
+                Réinitialiser
               </button>
             ) : null}
           </div>
@@ -213,7 +213,7 @@ export function ProfileCollectionTab({
           <div className="mt-3 space-y-3">
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                Serie
+                Série
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -246,7 +246,7 @@ export function ProfileCollectionTab({
 
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                Rarete
+                Rareté
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -320,7 +320,7 @@ export function ProfileCollectionTab({
 
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                Team
+                Équipe
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -353,7 +353,7 @@ export function ProfileCollectionTab({
 
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                Role
+                Rôle
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -386,7 +386,7 @@ export function ProfileCollectionTab({
 
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                Nationalite
+                Nationalité
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -423,7 +423,7 @@ export function ProfileCollectionTab({
 
       {filteredCollection.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4 text-sm text-slate-400">
-          Aucune carte ne correspond aux filtres selectionnes.
+          Aucune carte ne correspond aux filtres sélectionnés.
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
