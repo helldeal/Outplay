@@ -49,7 +49,7 @@ export function RecentDropsPanel({
   onLoadMore: () => void;
 }) {
   const navigate = useNavigate();
-  const { ref, hasBeenVisible } = useInViewOnce<HTMLAsideElement>({
+  const { ref, hasBeenVisible } = useInViewOnce<HTMLElement>({
     threshold: 0.2,
     rootMargin: "0px 0px -8% 0px",
   });
