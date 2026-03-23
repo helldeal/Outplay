@@ -1,15 +1,30 @@
 import { CalendarDays, Sparkles, Tag } from "lucide-react";
 
-const milestones = [
+export const milestones = [
   {
-    version: "v0.1",
-    date: "07 mars 2026",
-    title: "Première phase de test",
-    tone: "border-cyan-300/35 bg-cyan-400/10 text-cyan-100",
+    version: "v1.0.1",
+    date: "23 mars 2026",
+    title: "Interface repensée & Animations",
+    tone: "border-emerald-300/35 bg-emerald-400/10 text-emerald-100",
     updates: [
-      "Lancement de la première version jouable d'Outplay pour démarrer les tests utilisateurs.",
-      "Navigation principale en place pour ouvrir des boosters, suivre sa collection et progresser.",
-      "Premiers réglages de stabilité pour rendre l'expérience plus fluide dès les débuts.",
+      "Collection: filtres sélectionnables et options dynamiques selon les autres filtres.",
+      "Legendex: sélection par défaut de la série ciblé par l'utilisateur.",
+      "Leaderboard: animations et dynamisation de la page.",
+      "Matrices leaderboard: affichage optimisé pour mieux étaler les points autour de la moyenne",
+    ],
+  },
+  {
+    version: "v1.0",
+    date: "20 mars 2026",
+    title: "Sortie officielle / Rift Champion - Clutch Factor",
+    tone: "border-fuchsia-300/35 bg-fuchsia-400/10 text-fuchsia-100",
+    updates: [
+      "Système de parainage introduit pour récompenser les joueurs qui invitent leurs amis à rejoindre Outplay.",
+      "Système d'achievements renforcé avec une progression mieux suivie et des récompenses plus lisibles.",
+      "Expérience collection améliorée: filtres plus pratiques et score plus simple à comprendre.",
+      "Équilibrage du gameplay et de l'économie pour une progression plus cohérente au quotidien.",
+      "Nouvelles améliorations de stabilité pour réduire les erreurs et sécuriser l'expérience de jeu.",
+      "Finalisation de la version 1.0 avec une navigation plus claire et une interface mieux polie.",
     ],
   },
   {
@@ -27,17 +42,14 @@ const milestones = [
     ],
   },
   {
-    version: "v1.0",
-    date: "20 mars 2026",
-    title: "Version actuelle",
-    tone: "border-fuchsia-300/35 bg-fuchsia-400/10 text-fuchsia-100",
+    version: "v0.1",
+    date: "07 mars 2026",
+    title: "Première phase de test",
+    tone: "border-cyan-300/35 bg-cyan-400/10 text-cyan-100",
     updates: [
-      "Système de parainage introduit pour récompenser les joueurs qui invitent leurs amis à rejoindre Outplay.",
-      "Système d'achievements renforcé avec une progression mieux suivie et des récompenses plus lisibles.",
-      "Expérience collection améliorée: filtres plus pratiques et score plus simple à comprendre.",
-      "Équilibrage du gameplay et de l'économie pour une progression plus cohérente au quotidien.",
-      "Nouvelles améliorations de stabilité pour réduire les erreurs et sécuriser l'expérience de jeu.",
-      "Finalisation de la version 1.0 avec une navigation plus claire et une interface mieux polie.",
+      "Lancement de la première version jouable d'Outplay pour démarrer les tests utilisateurs.",
+      "Navigation principale en place pour ouvrir des boosters, suivre sa collection et progresser.",
+      "Premiers réglages de stabilité pour rendre l'expérience plus fluide dès les débuts.",
     ],
   },
 ] as const;

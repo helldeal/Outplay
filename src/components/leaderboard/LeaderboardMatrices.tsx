@@ -1,6 +1,7 @@
 import { Coins, Dices, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
+import { useInViewOnce } from "../../hooks/useInViewOnce";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { LeaderboardMatrixPlayer } from "../../query/leaderboard";
 import { Link } from "react-router-dom";
@@ -16,18 +17,36 @@ interface MatrixPoint {
   yValue: number;
 }
 
-const MATRIX_EDGE_PADDING = 6;
+const MATRIX_EDGE_PADDING = 3;
+const MATRIX_SPREAD_MULTIPLIER = 2;
 
 function clampPercent(value: number, min = 0, max = 100): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function normalizeDeltaToPct(delta: number, halfSpan: number): number {
+function normalizeDeltaToPct(
+  delta: number,
+  halfSpan: number,
+  spreadMultiplier = 1,
+): number {
   const safeSpan = Math.max(halfSpan, 1e-6);
   const usableHalf = (100 - MATRIX_EDGE_PADDING * 2) / 2;
-  const centered = 50 + (delta / safeSpan) * usableHalf;
+  const centered = 50 + ((delta * spreadMultiplier) / safeSpan) * usableHalf;
 
   return clampPercent(centered, MATRIX_EDGE_PADDING, 100 - MATRIX_EDGE_PADDING);
+}
+
+function getHalfSpanFromAverage(
+  values: number[],
+  average: number,
+  minHalfSpan: number,
+): number {
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const distanceToMin = Math.abs(average - minValue);
+  const distanceToMax = Math.abs(maxValue - average);
+
+  return Math.max(minHalfSpan, distanceToMin, distanceToMax);
 }
 
 function buildCenteredPoints(
@@ -48,35 +67,25 @@ function buildCenteredPoints(
     players.reduce((sum, player) => sum + yAccessor(player), 0) /
     players.length;
 
+  const xValues = players.map((player) => xAccessor(player));
+  const yValues = players.map((player) => yAccessor(player));
+
   const deltas = players.map((player) => ({
     player,
     deltaX: xAccessor(player) - averageX,
     deltaY: yAccessor(player) - averageY,
   }));
 
-  const minDeltaX = Math.min(...deltas.map((entry) => entry.deltaX), 0);
-  const maxDeltaX = Math.max(...deltas.map((entry) => entry.deltaX), 0);
-  const minDeltaY = Math.min(...deltas.map((entry) => entry.deltaY), 0);
-  const maxDeltaY = Math.max(...deltas.map((entry) => entry.deltaY), 0);
-
-  const halfSpanX = Math.max(
-    minSpan.x,
-    Math.abs(minDeltaX),
-    Math.abs(maxDeltaX),
-  );
-  const halfSpanY = Math.max(
-    minSpan.y,
-    Math.abs(minDeltaY),
-    Math.abs(maxDeltaY),
-  );
+  const halfSpanX = getHalfSpanFromAverage(xValues, averageX, minSpan.x);
+  const halfSpanY = getHalfSpanFromAverage(yValues, averageY, minSpan.y);
 
   return deltas.map(({ player, deltaX, deltaY }) => ({
     userId: player.userId,
     username: player.username,
     avatarUrl: player.avatarUrl,
     isCurrentUser: player.userId === currentUserId,
-    xPct: normalizeDeltaToPct(deltaX, halfSpanX),
-    yPct: normalizeDeltaToPct(deltaY, halfSpanY),
+    xPct: normalizeDeltaToPct(deltaX, halfSpanX, MATRIX_SPREAD_MULTIPLIER),
+    yPct: normalizeDeltaToPct(deltaY, halfSpanY, MATRIX_SPREAD_MULTIPLIER),
     xValue: xAccessor(player),
     yValue: yAccessor(player),
   }));
@@ -99,6 +108,8 @@ function MatrixCard({
   tooltipFormatter,
   selectedUserId,
   onSelectUser,
+  animationDelay,
+  hasBeenVisible,
 }: {
   title: string;
   subtitle: string;
@@ -113,11 +124,23 @@ function MatrixCard({
   tooltipFormatter: (point: MatrixPoint) => string;
   selectedUserId: string | null;
   onSelectUser: (userId: string) => void;
+  animationDelay: number;
+  hasBeenVisible: boolean;
 }) {
   const topPlayers = points.filter((point) => !point.isCurrentUser);
 
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+    <article
+      className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4"
+      style={{
+        opacity: hasBeenVisible ? 1 : 0,
+        transform: hasBeenVisible ? "translateY(0px)" : "translateY(32px)",
+        transitionProperty: "opacity, transform",
+        transitionDuration: "600ms",
+        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+        transitionDelay: `${animationDelay}ms`,
+      }}
+    >
       <h3 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
         {icon}
         {title}
@@ -202,6 +225,10 @@ export function LeaderboardMatrices({
   players: LeaderboardMatrixPlayer[];
   currentUserId: string;
 }) {
+  const { ref, hasBeenVisible } = useInViewOnce<HTMLElement>({
+    threshold: 0.18,
+    rootMargin: "0px 0px -6% 0px",
+  });
   const sortedPlayers = players
     .slice()
     .sort((a, b) => a.leaderboardPosition - b.leaderboardPosition);
@@ -240,7 +267,10 @@ export function LeaderboardMatrices({
   }, [selectedUserId, sortedPlayers]);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/45 p-5 md:p-6">
+    <section
+      ref={ref}
+      className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/45 p-5 md:p-6"
+    >
       <div className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-cyan-300" />
         <h2 className="text-lg font-black uppercase italic text-white md:text-xl">
@@ -270,6 +300,8 @@ export function LeaderboardMatrices({
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}
+          animationDelay={80}
+          hasBeenVisible={hasBeenVisible}
         />
 
         <MatrixCard
@@ -288,11 +320,23 @@ export function LeaderboardMatrices({
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}
+          animationDelay={340}
+          hasBeenVisible={hasBeenVisible}
         />
       </div>
 
       {selectedUser ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-3">
+        <div
+          className="rounded-xl border border-slate-800 bg-slate-950/65 p-3"
+          style={{
+            opacity: hasBeenVisible ? 1 : 0,
+            transform: hasBeenVisible ? "translateY(0px)" : "translateY(24px)",
+            transitionProperty: "opacity, transform",
+            transitionDuration: "600ms",
+            transitionTimingFunction: "ease-out",
+            transitionDelay: "500ms",
+          }}
+        >
           <Link
             to={`/profile/${selectedUser.userId}`}
             className="flex items-center gap-3 transition hover:opacity-80"

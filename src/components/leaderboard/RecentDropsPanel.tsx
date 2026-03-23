@@ -1,5 +1,6 @@
 import { Clock3, LoaderCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { RecentDrop } from "../../query/leaderboard";
 import { resolveBoosterTone } from "../rewards/reward-theme";
 import {
@@ -48,6 +49,10 @@ export function RecentDropsPanel({
   onLoadMore: () => void;
 }) {
   const navigate = useNavigate();
+  const { ref, hasBeenVisible } = useInViewOnce<HTMLAsideElement>({
+    threshold: 0.2,
+    rootMargin: "0px 0px -8% 0px",
+  });
 
   const formatRelativeDate = (dateIso: string) => {
     const d = new Date(dateIso);
@@ -60,7 +65,7 @@ export function RecentDropsPanel({
   };
 
   return (
-    <aside className="w-full space-y-3 lg:w-80 lg:shrink-0">
+    <aside ref={ref} className="w-full space-y-3 lg:w-80 lg:shrink-0">
       <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-300">
         <Clock3 className="h-4 w-4 text-cyan-300" />
         Dernières ouvertures
@@ -72,7 +77,7 @@ export function RecentDropsPanel({
         </div>
       ) : (
         <div className="space-y-3">
-          {drops.map((drop) => (
+          {drops.map((drop, index) => (
             <article
               key={drop.openingId}
               className="cursor-pointer rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:border-cyan-300/40"
@@ -87,6 +92,16 @@ export function RecentDropsPanel({
               }}
               role="button"
               tabIndex={0}
+              style={{
+                opacity: hasBeenVisible ? 1 : 0,
+                transform: hasBeenVisible
+                  ? "translateY(0px)"
+                  : "translateY(24px)",
+                transitionProperty: "opacity, transform",
+                transitionDuration: "500ms",
+                transitionTimingFunction: "ease-out",
+                transitionDelay: `${80 + index * 60}ms`,
+              }}
             >
               {(() => {
                 const boosterType = inferBoosterType(drop.boosterName);

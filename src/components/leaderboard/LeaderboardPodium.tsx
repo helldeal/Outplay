@@ -1,5 +1,6 @@
 import { Crown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardRow } from "../../query/leaderboard";
 import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
@@ -41,6 +42,11 @@ export function LeaderboardPodium({
   rows: LeaderboardRow[];
   scoreFormatter: Intl.NumberFormat;
 }) {
+  const { ref, hasBeenVisible } = useInViewOnce<HTMLDivElement>({
+    threshold: 0.3,
+    rootMargin: "0px 0px -10% 0px",
+  });
+
   if (rows.length < 3) {
     return null;
   }
@@ -48,13 +54,25 @@ export function LeaderboardPodium({
   const podiumOrder = [rows[1], rows[0], rows[2]].filter(Boolean);
 
   return (
-    <div className="flex items-end justify-center gap-3 md:gap-8">
+    <div ref={ref} className="flex items-end justify-center gap-3 md:gap-8">
       {podiumOrder.map((row, i) => {
         const meta = podiumMeta[i];
+        const delayMs = i * 120;
+
         return (
           <div
             key={row.userId}
             className="flex w-1/3 max-w-[220px] flex-col items-center"
+            style={{
+              opacity: hasBeenVisible ? 1 : 0,
+              transform: hasBeenVisible
+                ? "translateY(0px)"
+                : "translateY(48px)",
+              transitionProperty: "opacity, transform",
+              transitionDuration: "650ms",
+              transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+              transitionDelay: `${delayMs}ms`,
+            }}
           >
             <Link
               to={`/profile/${row.userId}`}

@@ -38,6 +38,11 @@ export function LegendexPage() {
       return;
     }
 
+    // Wait for target series resolution before applying default selection.
+    if (!requestedSeries && user && targetSeriesQuery.isLoading) {
+      return;
+    }
+
     const matchedSeries = requestedSeries
       ? sortedSeries.find(
           (series) =>
@@ -54,9 +59,21 @@ export function LegendexPage() {
       return;
     }
 
+    const targetSeries = targetSeriesQuery.data
+      ? sortedSeries.find((series) => series.id === targetSeriesQuery.data?.id)
+      : null;
+    const s1Series = sortedSeries.find(
+      (series) =>
+        series.code.toLowerCase() === "s1" ||
+        series.slug.toLowerCase() === "s1",
+    );
+    const preferredDefaultSeries = targetSeries ?? s1Series ?? sortedSeries[0];
+
     const fallbackSeries =
-      sortedSeries.find((series) => series.id === selectedSeriesId) ??
-      sortedSeries[0];
+      requestedSeries.length > 0
+        ? (sortedSeries.find((series) => series.id === selectedSeriesId) ??
+          preferredDefaultSeries)
+        : preferredDefaultSeries;
 
     if (selectedSeriesId !== fallbackSeries.id) {
       setSelectedSeriesId(fallbackSeries.id);
@@ -74,6 +91,9 @@ export function LegendexPage() {
     sortedSeries,
     searchParams,
     setSearchParams,
+    targetSeriesQuery.data,
+    targetSeriesQuery.isLoading,
+    user,
   ]);
 
   const handleSeriesChange = (nextSeriesId: string) => {

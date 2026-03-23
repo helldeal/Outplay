@@ -1,4 +1,6 @@
 import { Coins, Package, PieChart, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardGlobalStats } from "../../query/leaderboard";
 import { resolveAssetUrl } from "../../utils/asset-url";
 import { rarityLabel, rarityTextColor } from "../../utils/rarity";
@@ -63,8 +65,54 @@ export function LeaderboardGlobalStats({
     ...orderedBoosterDistribution.map((item) => item.openingsCount),
   );
 
+  const { ref, hasBeenVisible } = useInViewOnce<HTMLElement>({
+    threshold: 0.22,
+    rootMargin: "0px 0px -8% 0px",
+  });
+
+  const [animatedTotalPcSpent, setAnimatedTotalPcSpent] = useState(0);
+  const [animatedTotalCardsOpened, setAnimatedTotalCardsOpened] = useState(0);
+  const [animatedTotalOpenings, setAnimatedTotalOpenings] = useState(0);
+
+  useEffect(() => {
+    if (!hasBeenVisible) {
+      return;
+    }
+
+    const durationMs = 900;
+    const startedAt = performance.now();
+    let frameId = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const eased = 1 - (1 - progress) ** 3;
+
+      setAnimatedTotalPcSpent(Math.round(stats.totalPcSpent * eased));
+      setAnimatedTotalCardsOpened(Math.round(stats.totalCardsOpened * eased));
+      setAnimatedTotalOpenings(Math.round(stats.totalOpenings * eased));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [
+    hasBeenVisible,
+    stats.totalCardsOpened,
+    stats.totalOpenings,
+    stats.totalPcSpent,
+  ]);
+
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/45 p-5 md:p-6">
+    <section
+      ref={ref}
+      className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/45 p-5 md:p-6"
+    >
       <div className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-cyan-300" />
         <h2 className="text-lg font-black uppercase italic text-white md:text-xl">
@@ -79,7 +127,9 @@ export function LeaderboardGlobalStats({
             PC dépensés
           </p>
           <p className="mt-2 text-2xl font-black text-amber-300">
-            {scoreFormatter.format(stats.totalPcSpent)}
+            {scoreFormatter.format(
+              hasBeenVisible ? animatedTotalPcSpent : stats.totalPcSpent,
+            )}
           </p>
           <p className="text-xs text-slate-500">Achats de boosters (SHOP)</p>
         </article>
@@ -90,10 +140,17 @@ export function LeaderboardGlobalStats({
             Volume total de cartes
           </p>
           <p className="mt-2 text-2xl font-black text-indigo-300">
-            {scoreFormatter.format(stats.totalCardsOpened)}
+            {scoreFormatter.format(
+              hasBeenVisible
+                ? animatedTotalCardsOpened
+                : stats.totalCardsOpened,
+            )}
           </p>
           <p className="text-xs text-slate-500">
-            {scoreFormatter.format(stats.totalOpenings)} ouvertures
+            {scoreFormatter.format(
+              hasBeenVisible ? animatedTotalOpenings : stats.totalOpenings,
+            )}{" "}
+            ouvertures
           </p>
         </article>
       </div>
@@ -118,7 +175,7 @@ export function LeaderboardGlobalStats({
                 </div>
 
                 <div className="absolute inset-x-2 bottom-2 top-2 grid grid-cols-4 gap-2">
-                  {orderedBoosterDistribution.map((item) => {
+                  {orderedBoosterDistribution.map((item, index) => {
                     const tone = boosterTypeTone(item.boosterType);
                     const relativeHeight =
                       maxBoosterOpenings > 0
@@ -136,7 +193,14 @@ export function LeaderboardGlobalStats({
                       >
                         <div
                           className={`w-1/2 rounded-md ${tone.bar} shadow-[0_0_14px_rgba(15,23,42,0.35)]`}
-                          style={{ height: `${barHeight}%` }}
+                          style={{
+                            height: `${hasBeenVisible ? barHeight : 0}%`,
+                            transitionProperty: "height",
+                            transitionDuration: "800ms",
+                            transitionTimingFunction:
+                              "cubic-bezier(0.22, 1, 0.36, 1)",
+                            transitionDelay: `${120 + index * 90}ms`,
+                          }}
                         />
                       </div>
                     );
@@ -176,12 +240,22 @@ export function LeaderboardGlobalStats({
             <p className="mt-3 text-sm text-slate-500">Aucune donnée.</p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {stats.topDropCards.map((card) => {
+              {stats.topDropCards.map((card, index) => {
                 const imgSrc = resolveAssetUrl(card.cardImageUrl);
                 return (
                   <li
                     key={card.cardId}
                     className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/70 p-2"
+                    style={{
+                      opacity: hasBeenVisible ? 1 : 0,
+                      transform: hasBeenVisible
+                        ? "translateY(0px)"
+                        : "translateY(16px)",
+                      transitionProperty: "opacity, transform",
+                      transitionDuration: "500ms",
+                      transitionTimingFunction: "ease-out",
+                      transitionDelay: `${180 + index * 65}ms`,
+                    }}
                   >
                     <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
                       {imgSrc ? (

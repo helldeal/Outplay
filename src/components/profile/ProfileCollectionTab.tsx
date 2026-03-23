@@ -5,6 +5,16 @@ import { rarityLabel } from "../../utils/rarity";
 import type { UserCardRow } from "../../types";
 
 const ALL = "__ALL__";
+type CardRarity = UserCardRow["card"]["rarity"];
+type FilterKey = "series" | "rarity" | "game" | "team" | "role" | "nationality";
+
+const RARITY_ORDER: CardRarity[] = [
+  "LEGENDS",
+  "WORLD_CLASS",
+  "CHAMPION",
+  "CHALLENGER",
+  "ROOKIE",
+];
 
 function getSeriesName(row: UserCardRow): string {
   return row.card.series?.name ?? "Sans série";
@@ -20,6 +30,69 @@ function getRoleName(row: UserCardRow): string {
 
 function normalizeSelectValues(values: string[]): string[] {
   return values.filter(Boolean).sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+function matchesFilters(
+  row: UserCardRow,
+  filters: {
+    series: string;
+    rarity: string;
+    game: string;
+    team: string;
+    role: string;
+    nationality: string;
+  },
+  exclude?: FilterKey,
+): boolean {
+  if (
+    exclude !== "series" &&
+    filters.series !== ALL &&
+    getSeriesName(row) !== filters.series
+  ) {
+    return false;
+  }
+
+  if (
+    exclude !== "rarity" &&
+    filters.rarity !== ALL &&
+    row.card.rarity !== filters.rarity
+  ) {
+    return false;
+  }
+
+  if (
+    exclude !== "game" &&
+    filters.game !== ALL &&
+    row.card.game.name !== filters.game
+  ) {
+    return false;
+  }
+
+  if (
+    exclude !== "team" &&
+    filters.team !== ALL &&
+    getTeamName(row) !== filters.team
+  ) {
+    return false;
+  }
+
+  if (
+    exclude !== "role" &&
+    filters.role !== ALL &&
+    getRoleName(row) !== filters.role
+  ) {
+    return false;
+  }
+
+  if (
+    exclude !== "nationality" &&
+    filters.nationality !== ALL &&
+    (row.card.nationality.code ?? "N/A") !== filters.nationality
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 interface FilterOption {
@@ -57,14 +130,35 @@ export function ProfileCollectionTab({
   const [roleFilter, setRoleFilter] = useState<string>(ALL);
   const [nationalityFilter, setNationalityFilter] = useState<string>(ALL);
 
+  const activeFilters = {
+    series: seriesFilter,
+    rarity: rarityFilter,
+    game: gameFilter,
+    team: teamFilter,
+    role: roleFilter,
+    nationality: nationalityFilter,
+  };
+
   const filterOptions = useMemo(() => {
+    const getRowsForFacet = (facet: FilterKey) =>
+      collection.filter((row) => matchesFilters(row, activeFilters, facet));
+
+    const seriesRows = getRowsForFacet("series");
     const series = normalizeSelectValues(
-      Array.from(new Set(collection.map((row) => getSeriesName(row)))),
+      Array.from(new Set(seriesRows.map((row) => getSeriesName(row)))),
     );
+
+    const rarityRows = getRowsForFacet("rarity");
+    const availableRarities = new Set(rarityRows.map((row) => row.card.rarity));
+    const rarities = RARITY_ORDER.filter((rarity) =>
+      availableRarities.has(rarity),
+    );
+
+    const gameRows = getRowsForFacet("game");
 
     const games = Array.from(
       new Map(
-        collection.map((row) => [
+        gameRows.map((row) => [
           row.card.game.name,
           {
             value: row.card.game.name,
@@ -75,9 +169,11 @@ export function ProfileCollectionTab({
       ).values(),
     ).sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
+    const teamRows = getRowsForFacet("team");
+
     const teams = Array.from(
       new Map(
-        collection.map((row) => {
+        teamRows.map((row) => {
           const name = getTeamName(row);
           return [
             name,
@@ -91,9 +187,11 @@ export function ProfileCollectionTab({
       ).values(),
     ).sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
+    const roleRows = getRowsForFacet("role");
+
     const roles = Array.from(
       new Map(
-        collection.map((row) => {
+        roleRows.map((row) => {
           const name = getRoleName(row);
           return [
             name,
@@ -107,9 +205,11 @@ export function ProfileCollectionTab({
       ).values(),
     ).sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
+    const nationalityRows = getRowsForFacet("nationality");
+
     const nationalities = Array.from(
       new Map(
-        collection.map((row) => {
+        nationalityRows.map((row) => {
           const code = row.card.nationality.code ?? "N/A";
           return [
             code,
@@ -123,41 +223,14 @@ export function ProfileCollectionTab({
       ).values(),
     ).sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
-    return { series, games, teams, roles, nationalities };
-  }, [collection]);
+    return { series, rarities, games, teams, roles, nationalities };
+  }, [activeFilters, collection]);
 
   const filteredCollection = useMemo(() => {
     return collection
-      .filter((row) =>
-        seriesFilter === ALL ? true : getSeriesName(row) === seriesFilter,
-      )
-      .filter((row) =>
-        rarityFilter === ALL ? true : row.card.rarity === rarityFilter,
-      )
-      .filter((row) =>
-        gameFilter === ALL ? true : row.card.game.name === gameFilter,
-      )
-      .filter((row) =>
-        teamFilter === ALL ? true : getTeamName(row) === teamFilter,
-      )
-      .filter((row) =>
-        roleFilter === ALL ? true : getRoleName(row) === roleFilter,
-      )
-      .filter((row) =>
-        nationalityFilter === ALL
-          ? true
-          : (row.card.nationality.code ?? "N/A") === nationalityFilter,
-      )
+      .filter((row) => matchesFilters(row, activeFilters))
       .sort((a, b) => b.card.pc_value - a.card.pc_value);
-  }, [
-    collection,
-    seriesFilter,
-    rarityFilter,
-    gameFilter,
-    teamFilter,
-    roleFilter,
-    nationalityFilter,
-  ]);
+  }, [activeFilters, collection]);
 
   const hasActiveFilters =
     seriesFilter !== ALL ||
@@ -166,6 +239,51 @@ export function ProfileCollectionTab({
     teamFilter !== ALL ||
     roleFilter !== ALL ||
     nationalityFilter !== ALL;
+
+  const activeFilterChips = [
+    seriesFilter !== ALL
+      ? {
+          key: "series",
+          label: `Serie: ${seriesFilter}`,
+          onRemove: () => setSeriesFilter(ALL),
+        }
+      : null,
+    rarityFilter !== ALL
+      ? {
+          key: "rarity",
+          label: `Rarete: ${rarityLabel(rarityFilter as CardRarity)}`,
+          onRemove: () => setRarityFilter(ALL),
+        }
+      : null,
+    gameFilter !== ALL
+      ? {
+          key: "game",
+          label: `Jeu: ${gameFilter}`,
+          onRemove: () => setGameFilter(ALL),
+        }
+      : null,
+    teamFilter !== ALL
+      ? {
+          key: "team",
+          label: `Equipe: ${teamFilter}`,
+          onRemove: () => setTeamFilter(ALL),
+        }
+      : null,
+    roleFilter !== ALL
+      ? {
+          key: "role",
+          label: `Role: ${roleFilter}`,
+          onRemove: () => setRoleFilter(ALL),
+        }
+      : null,
+    nationalityFilter !== ALL
+      ? {
+          key: "nationality",
+          label: `Nationalite: ${nationalityFilter}`,
+          onRemove: () => setNationalityFilter(ALL),
+        }
+      : null,
+  ].filter((chip): chip is NonNullable<typeof chip> => chip !== null);
 
   return (
     <div className="space-y-4">
@@ -211,6 +329,27 @@ export function ProfileCollectionTab({
 
         {isFiltersOpen ? (
           <div className="mt-3 space-y-3">
+            {activeFilterChips.length > 0 ? (
+              <div>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                  Filtres actifs
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeFilterChips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={chip.onRemove}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/60 bg-cyan-950/45 px-2.5 py-1 text-[11px] font-semibold text-cyan-100 transition hover:border-cyan-300"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
                 Série
@@ -231,7 +370,9 @@ export function ProfileCollectionTab({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setSeriesFilter(value)}
+                    onClick={() =>
+                      setSeriesFilter((prev) => (prev === value ? ALL : value))
+                    }
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                       seriesFilter === value
                         ? "border-cyan-300/70 bg-cyan-400/20 text-cyan-100"
@@ -260,17 +401,13 @@ export function ProfileCollectionTab({
                 >
                   Toutes
                 </button>
-                {[
-                  "LEGENDS",
-                  "WORLD_CLASS",
-                  "CHAMPION",
-                  "CHALLENGER",
-                  "ROOKIE",
-                ].map((value) => (
+                {filterOptions.rarities.map((value) => (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setRarityFilter(value)}
+                    onClick={() =>
+                      setRarityFilter((prev) => (prev === value ? ALL : value))
+                    }
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                       rarityFilter === value
                         ? "border-fuchsia-300/70 bg-fuchsia-400/20 text-fuchsia-100"
@@ -305,7 +442,11 @@ export function ProfileCollectionTab({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setGameFilter(option.value)}
+                    onClick={() =>
+                      setGameFilter((prev) =>
+                        prev === option.value ? ALL : option.value,
+                      )
+                    }
                     className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                       gameFilter === option.value
                         ? "border-emerald-300/70 bg-emerald-400/20 text-emerald-100"
@@ -338,7 +479,11 @@ export function ProfileCollectionTab({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setTeamFilter(option.value)}
+                    onClick={() =>
+                      setTeamFilter((prev) =>
+                        prev === option.value ? ALL : option.value,
+                      )
+                    }
                     className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                       teamFilter === option.value
                         ? "border-amber-300/70 bg-amber-400/20 text-amber-100"
@@ -371,7 +516,11 @@ export function ProfileCollectionTab({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setRoleFilter(option.value)}
+                    onClick={() =>
+                      setRoleFilter((prev) =>
+                        prev === option.value ? ALL : option.value,
+                      )
+                    }
                     className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                       roleFilter === option.value
                         ? "border-violet-300/70 bg-violet-400/20 text-violet-100"
@@ -404,7 +553,11 @@ export function ProfileCollectionTab({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setNationalityFilter(option.value)}
+                    onClick={() =>
+                      setNationalityFilter((prev) =>
+                        prev === option.value ? ALL : option.value,
+                      )
+                    }
                     title={option.label}
                     className={`inline-flex items-center rounded-full border p-1 text-[11px] font-semibold transition ${
                       nationalityFilter === option.value

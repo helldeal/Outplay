@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardRow } from "../../query/leaderboard";
 import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
@@ -19,8 +20,16 @@ export function LeaderboardTable({
   onNext: () => void;
   scoreFormatter: Intl.NumberFormat;
 }) {
+  const { ref, hasBeenVisible } = useInViewOnce<HTMLDivElement>({
+    threshold: 0.15,
+    rootMargin: "0px 0px -5% 0px",
+  });
+
   return (
-    <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+    <div
+      ref={ref}
+      className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50"
+    >
       <div className="flex items-center gap-2 border-b border-slate-800 px-5 py-4">
         <Trophy className="h-5 w-5 text-amber-400" />
         <h2 className="text-lg font-black italic uppercase text-white">
@@ -46,6 +55,16 @@ export function LeaderboardTable({
               <tr
                 key={row.userId}
                 className="transition-colors hover:bg-white/5"
+                style={{
+                  opacity: hasBeenVisible ? 1 : 0,
+                  transform: hasBeenVisible
+                    ? "translateX(0px)"
+                    : "translateX(-16px)",
+                  transitionProperty: "opacity, transform",
+                  transitionDuration: "500ms",
+                  transitionTimingFunction: "ease-out",
+                  transitionDelay: `${60 + i * 50}ms`,
+                }}
               >
                 <td className="px-4 py-3 text-center">
                   <span
