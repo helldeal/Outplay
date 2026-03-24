@@ -2,6 +2,22 @@ import { CalendarDays, Sparkles, Tag } from "lucide-react";
 
 export const milestones = [
   {
+    version: "v1.0.2",
+    date: "24 mars 2026",
+    title: "Équilibrage de l'économie & Améliorations de stabilité",
+    tone: "border-blue-300/35 bg-blue-400/10 text-blue-100",
+    updates: [
+      "Nouveaux prix & ROI des boosters:",
+      "NORMAL: 1250 → 1600 (ROI 77% → 60%)",
+      "LUCK: 3500 → 2700 (ROI 49% → 65%)",
+      "PREMIUM: 8000 → 4650 (ROI 40% → 70%)",
+      "Compensation appliquée:",
+      "NORMAL = 0 (Bien joué à ceux qui ont spam ces boosters en early c'était le plus rentable, mb pour les autres)",
+      "LUCK = 800 × nombre acheté",
+      "PREMIUM = 3350 × nombre acheté",
+    ],
+  },
+  {
     version: "v1.0.1",
     date: "23 mars 2026",
     title: "Interface repensée & Animations",

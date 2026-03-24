@@ -28,7 +28,7 @@ export function LeaderboardTable({
   return (
     <div
       ref={ref}
-      className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50"
+      className="min-w-0 flex-1 rounded-2xl border border-slate-800 bg-slate-900/50"
     >
       <div className="flex items-center gap-2 border-b border-slate-800 px-5 py-4">
         <Trophy className="h-5 w-5 text-amber-400" />
@@ -54,7 +54,7 @@ export function LeaderboardTable({
             return (
               <tr
                 key={row.userId}
-                className="transition-colors hover:bg-white/5"
+                className="relative z-0 transition-colors hover:z-20 hover:bg-white/5 focus-within:z-20"
                 style={{
                   opacity: hasBeenVisible ? 1 : 0,
                   transform: hasBeenVisible

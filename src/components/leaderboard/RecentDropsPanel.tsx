@@ -118,55 +118,56 @@ export function RecentDropsPanel({
                   </div>
                 );
               })()}
-
-              <Link
-                to={`/profile/${drop.userId}`}
-                className="flex items-center gap-2.5 transition hover:text-cyan-100"
-                onClick={(event) => {
-                  event.stopPropagation();
-                }}
-              >
-                <PlayerAvatar
-                  avatarUrl={drop.avatarUrl}
-                  username={drop.username}
-                  size="sm"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-indigo-300">
-                    {drop.username}
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    {formatRelativeDate(drop.openedAt)}
-                  </p>
-                </div>
-              </Link>
-
-              {drop.bestCardName && (
-                <div
-                  className={`mt-2 flex items-center gap-3 rounded-lg border bg-slate-950/60 p-2 ${rarityBorderColor(drop.bestCardRarity)}`}
+              <div className="flex flex-row gap-3 justify-around items-center">
+                <Link
+                  to={`/profile/${drop.userId}`}
+                  className="flex items-center gap-2.5 transition hover:text-cyan-100"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
                 >
-                  <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-black">
-                    {drop.bestCardImageUrl && (
-                      <img
-                        src={drop.bestCardImageUrl}
-                        alt={drop.bestCardName}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p
-                      className={`text-[9px] font-black uppercase tracking-wider ${rarityTextColor(drop.bestCardRarity)}`}
-                    >
-                      {rarityLabel(drop.bestCardRarity)}
+                  <PlayerAvatar
+                    avatarUrl={drop.avatarUrl}
+                    username={drop.username}
+                    size="sm"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-indigo-300">
+                      {drop.username}
                     </p>
-                    <p className="truncate text-xs font-bold text-white">
-                      {drop.bestCardName}
+                    <p className="text-[11px] text-slate-500">
+                      {formatRelativeDate(drop.openedAt)}
                     </p>
                   </div>
-                </div>
-              )}
+                </Link>
+
+                {drop.bestCardName && (
+                  <div
+                    className={`flex flex-1 items-center gap-3 rounded-lg border bg-slate-950/60 p-2 ${rarityBorderColor(drop.bestCardRarity)}`}
+                  >
+                    <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-black">
+                      {drop.bestCardImageUrl && (
+                        <img
+                          src={drop.bestCardImageUrl}
+                          alt={drop.bestCardName}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p
+                        className={`text-[9px] font-black uppercase tracking-wider ${rarityTextColor(drop.bestCardRarity)}`}
+                      >
+                        {rarityLabel(drop.bestCardRarity)}
+                      </p>
+                      <p className="truncate text-xs font-bold text-white">
+                        {drop.bestCardName}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </article>
           ))}
 

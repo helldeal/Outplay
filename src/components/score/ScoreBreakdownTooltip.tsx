@@ -35,7 +35,7 @@ export function ScoreBreakdownTooltip({
       {children}
 
       <div
-        className={`pointer-events-none absolute z-20 mt-2 min-w-[220px] rounded-xl border border-slate-700/90 bg-slate-950/95 p-3 text-left opacity-0 shadow-[0_10px_32px_rgba(2,6,23,0.6)] transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${
+        className={`pointer-events-none absolute z-50 mt-2 min-w-[220px] rounded-xl border border-slate-700/90 bg-slate-950/95 p-3 text-left opacity-0 shadow-[0_10px_32px_rgba(2,6,23,0.6)] transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${
           tooltipPositionClassName ?? "left-1/2 top-full -translate-x-1/2"
         }`}
         role="tooltip"

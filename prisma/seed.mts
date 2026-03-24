@@ -284,7 +284,7 @@ async function seedSeriesAndCards(ids: {
     {
       name: `${s1Series.code} Normal Booster`,
       type: BoosterType.NORMAL,
-      pricePc: 1250,
+      pricePc: 1600,
       imageUrl: "/src/assets/series/rift-champions.jpg",
       isDailyOnly: false,
       dropRates: {
@@ -298,7 +298,7 @@ async function seedSeriesAndCards(ids: {
     {
       name: `${s1Series.code} Luck Booster`,
       type: BoosterType.LUCK,
-      pricePc: 3500,
+      pricePc: 2700,
       imageUrl: "/src/assets/series/rift-champions.jpg",
       isDailyOnly: false,
       dropRates: {
@@ -312,7 +312,7 @@ async function seedSeriesAndCards(ids: {
     {
       name: `${s1Series.code} Premium Booster`,
       type: BoosterType.PREMIUM,
-      pricePc: 8000,
+      pricePc: 4650,
       imageUrl: "/src/assets/series/rift-champions.jpg",
       isDailyOnly: false,
       dropRates: {
