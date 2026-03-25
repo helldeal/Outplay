@@ -17,7 +17,7 @@ interface MatrixPoint {
   yValue: number;
 }
 
-const MATRIX_EDGE_PADDING = 3;
+const MATRIX_EDGE_PADDING = 6;
 const MATRIX_SPREAD_MULTIPLIER = 2;
 
 function clampPercent(value: number, min = 0, max = 100): number {
