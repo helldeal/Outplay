@@ -103,23 +103,12 @@ export function AchievementsPage() {
       .map(([category, entries]) => ({
         category,
         entries: [...entries].sort((a, b) => {
-          const byName = a.name.localeCompare(b.name, "fr", {
-            sensitivity: "base",
-          });
-          if (byName !== 0) {
-            return byName;
+          if (a.metric_key !== b.metric_key) {
+            return a.metric_key.localeCompare(b.metric_key);
           }
 
           if (a.target_value !== b.target_value) {
             return a.target_value - b.target_value;
-          }
-
-          if (a.leaderboard_points !== b.leaderboard_points) {
-            return a.leaderboard_points - b.leaderboard_points;
-          }
-
-          if (a.code !== b.code) {
-            return a.code.localeCompare(b.code);
           }
 
           return 0;
