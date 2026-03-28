@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Lock } from "lucide-react";
+import { Lock, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import "../cards.css";
 import type { CSSProperties } from "react";
 import type { CardWithRelations, Rarity } from "../types";
@@ -241,6 +241,27 @@ export function CardTile({
           kind: "default" as const,
         },
         {
+          slot: "middle-left",
+          label: "Score",
+          value: formatInt(stats.cardScore),
+          meta: `x${stats.dropCoefficient.toFixed(2)}`,
+          trend:
+            stats.dropCoefficient > 1
+              ? ("up" as const)
+              : stats.dropCoefficient < 1
+                ? ("down" as const)
+                : ("flat" as const),
+          kind: "score" as const,
+        },
+        {
+          slot: "middle-right",
+          label: "Dernier drop",
+          value: stats.lastDropAt
+            ? new Date(stats.lastDropAt).toLocaleDateString("fr-FR")
+            : "—",
+          kind: "default" as const,
+        },
+        {
           slot: "bottom-left",
           label: "Top drop",
           value: stats.topHolder?.username ?? "—",
@@ -334,6 +355,32 @@ export function CardTile({
                         ) : null}
                       </div>
                     </div>
+                  ) : item.kind === "score" ? (
+                    <>
+                      <span className="flex justify-center items-center gap-1.5">
+                        <span className="card-stats-badge__value">
+                          {item.value}
+                        </span>
+                        {item.trend === "up" ? (
+                          <TrendingUp className="h-3 w-3 text-emerald-400" />
+                        ) : item.trend === "down" ? (
+                          <TrendingDown className="h-3 w-3 text-rose-400" />
+                        ) : (
+                          <Minus className="h-3 w-3 text-slate-400" />
+                        )}
+                        <span
+                          className={`text-[11px] font-semibold ${
+                            item.trend === "up"
+                              ? "text-emerald-300"
+                              : item.trend === "down"
+                                ? "text-rose-300"
+                                : "text-slate-300"
+                          }`}
+                        >
+                          {item.meta}
+                        </span>
+                      </span>
+                    </>
                   ) : (
                     <>
                       <span className="card-stats-badge__value">
