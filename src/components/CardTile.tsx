@@ -132,7 +132,9 @@ function CardInner({
                   className="h-[7cqw] w-[7cqw] rounded-sm object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[7cqw] w-[7cqw]" />
+              )}
 
               {card.nationality?.flagUrl ? (
                 <img
@@ -141,7 +143,9 @@ function CardInner({
                   className="h-[7cqw] w-[7cqw] rounded-full object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[7cqw] w-[7cqw]" />
+              )}
 
               {card.team?.logoUrl ? (
                 <img
@@ -150,7 +154,9 @@ function CardInner({
                   className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[8.5cqw] w-[8.5cqw]" />
+              )}
 
               {card.role?.iconUrl ? (
                 <img
@@ -159,7 +165,9 @@ function CardInner({
                   className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[8.5cqw] w-[8.5cqw]" />
+              )}
             </div>
 
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/55 to-transparent px-[6cqw] pb-[3.8cqw] pt-[16cqw]">

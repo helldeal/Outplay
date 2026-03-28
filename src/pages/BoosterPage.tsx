@@ -219,11 +219,8 @@ function FutReveal({
             <img
               src={hint.imgSrc}
               alt={hint.alt}
-              className={`${hint.round ? "h-24 w-24 rounded-full" : "h-28 w-28"} object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.25)]`}
+              className={`${hint.round ? "h-52 w-52 rounded-full" : "h-52 w-52 "} object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.25)]`}
             />
-            <span className="text-sm font-medium tracking-[0.3em] uppercase text-white/40">
-              {hint.label}
-            </span>
           </motion.div>
         )}
         {showCard && (

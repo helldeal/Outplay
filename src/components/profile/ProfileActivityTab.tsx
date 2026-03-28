@@ -118,6 +118,10 @@ export function ProfileActivityTab({
   recentAchievements,
   recentAchievementsLoading,
   recentAchievementsError,
+  canLoadMoreOpenings,
+  canLoadMoreAchievements,
+  onLoadMoreOpenings,
+  onLoadMoreAchievements,
   onOpenOpening,
 }: {
   intFormatter: Intl.NumberFormat;
@@ -127,6 +131,10 @@ export function ProfileActivityTab({
   recentAchievements: PublicProfileRecentAchievement[];
   recentAchievementsLoading: boolean;
   recentAchievementsError: string | null;
+  canLoadMoreOpenings: boolean;
+  canLoadMoreAchievements: boolean;
+  onLoadMoreOpenings: () => void;
+  onLoadMoreAchievements: () => void;
   onOpenOpening: (openingId: string) => void;
 }) {
   return (
@@ -234,6 +242,19 @@ export function ProfileActivityTab({
                 ) : null}
               </div>
             ))}
+
+            {canLoadMoreOpenings ? (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={onLoadMoreOpenings}
+                  disabled={recentOpeningsLoading}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs font-black uppercase tracking-[0.11em] text-slate-200 transition hover:border-cyan-300/60 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Voir plus
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </article>
@@ -329,6 +350,19 @@ export function ProfileActivityTab({
                 </div>
               </div>
             ))}
+
+            {canLoadMoreAchievements ? (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={onLoadMoreAchievements}
+                  disabled={recentAchievementsLoading}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs font-black uppercase tracking-[0.11em] text-slate-200 transition hover:border-amber-300/60 hover:text-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Voir plus
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </article>

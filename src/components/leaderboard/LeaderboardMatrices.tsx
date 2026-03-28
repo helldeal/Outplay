@@ -5,10 +5,12 @@ import { useInViewOnce } from "../../hooks/useInViewOnce";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { LeaderboardMatrixPlayer } from "../../query/leaderboard";
 import { Link } from "react-router-dom";
+import { getTitleColorClass } from "../../utils/title-style";
 
 interface MatrixPoint {
   userId: string;
   username: string;
+  title: string | null;
   avatarUrl: string | null;
   isCurrentUser: boolean;
   xPct: number;
@@ -82,6 +84,7 @@ function buildCenteredPoints(
   return deltas.map(({ player, deltaX, deltaY }) => ({
     userId: player.userId,
     username: player.username,
+    title: player.title,
     avatarUrl: player.avatarUrl,
     isCurrentUser: player.userId === currentUserId,
     xPct: normalizeDeltaToPct(deltaX, halfSpanX, MATRIX_SPREAD_MULTIPLIER),
@@ -350,7 +353,9 @@ export function LeaderboardMatrices({
               <p className="text-xs font-black uppercase tracking-[0.1em] text-amber-200">
                 Joueur sélectionné
               </p>
-              <p className="text-sm text-slate-200">
+              <p
+                className={`text-sm ${getTitleColorClass(selectedUser.title)}`}
+              >
                 {selectedUser.username} · #{selectedUser.leaderboardPosition}
               </p>
             </div>

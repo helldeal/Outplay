@@ -8,6 +8,7 @@ import {
   rarityLabel,
   rarityTextColor,
 } from "../../utils/rarity";
+import { getTitleColorClass } from "../../utils/title-style";
 import { PlayerAvatar } from "./PlayerAvatar";
 
 function inferBoosterType(
@@ -132,7 +133,11 @@ export function RecentDropsPanel({
                     size="sm"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-indigo-300">
+                    <p
+                      className={`truncate text-sm font-semibold ${getTitleColorClass(
+                        drop.title,
+                      )}`}
+                    >
                       {drop.username}
                     </p>
                     <p className="text-[11px] text-slate-500">
