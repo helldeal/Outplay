@@ -18,9 +18,9 @@ import { ProfileActivityTab } from "../components/profile/ProfileActivityTab";
 import { ProfileCollectionTab } from "../components/profile/ProfileCollectionTab";
 import { ProfileStatsTab } from "../components/profile/ProfileStatsTab";
 import { ScoreBreakdownTooltip } from "../components/score/ScoreBreakdownTooltip";
-import { useAchievementsProgressQuery } from "../query/achievements";
 import { useLeaderboardQuery } from "../query/leaderboard";
 import {
+  useCurrentUserAvailableTitlesQuery,
   publicProfileOverviewQueryKey,
   updateCurrentUserProfileIdentity,
   usePublicProfileCollectionQuery,
@@ -56,7 +56,7 @@ export function ProfilePage() {
     targetUserId,
     recentAchievementsLimit,
   );
-  const achievementsQuery = useAchievementsProgressQuery(
+  const availableTitlesQuery = useCurrentUserAvailableTitlesQuery(
     isOwnProfile ? user?.id : undefined,
   );
   const leaderboardQuery = useLeaderboardQuery(Boolean(user));
@@ -91,15 +91,8 @@ export function ProfilePage() {
       return [] as string[];
     }
 
-    const rows = achievementsQuery.data ?? [];
-    return Array.from(
-      new Set(
-        rows
-          .filter((row) => row.reward_claimed && row.reward_title)
-          .map((row) => row.reward_title as string),
-      ),
-    ).sort((a, b) => a.localeCompare(b, "fr"));
-  }, [achievementsQuery.data, isOwnProfile]);
+    return availableTitlesQuery.data ?? [];
+  }, [availableTitlesQuery.data, isOwnProfile]);
 
   const rarityCards = overviewQuery.data
     ? [

@@ -7,6 +7,10 @@ import {
   AchievementToasts,
   type AchievementToastItem,
 } from "./layout/AchievementToasts";
+import {
+  SeriesSplitToasts,
+  type SeriesSplitToastItem,
+} from "./layout/SeriesSplitToasts";
 import { AppFooter } from "./layout/AppFooter";
 import { AppHeader } from "./layout/AppHeader";
 import { StreakModal } from "./layout/StreakModal";
@@ -24,6 +28,11 @@ import {
   useHasOpenedDailyTodayQuery,
   useLoginStreakStatusQuery,
 } from "../query/booster";
+import {
+  useSeriesSplitNotificationsQuery,
+  useSeriesSplitQuery,
+  useSeriesSplitUnseenCountQuery,
+} from "../query/series-split";
 import { useEffect, useRef, useState } from "react";
 
 function formatCountdown(millisecondsLeft: number) {
@@ -37,6 +46,19 @@ function formatCountdown(millisecondsLeft: number) {
   const seconds = (totalSeconds % 60).toString().padStart(2, "0");
 
   return `${hours}:${minutes}:${seconds}`;
+}
+
+function formatSplitCountdown(millisecondsLeft: number) {
+  const totalMinutes = Math.max(0, Math.floor(millisecondsLeft / 60000));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) {
+    return `${days}j ${hours}h`;
+  }
+
+  return `${hours}h ${minutes}m`;
 }
 
 function getInitials(name: string): string {
@@ -83,13 +105,24 @@ export function AppLayout() {
   const [achievementToasts, setAchievementToasts] = useState<
     AchievementToastItem[]
   >([]);
+  const [seriesSplitToasts, setSeriesSplitToasts] = useState<
+    SeriesSplitToastItem[]
+  >([]);
+  const [seriesSplitCountdown, setSeriesSplitCountdown] =
+    useState<string>("00h 00m");
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const seenNotificationIdsRef = useRef<Set<string>>(new Set());
+  const seenSplitNotificationIdsRef = useRef<Set<string>>(new Set());
   const dailyTargetQuery = useDailyBoosterTargetQuery();
   const openedTodayQuery = useHasOpenedDailyTodayQuery(user?.id);
   const streakStatus = useLoginStreakStatusQuery(user?.id).data;
   const unseenAchievementsQuery = useAchievementUnseenCountQuery(user?.id);
   const achievementNotificationsQuery = useAchievementNotificationsQuery(
+    user?.id,
+  );
+  const seriesSplitQuery = useSeriesSplitQuery(user?.id);
+  const seriesSplitUnseenQuery = useSeriesSplitUnseenCountQuery(user?.id);
+  const seriesSplitNotificationsQuery = useSeriesSplitNotificationsQuery(
     user?.id,
   );
 
@@ -108,6 +141,7 @@ export function AppLayout() {
     (user?.user_metadata?.avatar as string | undefined) ??
     null;
   const unseenAchievementCount = Math.max(0, unseenAchievementsQuery.data ?? 0);
+  const unseenSeriesSplitCount = Math.max(0, seriesSplitUnseenQuery.data ?? 0);
 
   useEffect(() => {
     const notifications = achievementNotificationsQuery.data ?? [];
@@ -134,6 +168,55 @@ export function AppLayout() {
       }, 5200);
     }
   }, [achievementNotificationsQuery.data]);
+
+  useEffect(() => {
+    const notifications = seriesSplitNotificationsQuery.data ?? [];
+    if (notifications.length === 0) {
+      return;
+    }
+
+    for (const notification of notifications) {
+      const notificationId = `${notification.notificationType}:${notification.missionCode ?? notification.tierLevel ?? "none"}:${notification.unlockedAt}`;
+      if (seenSplitNotificationIdsRef.current.has(notificationId)) {
+        continue;
+      }
+
+      seenSplitNotificationIdsRef.current.add(notificationId);
+
+      setSeriesSplitToasts((prev) =>
+        [...prev, { ...notification, id: notificationId }].slice(-4),
+      );
+
+      window.setTimeout(() => {
+        setSeriesSplitToasts((prev) =>
+          prev.filter((toast) => toast.id !== notificationId),
+        );
+      }, 5200);
+    }
+  }, [seriesSplitNotificationsQuery.data]);
+
+  useEffect(() => {
+    const overview = seriesSplitQuery.data;
+    if (!overview?.endsAt) {
+      setSeriesSplitCountdown("00h 00m");
+      return;
+    }
+
+    const update = () => {
+      const millisecondsLeft =
+        new Date(overview.endsAt).getTime() - new Date().getTime();
+      if (millisecondsLeft <= 0) {
+        setSeriesSplitCountdown("Terminé");
+        return;
+      }
+
+      setSeriesSplitCountdown(formatSplitCountdown(millisecondsLeft));
+    };
+
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [seriesSplitQuery.data]);
 
   const shouldDisplayResetCountdown =
     Boolean(openedTodayQuery.data) ||
@@ -290,6 +373,13 @@ export function AppLayout() {
         }),
         queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["series-split", user.id] }),
+        queryClient.invalidateQueries({
+          queryKey: ["series-split-unseen-count", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["series-split-notifications", user.id],
+        }),
         queryClient.invalidateQueries({
           queryKey: ["achievements-progress", user.id],
         }),
@@ -326,6 +416,15 @@ export function AppLayout() {
           }),
           queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
           queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+          queryClient.invalidateQueries({
+            queryKey: ["series-split", user.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["series-split-unseen-count", user.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["series-split-notifications", user.id],
+          }),
           queryClient.invalidateQueries({
             queryKey: ["achievements-progress", user.id],
           }),
@@ -390,6 +489,7 @@ export function AppLayout() {
       <AppHeader
         isAuthenticated={Boolean(user)}
         unseenAchievementCount={unseenAchievementCount}
+        unseenSeriesSplitCount={unseenSeriesSplitCount}
         onOpenDaily={() => {
           void openDailyFromHeader().catch(() => undefined);
         }}
@@ -416,6 +516,15 @@ export function AppLayout() {
         }
         streakActiveClass={nextStreakTone.headerActiveClass}
         streakInactiveClass={nextStreakTone.headerInactiveHoverClass}
+        seriesSplitPath={seriesSplitQuery.data ? "/series-split" : null}
+        seriesSplitLabel={
+          seriesSplitQuery.data
+            ? `Split ${seriesSplitQuery.data.seriesCode}`
+            : null
+        }
+        seriesSplitCountdown={
+          seriesSplitQuery.data ? seriesSplitCountdown : null
+        }
         pcBalance={profile?.pc_balance ?? 0}
         profileMenuRef={profileMenuRef}
         isProfileMenuOpen={isProfileMenuOpen}
@@ -432,6 +541,7 @@ export function AppLayout() {
       />
 
       <AchievementToasts toasts={achievementToasts} />
+      <SeriesSplitToasts toasts={seriesSplitToasts} />
 
       <StreakModal
         isOpen={isStreakModalOpen}

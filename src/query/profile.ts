@@ -155,6 +155,9 @@ export const publicProfileRecentAchievementsQueryKey = (
   limit = 8,
 ) => ["public-profile-recent-achievements", userId, limit] as const;
 
+export const currentUserAvailableTitlesQueryKey = (userId?: string) =>
+  ["current-user-available-titles", userId] as const;
+
 export interface PublicProfileRecentOpening {
   openingId: string;
   openedAt: string;
@@ -505,6 +508,36 @@ export function usePublicProfileRecentAchievementsQuery(
           rewardBoosterType: row.reward_booster_type,
         }),
       ) as PublicProfileRecentAchievement[];
+    },
+  });
+}
+
+export function useCurrentUserAvailableTitlesQuery(userId?: string) {
+  return useQuery({
+    queryKey: currentUserAvailableTitlesQueryKey(userId),
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc(
+        "get_current_user_available_titles",
+        {
+          p_user_id: userId!,
+        },
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      const rows = (data ?? []) as Array<{ title: string | null }>;
+      return Array.from(
+        new Set(
+          rows
+            .map((row) =>
+              typeof row.title === "string" ? row.title.trim() : "",
+            )
+            .filter((title) => title.length > 0),
+        ),
+      ).sort((a, b) => a.localeCompare(b, "fr"));
     },
   });
 }
