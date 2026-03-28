@@ -1172,6 +1172,20 @@
     top: 0;
 }
 
+.card-stats-badge--middle-left {
+    left: 0;
+    top: 50%;
+    --stat-y: -50%;
+    --stat-x: -50%;
+}
+
+.card-stats-badge--middle-right {
+    right: 0;
+    top: 50%;
+    --stat-y: -50%;
+    --stat-x: 50%;
+}
+
 .card-stats-badge--bottom-left {
     left: 0;
     bottom: 0;

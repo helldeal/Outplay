@@ -48,8 +48,8 @@ const PENDING_PC_DELTA_STORAGE_KEY = "outplay:pendingPcDelta";
 
 /* ─────────────────────── Helpers ─────────────────────── */
 
-function isAboveChallenger(rarity: Rarity): boolean {
-  return rarityRank(rarity) > rarityRank("CHALLENGER");
+function isChallengerOrAbove(rarity: Rarity): boolean {
+  return rarityRank(rarity) >= rarityRank("CHALLENGER");
 }
 
 function rarityGlowColor(rarity: Rarity): string {
@@ -63,6 +63,20 @@ function rarityGlowColor(rarity: Rarity): string {
     default:
       return "rgba(56,189,248,0.25)";
   }
+}
+
+function buildRevealPulseRarities(rarity: Rarity): Rarity[] {
+  const progressiveOrder: Rarity[] = [
+    "CHALLENGER",
+    "CHAMPION",
+    "WORLD_CLASS",
+    "LEGENDS",
+  ];
+
+  const targetRank = rarityRank(rarity);
+  return progressiveOrder.filter(
+    (entryRarity) => rarityRank(entryRarity) <= targetRank,
+  );
 }
 
 /* ─────────────────────── FUT-style Reveal ─────────────────────── */
@@ -127,17 +141,29 @@ function FutReveal({
   onComplete: () => void;
 }) {
   const hints = useMemo(() => buildHints(card), [card]);
+  const pulseRarities = useMemo(
+    () => buildRevealPulseRarities(card.rarity),
+    [card],
+  );
   const [step, setStep] = useState(0);
-  const glow = rarityGlowColor(card.rarity);
+  const totalSteps = pulseRarities.length + hints.length;
+  const isPulseStep = step < pulseRarities.length;
+  const activePulseRarity = isPulseStep ? pulseRarities[step] : null;
+  const hintIndex = step - pulseRarities.length;
+  const hint =
+    !isPulseStep && hintIndex >= 0 && hintIndex < hints.length
+      ? hints[hintIndex]
+      : null;
+  const showCard = step >= totalSteps;
+  const currentGlowColor = rarityGlowColor(activePulseRarity ?? card.rarity);
 
   useEffect(() => {
-    if (step >= hints.length) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 1700);
-    return () => clearTimeout(t);
-  }, [step, hints.length]);
+    if (step >= totalSteps) return;
 
-  const showCard = step >= hints.length;
-  const hint = !showCard ? hints[step] : null;
+    const timeoutMs = isPulseStep ? 1200 : 1700;
+    const t = setTimeout(() => setStep((s) => s + 1), timeoutMs);
+    return () => clearTimeout(t);
+  }, [isPulseStep, step, totalSteps]);
 
   return (
     <motion.div
@@ -162,15 +188,25 @@ function FutReveal({
         className="pointer-events-none absolute inset-0"
         animate={{
           background: [
-            `radial-gradient(circle at 50% 50%,${glow} 0%,transparent 55%)`,
-            `radial-gradient(circle at 50% 50%,${glow} 0%,transparent 35%)`,
+            `radial-gradient(circle at 50% 50%,${currentGlowColor} 0%,transparent 55%)`,
+            `radial-gradient(circle at 50% 50%,${currentGlowColor} 0%,transparent 35%)`,
           ],
         }}
-        transition={{ duration: 1.6, repeat: Infinity, repeatType: "reverse" }}
+        transition={{ duration: 0.9, repeat: Infinity, repeatType: "reverse" }}
       />
 
-      {/* Hint sequence → then card reveal */}
+      {/* Pulse colors sequence → hint sequence → card reveal */}
       <AnimatePresence mode="wait">
+        {isPulseStep && activePulseRarity && (
+          <motion.div
+            key={`pulse-${activePulseRarity}-${step}`}
+            className="relative z-10 flex flex-col items-center gap-4"
+            initial={{ scale: 0.3, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.5, opacity: 0, filter: "blur(10px)" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          ></motion.div>
+        )}
         {hint && (
           <motion.div
             key={hint.key}
@@ -183,11 +219,8 @@ function FutReveal({
             <img
               src={hint.imgSrc}
               alt={hint.alt}
-              className={`${hint.round ? "h-24 w-24 rounded-full" : "h-28 w-28"} object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.25)]`}
+              className={`${hint.round ? "h-52 w-52 rounded-full" : "h-52 w-52 "} object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.25)]`}
             />
-            <span className="text-sm font-medium tracking-[0.3em] uppercase text-white/40">
-              {hint.label}
-            </span>
           </motion.div>
         )}
         {showCard && (
@@ -343,7 +376,7 @@ export function BoosterPage() {
       if (cardRevealed(idx) || idx !== nextIdx) return;
 
       const entry = cards[idx];
-      if (isAboveChallenger(entry.card.rarity)) {
+      if (isChallengerOrAbove(entry.card.rarity)) {
         setFutIdx(idx);
       } else {
         setFlipped((p) => new Set([...p, idx]));

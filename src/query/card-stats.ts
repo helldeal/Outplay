@@ -7,6 +7,10 @@ interface PublicCardStatsRpcRow {
   total_opened_cards: number | string;
   total_card_drops: number | string;
   drop_rate_pct: number | string;
+  expected_drop_rate_pct: number | string;
+  drop_coefficient: number | string;
+  card_score: number | string;
+  last_drop_at: string | null;
   owners_count: number | string;
   first_holder_user_id: string | null;
   first_holder_username: string | null;
@@ -23,6 +27,10 @@ export interface PublicCardStats {
   totalOpenedCards: number;
   totalCardDrops: number;
   dropRatePct: number;
+  expectedDropRatePct: number;
+  dropCoefficient: number;
+  cardScore: number;
+  lastDropAt: string | null;
   ownersCount: number;
   oneIn: number | null;
   firstHolder: {
@@ -56,6 +64,9 @@ function mapRow(row: PublicCardStatsRpcRow): PublicCardStats {
   const totalOpenedCards = parseNumber(row.total_opened_cards);
   const totalCardDrops = parseNumber(row.total_card_drops);
   const dropRatePct = parseNumber(row.drop_rate_pct);
+  const expectedDropRatePct = parseNumber(row.expected_drop_rate_pct);
+  const dropCoefficient = parseNumber(row.drop_coefficient);
+  const cardScore = parseNumber(row.card_score);
   const ownersCount = parseNumber(row.owners_count);
   const oneIn = totalCardDrops > 0 ? totalOpenedCards / totalCardDrops : null;
 
@@ -64,6 +75,10 @@ function mapRow(row: PublicCardStatsRpcRow): PublicCardStats {
     totalOpenedCards,
     totalCardDrops,
     dropRatePct,
+    expectedDropRatePct,
+    dropCoefficient,
+    cardScore,
+    lastDropAt: row.last_drop_at,
     ownersCount,
     oneIn,
     firstHolder: row.first_holder_user_id

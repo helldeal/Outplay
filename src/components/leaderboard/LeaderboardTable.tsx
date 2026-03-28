@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardRow } from "../../query/leaderboard";
+import { getTitleColorClass } from "../../utils/title-style";
 import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
 
@@ -87,7 +88,11 @@ export function LeaderboardTable({
                       username={row.username}
                       size="sm"
                     />
-                    <span className="truncate font-semibold text-white">
+                    <span
+                      className={`truncate font-semibold ${getTitleColorClass(
+                        row.title,
+                      )}`}
+                    >
                       {row.username}
                     </span>
                   </Link>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Gift, Info, LoaderCircle, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import {
   BoosterTypeBadge,
@@ -17,6 +17,7 @@ import {
   useShopBoostersQuery,
 } from "../query/booster";
 import type { ShopBoosterWithSeries } from "../query/booster";
+import { useSeriesSplitQuery } from "../query/series-split";
 
 const BOOSTER_DRAW_COUNT = 5;
 
@@ -34,6 +35,7 @@ export function ShopPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const boostersQuery = useShopBoostersQuery();
+  const seriesSplitQuery = useSeriesSplitQuery(user?.id);
   const [openingError, setOpeningError] = useState<string | null>(null);
   const [openingBoosterId, setOpeningBoosterId] = useState<string | null>(null);
   const [dropRatesModalBoosterId, setDropRatesModalBoosterId] = useState<
@@ -59,10 +61,29 @@ export function ShopPage() {
   };
 
   const boosters = boostersQuery.data ?? [];
+  const activeSplitSeriesCode = seriesSplitQuery.data?.seriesCode ?? null;
+  const orderedBoosters = useMemo(() => {
+    if (!activeSplitSeriesCode) {
+      return boosters;
+    }
+
+    return [...boosters].sort((left, right) => {
+      const leftIsSplit = left.series.code === activeSplitSeriesCode;
+      const rightIsSplit = right.series.code === activeSplitSeriesCode;
+
+      if (leftIsSplit === rightIsSplit) {
+        return left.series.code.localeCompare(right.series.code);
+      }
+
+      return leftIsSplit ? -1 : 1;
+    });
+  }, [activeSplitSeriesCode, boosters]);
   const preloadUrls = useMemo(
     () =>
-      boosters.map((booster) => booster.image_url ?? booster.series.coverImage),
-    [boosters],
+      orderedBoosters.map(
+        (booster) => booster.image_url ?? booster.series.coverImage,
+      ),
+    [orderedBoosters],
   );
   const { isReady: areBoosterAssetsReady } = useImagePreload(preloadUrls);
   const isBoostersLoading = boostersQuery.isLoading;
@@ -71,7 +92,7 @@ export function ShopPage() {
       ? null
       : (boosters.find((booster) => booster.id === dropRatesModalBoosterId) ??
         null);
-  const boostersBySeries = boosters.reduce<
+  const boostersBySeries = orderedBoosters.reduce<
     Map<
       string,
       {
@@ -145,6 +166,7 @@ export function ShopPage() {
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["series-split", user.id] }),
         refreshProfile(),
       ]).catch(() => undefined);
     } catch (error) {
@@ -200,7 +222,12 @@ export function ShopPage() {
             Array.from(boostersBySeries.entries()).map(([seriesId, entry]) => (
               <div
                 key={seriesId}
-                className="relative overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/55 p-4 shadow-[0_12px_38px_rgba(2,6,23,0.45)]"
+                id={`shop-series-${entry.code.toLowerCase()}`}
+                className={`relative overflow-hidden rounded-2xl border p-4 shadow-[0_12px_38px_rgba(2,6,23,0.45)] ${
+                  entry.code === activeSplitSeriesCode
+                    ? "border-cyan-300/50 bg-cyan-500/10"
+                    : "border-slate-800/90 bg-slate-900/55"
+                }`}
               >
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(56,189,248,0.08),transparent_35%,rgba(251,191,36,0.08))]" />
 
@@ -208,9 +235,19 @@ export function ShopPage() {
                   <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">
                     Série {entry.code}
                   </p>
-                  <h2 className="text-xl font-black uppercase italic text-white">
-                    {entry.name}
-                  </h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-black uppercase italic text-white">
+                      {entry.name}
+                    </h2>
+                    {entry.code === activeSplitSeriesCode ? (
+                      <Link
+                        to="/series-split"
+                        className="ml-2 rounded-full border border-cyan-200/70 bg-cyan-100/95 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-900 hover:bg-white transition"
+                      >
+                        Split en cours
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

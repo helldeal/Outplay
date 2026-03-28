@@ -2,6 +2,7 @@ import { Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardRow } from "../../query/leaderboard";
+import { getTitleColorClass } from "../../utils/title-style";
 import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
 
@@ -110,7 +111,11 @@ export function LeaderboardPodium({
                 {meta.rank}
               </span>
               <div className="mt-auto pb-4 text-center">
-                <p className="truncate px-2 text-lg font-bold text-white">
+                <p
+                  className={`truncate px-2 text-lg font-bold ${getTitleColorClass(
+                    row.title,
+                  )}`}
+                >
                   {row.username}
                 </p>
                 <p className="text-xs font-semibold text-slate-400 uppercase">

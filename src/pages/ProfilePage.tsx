@@ -18,9 +18,9 @@ import { ProfileActivityTab } from "../components/profile/ProfileActivityTab";
 import { ProfileCollectionTab } from "../components/profile/ProfileCollectionTab";
 import { ProfileStatsTab } from "../components/profile/ProfileStatsTab";
 import { ScoreBreakdownTooltip } from "../components/score/ScoreBreakdownTooltip";
-import { useAchievementsProgressQuery } from "../query/achievements";
 import { useLeaderboardQuery } from "../query/leaderboard";
 import {
+  useCurrentUserAvailableTitlesQuery,
   publicProfileOverviewQueryKey,
   updateCurrentUserProfileIdentity,
   usePublicProfileCollectionQuery,
@@ -28,6 +28,7 @@ import {
   usePublicProfileRecentAchievementsQuery,
   usePublicProfileRecentOpeningsQuery,
 } from "../query/profile";
+import { getTitleColorClass } from "../utils/title-style";
 import { rarityLabel, rarityTextColor } from "../utils/rarity";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
@@ -42,12 +43,20 @@ export function ProfilePage() {
     user?.id && targetUserId && user.id === targetUserId,
   );
 
+  const [recentOpeningsLimit, setRecentOpeningsLimit] = useState(4);
+  const [recentAchievementsLimit, setRecentAchievementsLimit] = useState(8);
+
   const overviewQuery = usePublicProfileOverviewQuery(targetUserId);
   const collectionQuery = usePublicProfileCollectionQuery(targetUserId);
-  const recentOpeningsQuery = usePublicProfileRecentOpeningsQuery(targetUserId);
-  const recentAchievementsQuery =
-    usePublicProfileRecentAchievementsQuery(targetUserId);
-  const achievementsQuery = useAchievementsProgressQuery(
+  const recentOpeningsQuery = usePublicProfileRecentOpeningsQuery(
+    targetUserId,
+    recentOpeningsLimit,
+  );
+  const recentAchievementsQuery = usePublicProfileRecentAchievementsQuery(
+    targetUserId,
+    recentAchievementsLimit,
+  );
+  const availableTitlesQuery = useCurrentUserAvailableTitlesQuery(
     isOwnProfile ? user?.id : undefined,
   );
   const leaderboardQuery = useLeaderboardQuery(Boolean(user));
@@ -82,15 +91,8 @@ export function ProfilePage() {
       return [] as string[];
     }
 
-    const rows = achievementsQuery.data ?? [];
-    return Array.from(
-      new Set(
-        rows
-          .filter((row) => row.reward_claimed && row.reward_title)
-          .map((row) => row.reward_title as string),
-      ),
-    ).sort((a, b) => a.localeCompare(b, "fr"));
-  }, [achievementsQuery.data, isOwnProfile]);
+    return availableTitlesQuery.data ?? [];
+  }, [availableTitlesQuery.data, isOwnProfile]);
 
   const rarityCards = overviewQuery.data
     ? [
@@ -229,9 +231,16 @@ export function ProfilePage() {
                 {overview.username}
               </h1>
               <p className="mt-1 text-sm text-slate-300">
-                {overview.title
-                  ? `Titre : ${overview.title}`
-                  : "Aucun titre équipé"}
+                {overview.title ? (
+                  <>
+                    Titre :{" "}
+                    <span className={getTitleColorClass(overview.title)}>
+                      {overview.title}
+                    </span>
+                  </>
+                ) : (
+                  "Aucun titre équipé"
+                )}
               </p>
               <p className="mt-1 max-w-xl text-sm text-slate-400">
                 {overview.description?.trim()
@@ -503,6 +512,19 @@ export function ProfilePage() {
               ? (recentAchievementsQuery.error as Error).message
               : null
           }
+          canLoadMoreOpenings={
+            (recentOpeningsQuery.data ?? []).length >= recentOpeningsLimit
+          }
+          canLoadMoreAchievements={
+            (recentAchievementsQuery.data ?? []).length >=
+            recentAchievementsLimit
+          }
+          onLoadMoreOpenings={() => {
+            setRecentOpeningsLimit((current) => current + 4);
+          }}
+          onLoadMoreAchievements={() => {
+            setRecentAchievementsLimit((current) => current + 8);
+          }}
           onOpenOpening={(openingId) => {
             navigate(`/opening/${openingId}`);
           }}

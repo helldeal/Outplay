@@ -16,6 +16,7 @@ export function displayName(raw: string | null | undefined): string {
 interface LeaderboardRpcRow {
   user_id: string;
   username: string;
+  title?: string | null;
   avatar_url: string | null;
   total_cards: number;
   weighted_score: number;
@@ -27,6 +28,7 @@ interface LeaderboardRpcRow {
 export interface LeaderboardRow {
   userId: string;
   username: string;
+  title: string | null;
   avatarUrl: string | null;
   totalCards: number;
   weightedScore: number;
@@ -36,6 +38,32 @@ export interface LeaderboardRow {
 }
 
 export const leaderboardQueryKey = ["leaderboard"] as const;
+
+async function fetchTitlesByUserIds(
+  userIds: string[],
+): Promise<Map<string, string | null>> {
+  const titlesByUserId = new Map<string, string | null>();
+
+  if (userIds.length === 0) {
+    return titlesByUserId;
+  }
+
+  const { data: titleRows, error: titleError } = await supabase
+    .from("users")
+    .select("id,title")
+    .in("id", userIds);
+
+  if (!titleError) {
+    for (const entry of (titleRows ?? []) as Array<{
+      id: string;
+      title: string | null;
+    }>) {
+      titlesByUserId.set(entry.id, entry.title ?? null);
+    }
+  }
+
+  return titlesByUserId;
+}
 
 export function useLeaderboardQuery(isEnabled: boolean) {
   return useQuery({
@@ -47,15 +75,24 @@ export function useLeaderboardQuery(isEnabled: boolean) {
         throw error;
       }
 
-      return ((data ?? []) as LeaderboardRpcRow[]).map((row) => ({
+      const rows = ((data ?? []) as LeaderboardRpcRow[]).map((row) => ({
         userId: row.user_id,
         username: displayName(row.username),
+        title: row.title ?? null,
         avatarUrl: row.avatar_url,
         totalCards: row.total_cards,
         weightedScore: row.weighted_score,
         cardScore: row.card_score,
         achievementScore: row.achievement_score,
         achievementsUnlocked: row.achievements_unlocked,
+      }));
+
+      const userIds = rows.map((row) => row.userId);
+      const titlesByUserId = await fetchTitlesByUserIds(userIds);
+
+      return rows.map((row) => ({
+        ...row,
+        title: row.title ?? titlesByUserId.get(row.userId) ?? null,
       }));
     },
   });
@@ -87,6 +124,7 @@ export interface RecentDrop {
   openingId: string;
   userId: string;
   username: string;
+  title: string | null;
   avatarUrl: string | null;
   boosterName: string;
   openedAt: string;
@@ -112,6 +150,7 @@ function mapDropRow(row: RecentDropRpcRow): RecentDrop {
     openingId: row.opening_id,
     userId: row.user_id,
     username: displayName(row.username),
+    title: null,
     avatarUrl: row.avatar_url,
     boosterName: row.booster_name,
     openedAt: row.opened_at,
@@ -134,7 +173,16 @@ export function useRecentDropsQuery(isEnabled: boolean) {
       });
 
       if (error) throw error;
-      return ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
+
+      const rows = ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
+      const titlesByUserId = await fetchTitlesByUserIds(
+        rows.map((row) => row.userId),
+      );
+
+      return rows.map((row) => ({
+        ...row,
+        title: titlesByUserId.get(row.userId) ?? null,
+      }));
     },
   });
 }
@@ -148,7 +196,16 @@ export async function fetchMoreRecentDrops(
   });
 
   if (error) throw error;
-  return ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
+
+  const rows = ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
+  const titlesByUserId = await fetchTitlesByUserIds(
+    rows.map((row) => row.userId),
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    title: titlesByUserId.get(row.userId) ?? null,
+  }));
 }
 
 /* ── Leaderboard global stats ── */
@@ -323,6 +380,7 @@ interface LeaderboardMatrixPlayerRpcRow {
 export interface LeaderboardMatrixPlayer {
   userId: string;
   username: string;
+  title: string | null;
   avatarUrl: string | null;
   leaderboardPosition: number;
   weightedScore: number;
@@ -355,16 +413,28 @@ export function useLeaderboardMatrixPlayersQuery(
         throw error;
       }
 
-      return ((data ?? []) as LeaderboardMatrixPlayerRpcRow[]).map((row) => ({
-        userId: row.user_id,
-        username: displayName(row.username),
-        avatarUrl: row.avatar_url,
-        leaderboardPosition: row.leaderboard_position,
-        weightedScore: row.weighted_score,
-        duplicateRate: toNumber(row.duplicate_rate),
-        bigPullRate: toNumber(row.big_pull_rate),
-        avgPcGained: toNumber(row.avg_pc_gained),
-        avgPcSpent: toNumber(row.avg_pc_spent),
+      const rows = ((data ?? []) as LeaderboardMatrixPlayerRpcRow[]).map(
+        (row) => ({
+          userId: row.user_id,
+          username: displayName(row.username),
+          title: null,
+          avatarUrl: row.avatar_url,
+          leaderboardPosition: row.leaderboard_position,
+          weightedScore: row.weighted_score,
+          duplicateRate: toNumber(row.duplicate_rate),
+          bigPullRate: toNumber(row.big_pull_rate),
+          avgPcGained: toNumber(row.avg_pc_gained),
+          avgPcSpent: toNumber(row.avg_pc_spent),
+        }),
+      );
+
+      const titlesByUserId = await fetchTitlesByUserIds(
+        rows.map((row) => row.userId),
+      );
+
+      return rows.map((row) => ({
+        ...row,
+        title: titlesByUserId.get(row.userId) ?? null,
       }));
     },
   });

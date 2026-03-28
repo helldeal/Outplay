@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Lock } from "lucide-react";
+import { Lock, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import "../cards.css";
 import type { CSSProperties } from "react";
 import type { CardWithRelations, Rarity } from "../types";
@@ -132,7 +132,9 @@ function CardInner({
                   className="h-[7cqw] w-[7cqw] rounded-sm object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[7cqw] w-[7cqw]" />
+              )}
 
               {card.nationality?.flagUrl ? (
                 <img
@@ -141,7 +143,9 @@ function CardInner({
                   className="h-[7cqw] w-[7cqw] rounded-full object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[7cqw] w-[7cqw]" />
+              )}
 
               {card.team?.logoUrl ? (
                 <img
@@ -150,7 +154,9 @@ function CardInner({
                   className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[8.5cqw] w-[8.5cqw]" />
+              )}
 
               {card.role?.iconUrl ? (
                 <img
@@ -159,7 +165,9 @@ function CardInner({
                   className="h-[8.5cqw] w-[8.5cqw] rounded-sm object-contain"
                   draggable={false}
                 />
-              ) : null}
+              ) : (
+                <div className="h-[8.5cqw] w-[8.5cqw]" />
+              )}
             </div>
 
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/55 to-transparent px-[6cqw] pb-[3.8cqw] pt-[16cqw]">
@@ -230,6 +238,27 @@ export function CardTile({
           label: "Collection",
           value: `${formatInt(stats.ownersCount)} · ${formatInt(stats.totalCardDrops)}`,
           meta: "Possesseurs · Drops",
+          kind: "default" as const,
+        },
+        {
+          slot: "middle-left",
+          label: "Score",
+          value: formatInt(stats.cardScore),
+          meta: `x${stats.dropCoefficient.toFixed(2)}`,
+          trend:
+            stats.dropCoefficient > 1
+              ? ("up" as const)
+              : stats.dropCoefficient < 1
+                ? ("down" as const)
+                : ("flat" as const),
+          kind: "score" as const,
+        },
+        {
+          slot: "middle-right",
+          label: "Dernier drop",
+          value: stats.lastDropAt
+            ? new Date(stats.lastDropAt).toLocaleDateString("fr-FR")
+            : "—",
           kind: "default" as const,
         },
         {
@@ -326,6 +355,32 @@ export function CardTile({
                         ) : null}
                       </div>
                     </div>
+                  ) : item.kind === "score" ? (
+                    <>
+                      <span className="flex justify-center items-center gap-1.5">
+                        <span className="card-stats-badge__value">
+                          {item.value}
+                        </span>
+                        {item.trend === "up" ? (
+                          <TrendingUp className="h-3 w-3 text-emerald-400" />
+                        ) : item.trend === "down" ? (
+                          <TrendingDown className="h-3 w-3 text-rose-400" />
+                        ) : (
+                          <Minus className="h-3 w-3 text-slate-400" />
+                        )}
+                        <span
+                          className={`text-[11px] font-semibold ${
+                            item.trend === "up"
+                              ? "text-emerald-300"
+                              : item.trend === "down"
+                                ? "text-rose-300"
+                                : "text-slate-300"
+                          }`}
+                        >
+                          {item.meta}
+                        </span>
+                      </span>
+                    </>
                   ) : (
                     <>
                       <span className="card-stats-badge__value">

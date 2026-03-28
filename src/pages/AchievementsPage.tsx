@@ -27,6 +27,7 @@ const categoryOrder = [
   "Activite",
   "Serie",
   "Esport",
+  "Social",
 ] as const;
 
 const categoryTone: Record<string, string> = {
@@ -34,6 +35,7 @@ const categoryTone: Record<string, string> = {
   Rarete: "from-fuchsia-400/30 via-fuchsia-300/10 to-transparent",
   Booster: "from-amber-400/30 via-amber-300/10 to-transparent",
   Chance: "from-violet-400/30 via-violet-300/10 to-transparent",
+  Social: "from-pink-400/30 via-pink-300/10 to-transparent",
   Economy: "from-emerald-400/30 via-emerald-300/10 to-transparent",
   Activite: "from-orange-400/30 via-orange-300/10 to-transparent",
   Serie: "from-sky-400/30 via-sky-300/10 to-transparent",
@@ -103,23 +105,12 @@ export function AchievementsPage() {
       .map(([category, entries]) => ({
         category,
         entries: [...entries].sort((a, b) => {
-          const byName = a.name.localeCompare(b.name, "fr", {
-            sensitivity: "base",
-          });
-          if (byName !== 0) {
-            return byName;
+          if (a.metric_key !== b.metric_key) {
+            return a.metric_key.localeCompare(b.metric_key);
           }
 
           if (a.target_value !== b.target_value) {
             return a.target_value - b.target_value;
-          }
-
-          if (a.leaderboard_points !== b.leaderboard_points) {
-            return a.leaderboard_points - b.leaderboard_points;
-          }
-
-          if (a.code !== b.code) {
-            return a.code.localeCompare(b.code);
           }
 
           return 0;
@@ -170,6 +161,9 @@ export function AchievementsPage() {
           }),
           queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
           queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+          queryClient.invalidateQueries({
+            queryKey: ["series-split", user.id],
+          }),
           refreshProfile(),
         ]);
 

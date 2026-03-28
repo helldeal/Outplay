@@ -145,11 +145,18 @@ export const publicProfileOverviewQueryKey = (userId?: string) =>
 export const publicProfileCollectionQueryKey = (userId?: string) =>
   ["public-profile-collection", userId] as const;
 
-export const publicProfileRecentOpeningsQueryKey = (userId?: string) =>
-  ["public-profile-recent-openings", userId] as const;
+export const publicProfileRecentOpeningsQueryKey = (
+  userId?: string,
+  limit = 4,
+) => ["public-profile-recent-openings", userId, limit] as const;
 
-export const publicProfileRecentAchievementsQueryKey = (userId?: string) =>
-  ["public-profile-recent-achievements", userId] as const;
+export const publicProfileRecentAchievementsQueryKey = (
+  userId?: string,
+  limit = 8,
+) => ["public-profile-recent-achievements", userId, limit] as const;
+
+export const currentUserAvailableTitlesQueryKey = (userId?: string) =>
+  ["current-user-available-titles", userId] as const;
 
 export interface PublicProfileRecentOpening {
   openingId: string;
@@ -422,16 +429,19 @@ export function usePublicProfileCollectionQuery(userId?: string) {
   });
 }
 
-export function usePublicProfileRecentOpeningsQuery(userId?: string) {
+export function usePublicProfileRecentOpeningsQuery(
+  userId?: string,
+  limit = 4,
+) {
   return useQuery({
-    queryKey: publicProfileRecentOpeningsQueryKey(userId),
+    queryKey: publicProfileRecentOpeningsQueryKey(userId, limit),
     enabled: Boolean(userId),
     queryFn: async () => {
       const { data, error } = await supabase.rpc(
         "get_public_profile_recent_openings",
         {
           p_user_id: userId!,
-          p_limit: 4,
+          p_limit: limit,
         },
       );
 
@@ -462,16 +472,19 @@ export function usePublicProfileRecentOpeningsQuery(userId?: string) {
   });
 }
 
-export function usePublicProfileRecentAchievementsQuery(userId?: string) {
+export function usePublicProfileRecentAchievementsQuery(
+  userId?: string,
+  limit = 8,
+) {
   return useQuery({
-    queryKey: publicProfileRecentAchievementsQueryKey(userId),
+    queryKey: publicProfileRecentAchievementsQueryKey(userId, limit),
     enabled: Boolean(userId),
     queryFn: async () => {
       const { data, error } = await supabase.rpc(
         "get_public_profile_recent_achievements",
         {
           p_user_id: userId!,
-          p_limit: 8,
+          p_limit: limit,
         },
       );
 
@@ -495,6 +508,36 @@ export function usePublicProfileRecentAchievementsQuery(userId?: string) {
           rewardBoosterType: row.reward_booster_type,
         }),
       ) as PublicProfileRecentAchievement[];
+    },
+  });
+}
+
+export function useCurrentUserAvailableTitlesQuery(userId?: string) {
+  return useQuery({
+    queryKey: currentUserAvailableTitlesQueryKey(userId),
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc(
+        "get_current_user_available_titles",
+        {
+          p_user_id: userId!,
+        },
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      const rows = (data ?? []) as Array<{ title: string | null }>;
+      return Array.from(
+        new Set(
+          rows
+            .map((row) =>
+              typeof row.title === "string" ? row.title.trim() : "",
+            )
+            .filter((title) => title.length > 0),
+        ),
+      ).sort((a, b) => a.localeCompare(b, "fr"));
     },
   });
 }
