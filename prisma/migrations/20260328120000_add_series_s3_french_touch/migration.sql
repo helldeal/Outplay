@@ -15,7 +15,7 @@ WITH game_data(name, slug, "logoUrl") AS (
     ('Super Smash Bros.', 'smash', '/src/assets/games/smash.png'),
     ('Rainbow Six Siege', 'rainbow-six-siege', '/src/assets/games/r6.png'),
     ('Call of Duty', 'call-of-duty', '/src/assets/games/cod.png'),
-    ('FIFA', 'fifa', '/src/assets/games/fifa.jpg'),
+    ('FIFA', 'fifa', '/src/assets/games/fifa.png'),
     ('SoulCalibur', 'soulcalibur', '/src/assets/games/soulcalibur.png'),
     ('Dragon Ball FighterZ', 'dragon-ball-fighterz', '/src/assets/games/dragon-ball-fighterz.png'),
     ('StarCraft II', 'starcraft-ii', '/src/assets/games/sc2.webp'),
