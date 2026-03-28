@@ -10,9 +10,10 @@ export const milestones = [
       "Lancement de la série S3: French Touch.",
       "Split Series: En gros c'est un Battle Pass pour la serie en cours. Nouveaux titres exclusifs à débloquer et récompenses uniques.",
       "Améliorations de stabilité et de performance.",
-      "Achievements: Triés par metrics plus logiques, ajout de nouveaux achievements liés aux catégories CHANCE et SOCIAL",
+      "Achievements: Triés par metrics plus logiques, ajout de nouveaux achievements liés aux catégories CHANCE et SOCIAL.",
       "Ajout de couleurs de titres spécifiques pour le profil et le leaderboard.",
       "Nouveau système de score pour les cartes: coefficient de rareté appliqué (taux de drop attendu/taux de drop réel) aux points de score.",
+      "Ouverture de boosters: Ajout des cartes CHALLENGER dans les reveals progressifs et rareté révelée progressivement.",
     ],
   },
   {
