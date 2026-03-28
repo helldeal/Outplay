@@ -27,6 +27,7 @@ const categoryOrder = [
   "Activite",
   "Serie",
   "Esport",
+  "Social",
 ] as const;
 
 const categoryTone: Record<string, string> = {
@@ -34,6 +35,7 @@ const categoryTone: Record<string, string> = {
   Rarete: "from-fuchsia-400/30 via-fuchsia-300/10 to-transparent",
   Booster: "from-amber-400/30 via-amber-300/10 to-transparent",
   Chance: "from-violet-400/30 via-violet-300/10 to-transparent",
+  Social: "from-pink-400/30 via-pink-300/10 to-transparent",
   Economy: "from-emerald-400/30 via-emerald-300/10 to-transparent",
   Activite: "from-orange-400/30 via-orange-300/10 to-transparent",
   Serie: "from-sky-400/30 via-sky-300/10 to-transparent",
