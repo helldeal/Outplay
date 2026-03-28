@@ -2,6 +2,20 @@ import { CalendarDays, Sparkles, Tag } from "lucide-react";
 
 export const milestones = [
   {
+    version: "v1.2",
+    date: "28 mars 2026",
+    title: "Split de série S3 - French Touch",
+    tone: "border-amber-300/35 bg-amber-400/10 text-amber-100",
+    updates: [
+      "Lancement de la série S3: French Touch.",
+      "Split Series: En gros c'est un Battle Pass pour la serie en cours. Nouveaux titres exclusifs à débloquer et récompenses uniques.",
+      "Améliorations de stabilité et de performance.",
+      "Achievements: Triés par metrics plus logiques, ajout de nouveaux achievements liés aux catégories CHANCE et SOCIAL",
+      "Ajout de couleurs de titres spécifiques pour le profil et le leaderboard.",
+      "Nouveau système de score pour les cartes: coefficient de rareté appliqué (taux de drop attendu/taux de drop réel) aux points de score.",
+    ],
+  },
+  {
     version: "v1.0.2",
     date: "24 mars 2026",
     title: "Équilibrage de l'économie & Améliorations de stabilité",
