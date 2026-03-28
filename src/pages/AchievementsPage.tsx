@@ -161,6 +161,9 @@ export function AchievementsPage() {
           }),
           queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
           queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+          queryClient.invalidateQueries({
+            queryKey: ["series-split", user.id],
+          }),
           refreshProfile(),
         ]);
 

@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   LogIn,
   LogOut,
+  Rocket,
   ShoppingBag,
   Trophy,
   UserRound,
@@ -27,6 +28,10 @@ const navItemClass = ({ isActive }: NavClassParams) =>
 type AppHeaderProps = {
   isAuthenticated: boolean;
   unseenAchievementCount: number;
+  unseenSeriesSplitCount: number;
+  seriesSplitPath: string | null;
+  seriesSplitLabel: string | null;
+  seriesSplitCountdown: string | null;
   onOpenDaily: () => void;
   canOpenDaily: boolean;
   isOpeningDaily: boolean;
@@ -61,6 +66,10 @@ const pcFormatter = new Intl.NumberFormat("fr-FR");
 export function AppHeader({
   isAuthenticated,
   unseenAchievementCount,
+  unseenSeriesSplitCount,
+  seriesSplitPath,
+  seriesSplitLabel,
+  seriesSplitCountdown,
   onOpenDaily,
   canOpenDaily,
   isOpeningDaily,
@@ -304,6 +313,25 @@ export function AppHeader({
                 ) : null}
               </span>
             </NavLink>
+            {seriesSplitPath && seriesSplitLabel ? (
+              <NavLink to={seriesSplitPath} className={navItemClass}>
+                <span className="inline-flex items-center gap-1.5">
+                  <Rocket className="h-4 w-4" />
+                  {seriesSplitLabel}
+                  {unseenSeriesSplitCount > 0 ? (
+                    <span className="relative inline-flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400" />
+                    </span>
+                  ) : null}
+                  {seriesSplitCountdown ? (
+                    <span className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-200">
+                      {seriesSplitCountdown}
+                    </span>
+                  ) : null}
+                </span>
+              </NavLink>
+            ) : null}
           </nav>
         </div>
 
@@ -467,6 +495,22 @@ export function AppHeader({
             </span>
           ) : null}
         </NavLink>
+        {seriesSplitPath && seriesSplitLabel ? (
+          <NavLink to={seriesSplitPath} className={navItemClass}>
+            {seriesSplitLabel}
+            {unseenSeriesSplitCount > 0 ? (
+              <span className="relative ml-1 inline-flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400" />
+              </span>
+            ) : null}
+            {seriesSplitCountdown ? (
+              <span className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-200">
+                {seriesSplitCountdown}
+              </span>
+            ) : null}
+          </NavLink>
+        ) : null}
       </div>
 
       <style>{`

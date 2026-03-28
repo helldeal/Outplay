@@ -13,6 +13,7 @@ import { OpeningRecapPage } from "./pages/OpeningRecapPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { PatchNotesPage } from "./pages/PatchNotesPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { SeriesSplitPage } from "./pages/SeriesSplitPage";
 import { ShopPage } from "./pages/ShopPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -98,6 +99,14 @@ export default function App() {
           element={
             <RequireAuth>
               <AchievementsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/series-split"
+          element={
+            <RequireAuth>
+              <SeriesSplitPage />
             </RequireAuth>
           }
         />
