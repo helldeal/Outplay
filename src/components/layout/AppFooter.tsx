@@ -8,6 +8,7 @@ const sitemapSections = [
       { to: "/", label: "Home" },
       { to: "/shop", label: "Shop" },
       { to: "/legendex", label: "Legendex" },
+      { to: "/series-split", label: "Series Split" },
       { to: "/leaderboard", label: "Leaderboard" },
       { to: "/achievements", label: "Achievements" },
     ],
@@ -15,6 +16,7 @@ const sitemapSections = [
   {
     title: "Informations",
     links: [
+      { to: "/patch-notes", label: "Patch Notes", icon: Info },
       { to: "/about", label: "À propos", icon: Info },
       { to: "/privacy", label: "Confidentialité", icon: Shield },
     ],
@@ -54,9 +56,9 @@ export function AppFooter() {
         <div className="space-y-3">
           <img src={logoSrc} alt="Outplay" className="h-8 w-auto" />
           <p className="max-w-sm text-sm leading-relaxed text-slate-300">
-            Outplay est un hub communautaire de collection esport. Le projet
-            évolue en continu avec de nouvelles cartes, économies et
-            fonctionnalités.
+            Outplay est un hub communautaire de collection esport avec Series
+            Split, leaderboard et progression continue. Le projet evolue en
+            permanence avec de nouvelles cartes et fonctionnalites.
           </p>
         </div>
 

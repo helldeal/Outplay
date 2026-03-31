@@ -25,6 +25,10 @@ export function LeaderboardTable({
     threshold: 0.15,
     rootMargin: "0px 0px -5% 0px",
   });
+  const visibleRows = Array.from(
+    { length: 10 },
+    (_, index) => rows[index] ?? null,
+  );
 
   return (
     <div
@@ -49,12 +53,14 @@ export function LeaderboardTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800/60">
-          {rows.map((row, i) => {
+          {visibleRows.map((row, i) => {
             const rank = page * 10 + i + 1;
             const isTop3 = rank <= 3;
+            const isPlaceholder = row === null;
+
             return (
               <tr
-                key={row.userId}
+                key={row?.userId ?? `placeholder-${page}-${i}`}
                 className="relative z-0 transition-colors hover:z-20 hover:bg-white/5 focus-within:z-20"
                 style={{
                   opacity: hasBeenVisible ? 1 : 0,
@@ -79,42 +85,53 @@ export function LeaderboardTable({
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    to={`/profile/${row.userId}`}
-                    className="inline-flex items-center gap-2.5 transition hover:text-cyan-100"
-                  >
-                    <PlayerAvatar
-                      avatarUrl={row.avatarUrl}
-                      username={row.username}
-                      size="sm"
-                    />
-                    <span
-                      className={`truncate font-semibold ${getTitleColorClass(
-                        row.title,
-                      )}`}
-                    >
-                      {row.username}
+                  {isPlaceholder ? (
+                    <span className="inline-flex items-center gap-2.5 text-slate-600">
+                      <span className="h-7 w-7 rounded-full bg-slate-800/70" />
+                      <span className="h-3.5 w-24 rounded bg-slate-800/70" />
                     </span>
-                  </Link>
+                  ) : (
+                    <Link
+                      to={`/profile/${row.userId}`}
+                      className="inline-flex items-center gap-2.5 transition hover:text-cyan-100"
+                    >
+                      <PlayerAvatar
+                        avatarUrl={row.avatarUrl}
+                        username={row.username}
+                        size="sm"
+                      />
+                      <span
+                        className={`truncate font-semibold ${getTitleColorClass(
+                          row.title,
+                        )}`}
+                      >
+                        {row.username}
+                      </span>
+                    </Link>
+                  )}
                 </td>
                 <td className="relative px-4 py-3 text-center text-indigo-300">
-                  <ScoreBreakdownTooltip
-                    totalScore={row.weightedScore}
-                    cardScore={row.cardScore}
-                    achievementScore={row.achievementScore}
-                    className="inline-flex"
-                    tooltipPositionClassName="right-0 top-full"
-                  >
-                    <span className="font-mono font-bold cursor-help rounded px-1">
-                      {scoreFormatter.format(row.weightedScore)}
-                    </span>
-                  </ScoreBreakdownTooltip>
+                  {isPlaceholder ? (
+                    <span className="inline-block h-3.5 w-14 rounded bg-slate-800/70" />
+                  ) : (
+                    <ScoreBreakdownTooltip
+                      totalScore={row.weightedScore}
+                      cardScore={row.cardScore}
+                      achievementScore={row.achievementScore}
+                      className="inline-flex"
+                      tooltipPositionClassName="right-0 top-full"
+                    >
+                      <span className="font-mono font-bold cursor-help rounded px-1">
+                        {scoreFormatter.format(row.weightedScore)}
+                      </span>
+                    </ScoreBreakdownTooltip>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-center text-slate-400">
-                  {row.totalCards}
+                  {isPlaceholder ? "-" : row.totalCards}
                 </td>
                 <td className="px-4 py-3 text-center text-amber-300">
-                  {row.achievementsUnlocked}
+                  {isPlaceholder ? "-" : row.achievementsUnlocked}
                 </td>
               </tr>
             );
