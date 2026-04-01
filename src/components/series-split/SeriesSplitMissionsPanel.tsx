@@ -51,11 +51,11 @@ export function SeriesSplitMissionsPanel(props: {
         </h2>
         <p className="text-xs text-slate-400">
           {props.missions.filter((mission) => mission.canClaim).length} a
-          reclamer
+          réclamer
         </p>
       </div>
 
-      <motion.div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
+      <motion.div className="space-y-3">
         {props.missions.map((mission) => (
           <motion.article
             variants={itemVariants}
@@ -138,12 +138,12 @@ export function SeriesSplitMissionsPanel(props: {
                 ) : mission.claimed ? (
                   <>
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    Reclame
+                    Réclamé
                   </>
                 ) : mission.canClaim ? (
                   <>
                     <Gift className="h-3.5 w-3.5" />
-                    Reclamer
+                    Réclamer
                   </>
                 ) : (
                   "En cours"

@@ -2,219 +2,300 @@ import { motion } from "framer-motion";
 import {
   Award,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
+  Coins,
   Crown,
+  Gift,
   LoaderCircle,
   Lock,
   Sparkles,
+  Trophy,
 } from "lucide-react";
-import { RewardTypeBadge } from "../rewards/reward-theme";
+import {
+  resolveRewardTone,
+  type RewardBoosterType,
+} from "../rewards/reward-theme";
 import type { SeriesSplitTier } from "../../query/series-split";
 
 const pointsFormatter = new Intl.NumberFormat("fr-FR");
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
-    },
-  },
-};
+function RewardIcon({ type }: { type: "pc" | "booster" | "title" }) {
+  switch (type) {
+    case "pc":
+      return <Coins className="h-3.5 w-3.5" />;
+    case "booster":
+      return <Gift className="h-3.5 w-3.5" />;
+    case "title":
+      return <Trophy className="h-3.5 w-3.5" />;
+  }
+}
+
+function TierRewardBadge(props: {
+  type: "pc" | "booster" | "title";
+  label: string;
+  rewardPc: number;
+  rewardBoosterType: RewardBoosterType | undefined;
+}) {
+  const tone = resolveRewardTone({
+    rewardPc: props.rewardPc,
+    rewardBoosterType: props.rewardBoosterType,
+  });
+  const titleClass =
+    props.type === "title"
+      ? "bg-purple-400/15 text-purple-200"
+      : tone.rewardBadgeClass;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold ${titleClass}`}
+    >
+      <RewardIcon type={props.type} />
+      <span>{props.label}</span>
+    </span>
+  );
+}
 
 export function SeriesSplitTiersPanel(props: {
-  nextTier: SeriesSplitTier | null;
-  pointsToNextTier: number;
-  canGoPrevTierPage: boolean;
-  canGoNextTierPage: boolean;
-  onPrevTierPage: () => void;
-  onNextTierPage: () => void;
-  visibleTrackProgressPct: number;
-  visibleTiers: SeriesSplitTier[];
-  visibleTierRangeLabel: string;
+  tiers: SeriesSplitTier[];
+  totalPoints: number;
   claimingTierLevel: number | null;
   onClaimTier: (tierLevel: number) => void;
 }) {
+  const sortedTiers = [...props.tiers].sort(
+    (a, b) => a.pointsRequired - b.pointsRequired,
+  );
+  const nextTierIndex = sortedTiers.findIndex(
+    (tier) => props.totalPoints < tier.pointsRequired,
+  );
+  const currentTierFloorPoints =
+    nextTierIndex > 0 ? sortedTiers[nextTierIndex - 1].pointsRequired : 0;
+  const nextTierProgressPct =
+    nextTierIndex >= 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            ((props.totalPoints - currentTierFloorPoints) /
+              Math.max(
+                1,
+                sortedTiers[nextTierIndex].pointsRequired -
+                  currentTierFloorPoints,
+              )) *
+              100,
+          ),
+        )
+      : 100;
+
   return (
     <motion.div
-      className="space-y-3"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
+      className="space-y-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center justify-between gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-slate-200">
           <Award className="h-4 w-4 text-amber-300" />
           Paliers
         </h2>
       </div>
 
-      <p className="text-xs text-slate-400">
-        {props.nextTier
-          ? `${pointsFormatter.format(props.pointsToNextTier)} points avant le prochain tier`
-          : "Tous les tiers sont debloques"}
-      </p>
+      {/* Vertical Battle Pass Track */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-700/50 bg-gradient-to-b from-slate-900 to-slate-950">
+        {/* Background glow */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.06),transparent_60%)]" />
 
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/65 p-4">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.08),transparent_45%,rgba(251,191,36,0.06))]" />
+        <div className="relative p-4">
+          <div className="relative flex flex-col gap-1">
+            {sortedTiers.map((tier, index) => {
+              const isReached = props.totalPoints >= tier.pointsRequired;
+              const isNextTier = index === nextTierIndex;
 
-        <button
-          type="button"
-          onClick={props.onPrevTierPage}
-          disabled={!props.canGoPrevTierPage}
-          className="absolute left-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/50 bg-slate-950/85 text-cyan-200 transition hover:scale-105 hover:border-cyan-300 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-35"
-          aria-label="Voir les tiers precedents"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
+              const rewards = [] as Array<{
+                key: string;
+                type: "pc" | "booster" | "title";
+                label: string;
+                rewardPc: number;
+                rewardBoosterType: RewardBoosterType | undefined;
+              }>;
 
-        <button
-          type="button"
-          onClick={props.onNextTierPage}
-          disabled={!props.canGoNextTierPage}
-          className="absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-cyan-400/50 bg-slate-950/85 text-cyan-200 transition hover:scale-105 hover:border-cyan-300 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-35"
-          aria-label="Voir les tiers suivants"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+              if (tier.rewardPc > 0) {
+                rewards.push({
+                  key: `${tier.tierLevel}-pc`,
+                  type: "pc",
+                  label: `${pointsFormatter.format(tier.rewardPc)} PC`,
+                  rewardPc: tier.rewardPc,
+                  rewardBoosterType: undefined,
+                });
+              }
 
-        <div className="relative pb-2">
-          <motion.div
-            className="relative px-12 pb-14 pt-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="pointer-events-none absolute bottom-4 left-12 right-12 h-1 rounded-full bg-cyan-950/90" />
-            <motion.div
-              className="pointer-events-none absolute bottom-4 left-12 h-1 rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
-              initial={{ width: 0 }}
-              animate={{
-                width: `calc((100% - 6rem) * ${props.visibleTrackProgressPct / 100})`,
-              }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
+              if (tier.rewardBoosterType) {
+                rewards.push({
+                  key: `${tier.tierLevel}-booster`,
+                  type: "booster",
+                  label: tier.rewardBoosterType,
+                  rewardPc: 0,
+                  rewardBoosterType: tier.rewardBoosterType,
+                });
+              }
 
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {props.visibleTiers.map((tier) => {
-                const rewardBadges = [] as Array<{
-                  key: string;
-                  rewardPc: number;
-                  rewardBoosterType:
-                    | "NORMAL"
-                    | "LUCK"
-                    | "PREMIUM"
-                    | "GODPACK"
-                    | undefined;
-                  label: string;
-                }>;
+              if (tier.rewardTitle) {
+                rewards.push({
+                  key: `${tier.tierLevel}-title`,
+                  type: "title",
+                  label: tier.rewardTitle,
+                  rewardPc: 0,
+                  rewardBoosterType: undefined,
+                });
+              }
 
-                if (tier.rewardPc > 0) {
-                  rewardBadges.push({
-                    key: `${tier.tierLevel}-pc`,
-                    rewardPc: tier.rewardPc,
-                    rewardBoosterType: undefined,
-                    label: `${pointsFormatter.format(tier.rewardPc)} PC`,
-                  });
-                }
+              return (
+                <motion.div
+                  key={tier.tierLevel}
+                  className="relative flex items-center gap-3 py-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03, duration: 0.3 }}
+                >
+                  {/* Tier node */}
+                  <div className="relative z-10 flex-shrink-0">
+                    {tier.canClaim && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full bg-amber-400/50"
+                        animate={{
+                          scale: [1, 1.6, 1],
+                          opacity: [0.6, 0, 0.6],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    )}
 
-                if (tier.rewardBoosterType) {
-                  rewardBadges.push({
-                    key: `${tier.tierLevel}-booster`,
-                    rewardPc: 0,
-                    rewardBoosterType: tier.rewardBoosterType,
-                    label: `${tier.rewardBoosterType} Booster`,
-                  });
-                }
+                    <div
+                      className={`relative flex h-10 w-10 items-center justify-center rounded-full border-[3px] transition-all duration-200 ${
+                        tier.claimed
+                          ? "border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_0_16px_rgba(16,185,129,0.4)]"
+                          : tier.canClaim
+                            ? "border-amber-400 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-[0_0_16px_rgba(251,191,36,0.4)]"
+                            : isReached
+                              ? "border-cyan-400 bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-[0_0_12px_rgba(34,211,238,0.3)]"
+                              : "border-slate-700 bg-slate-900 text-slate-500"
+                      }`}
+                    >
+                      {tier.claimed ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : tier.canClaim ? (
+                        <Crown className="h-4 w-4" />
+                      ) : isReached ? (
+                        <Sparkles className="h-4 w-4" />
+                      ) : (
+                        <span className="text-xs font-black">
+                          {tier.tierLevel}
+                        </span>
+                      )}
+                    </div>
 
-                if (tier.rewardTitle) {
-                  rewardBadges.push({
-                    key: `${tier.tierLevel}-title`,
-                    rewardPc: 0,
-                    rewardBoosterType: undefined,
-                    label: `Titre: ${tier.rewardTitle}`,
-                  });
-                }
+                    {!isReached && (
+                      <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 ring-2 ring-slate-900">
+                        <Lock className="h-2 w-2 text-slate-500" />
+                      </div>
+                    )}
+                  </div>
 
-                const cappedRewardBadges = rewardBadges.slice(0, 3);
-
-                return (
-                  <article
-                    key={tier.tierLevel}
-                    className={`relative mb-4 flex h-40 flex-col justify-between rounded-lg border p-2.5 text-left ${
+                  {/* Tier content card */}
+                  <div
+                    className={`relative overflow-hidden flex flex-1 items-center justify-between rounded-xl border px-3 py-2 transition-all duration-200 ${
                       tier.claimed
-                        ? "border-emerald-400/35 bg-emerald-500/10"
-                        : tier.unlocked
-                          ? "border-amber-300/40 bg-amber-500/10"
-                          : "border-slate-800 bg-slate-950/80"
+                        ? "border-emerald-500/20 bg-emerald-950/40"
+                        : tier.canClaim
+                          ? "border-amber-500/30 bg-amber-950/40"
+                          : isReached
+                            ? "border-cyan-500/20 bg-cyan-950/30"
+                            : "border-slate-800 bg-slate-900/50"
                     }`}
                   >
-                    <div className="mb-1 flex items-start justify-between gap-2">
-                      <p className="text-[11px] font-black uppercase tracking-[0.12em] text-cyan-300">
+                    {isNextTier ? (
+                      <div className="pointer-events-none absolute inset-0">
+                        <motion.div
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400/20 via-sky-400/15 to-transparent"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${nextTierProgressPct}%` }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                        />
+                      </div>
+                    ) : null}
+
+                    {/* Left: Tier info & rewards */}
+                    <div className="relative z-10 flex items-center gap-3">
+                      <div className="text-center">
+                        <span
+                          className={`text-lg font-black ${
+                            tier.claimed
+                              ? "text-emerald-400"
+                              : tier.canClaim
+                                ? "text-amber-400"
+                                : isReached
+                                  ? "text-cyan-400"
+                                  : "text-slate-500"
+                          }`}
+                        >
+                          {tier.tierLevel}
+                        </span>
+                        <p className="text-[9px] uppercase tracking-wider text-slate-500">
+                          tier
+                        </p>
+                      </div>
+
+                      <div className="h-8 w-px bg-slate-700/50" />
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {rewards.map((reward) => (
+                          <TierRewardBadge
+                            key={reward.key}
+                            type={reward.type}
+                            label={reward.label}
+                            rewardPc={reward.rewardPc}
+                            rewardBoosterType={reward.rewardBoosterType}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right: Points & Claim */}
+                    <div className="relative z-10 flex items-center gap-3">
+                      <span className="text-[10px] font-medium text-slate-500">
                         {pointsFormatter.format(tier.pointsRequired)} pts
-                      </p>
+                      </span>
+
                       {tier.canClaim ? (
                         <button
                           type="button"
                           disabled={props.claimingTierLevel !== null}
-                          onClick={() => {
-                            props.onClaimTier(tier.tierLevel);
-                          }}
-                          title="Reclamer la recompense"
-                          className="group inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-300/70 bg-amber-300/20 text-amber-200 transition hover:scale-110 hover:bg-amber-300/30 disabled:cursor-not-allowed disabled:opacity-70"
+                          onClick={() => props.onClaimTier(tier.tierLevel)}
+                          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-lg transition hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/25 disabled:opacity-50"
                         >
                           {props.claimingTierLevel === tier.tierLevel ? (
                             <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <Crown className="h-3.5 w-3.5" />
+                            <>
+                              <Gift className="h-3.5 w-3.5" />
+                            </>
                           )}
                         </button>
                       ) : tier.claimed ? (
-                        <CheckCircle2 className="h-4.5 w-4.5 text-emerald-300" />
-                      ) : tier.unlocked ? (
-                        <Sparkles className="h-4.5 w-4.5 text-amber-300" />
-                      ) : (
-                        <Lock className="h-4.5 w-4.5 text-slate-500" />
-                      )}
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </span>
+                      ) : null}
                     </div>
-
-                    <div className="flex min-h-[72px] flex-col items-start gap-1.5">
-                      {cappedRewardBadges.map((badge) => (
-                        <RewardTypeBadge
-                          key={badge.key}
-                          rewardPc={badge.rewardPc}
-                          rewardBoosterType={badge.rewardBoosterType}
-                          label={badge.label}
-                          className="bg-transparent"
-                        />
-                      ))}
-                    </div>
-
-                    <div className="relative mt-auto flex items-center justify-center pt-2">
-                      <div
-                        className={`z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-black ${
-                          tier.claimed
-                            ? "border-emerald-300 bg-emerald-300/20 text-emerald-100"
-                            : tier.unlocked
-                              ? "border-amber-300 bg-amber-300/20 text-amber-100"
-                              : "border-cyan-700 bg-slate-900 text-cyan-200"
-                        }`}
-                        style={{ transform: "translateY(8px)" }}
-                      >
-                        {tier.tierLevel}
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </motion.div>
-        </div>
-
-        <div className="mt-2 text-center text-[11px] font-semibold text-cyan-200">
-          Tiers {props.visibleTierRangeLabel}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </motion.div>

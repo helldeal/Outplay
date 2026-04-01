@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthProvider";
@@ -7,7 +7,6 @@ import {
   claimSeriesSplitMissionRpc,
   claimSeriesSplitTierRpc,
   markSeriesSplitSeenRpc,
-  type SeriesSplitTier,
   useSeriesSplitQuery,
 } from "../query/series-split";
 import {
@@ -26,7 +25,6 @@ export function SeriesSplitPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const splitQuery = useSeriesSplitQuery(user?.id);
-  const [tierPageIndex, setTierPageIndex] = useState(0);
   const [claimingMissionCode, setClaimingMissionCode] = useState<string | null>(
     null,
   );
@@ -36,123 +34,40 @@ export function SeriesSplitPage() {
 
   const overview = splitQuery.data;
 
-  const tiersByPoints = useMemo(
-    () =>
-      [...(overview?.tiers ?? [])].sort(
-        (left, right) => left.pointsRequired - right.pointsRequired,
-      ),
-    [overview?.tiers],
+  // Compute next tier and progress values for the Hero component
+  const sortedTiers = [...(overview?.tiers ?? [])].sort(
+    (a, b) => a.pointsRequired - b.pointsRequired,
   );
 
-  const nextTier = useMemo<SeriesSplitTier | null>(() => {
-    if (!overview) {
-      return null;
-    }
+  const nextTier =
+    sortedTiers.find(
+      (tier) => (overview?.totalPoints ?? 0) < tier.pointsRequired,
+    ) ?? null;
 
-    return (
-      tiersByPoints.find(
-        (tier) => overview.totalPoints < tier.pointsRequired,
-      ) ?? null
-    );
-  }, [overview, tiersByPoints]);
-
-  const currentTierFloorPoints = useMemo(() => {
-    if (!overview || tiersByPoints.length === 0) {
-      return 0;
-    }
-
-    const reachedTiers = tiersByPoints.filter(
+  const currentTierFloorPoints = (() => {
+    if (!overview || sortedTiers.length === 0) return 0;
+    const reachedTiers = sortedTiers.filter(
       (tier) => tier.pointsRequired <= overview.totalPoints,
     );
-
-    if (reachedTiers.length === 0) {
-      return 0;
-    }
-
+    if (reachedTiers.length === 0) return 0;
     return reachedTiers[reachedTiers.length - 1].pointsRequired;
-  }, [overview, tiersByPoints]);
+  })();
 
-  const progressPct = useMemo(() => {
-    if (!overview) {
-      return 0;
-    }
-
-    if (!nextTier) {
-      return 100;
-    }
-
+  const nextTierProgressPct = (() => {
+    if (!overview) return 0;
+    if (!nextTier) return 100;
     const denominator = nextTier.pointsRequired - currentTierFloorPoints;
-    if (denominator <= 0) {
-      return 100;
-    }
-
+    if (denominator <= 0) return 100;
     const numerator = overview.totalPoints - currentTierFloorPoints;
     return Math.max(0, Math.min(100, (numerator / denominator) * 100));
-  }, [currentTierFloorPoints, nextTier, overview]);
+  })();
 
-  const pointsToNextTier =
-    overview && nextTier
-      ? Math.max(0, nextTier.pointsRequired - overview.totalPoints)
-      : 0;
-
-  const tierPages = useMemo(() => {
-    const pages: Array<typeof tiersByPoints> = [];
-    for (let index = 0; index < tiersByPoints.length; index += 5) {
-      pages.push(tiersByPoints.slice(index, index + 5));
-    }
-    return pages;
-  }, [tiersByPoints]);
-
-  useEffect(() => {
-    if (tierPages.length === 0) {
-      if (tierPageIndex !== 0) {
-        setTierPageIndex(0);
-      }
-      return;
-    }
-
-    if (tierPageIndex > tierPages.length - 1) {
-      setTierPageIndex(Math.max(0, tierPages.length - 1));
-    }
-  }, [tierPageIndex, tierPages]);
-
-  const visibleTiers = useMemo(() => {
-    return tierPages[tierPageIndex] ?? [];
-  }, [tierPageIndex, tierPages]);
-
-  const canGoPrevTierPage = tierPageIndex > 0;
-  const canGoNextTierPage = tierPageIndex < tierPages.length - 1;
-
-  const visibleTierRangeLabel = useMemo(() => {
-    if (visibleTiers.length === 0) {
-      return "Aucun palier";
-    }
-
-    return `${visibleTiers[0].tierLevel}-${visibleTiers[visibleTiers.length - 1].tierLevel}`;
-  }, [visibleTiers]);
-
-  const visibleTrackProgressPct = useMemo(() => {
-    if (!overview || visibleTiers.length === 0) {
-      return 0;
-    }
-
-    if (visibleTiers.length === 1) {
-      return overview.totalPoints >= visibleTiers[0].pointsRequired ? 100 : 0;
-    }
-
-    const minPoints = visibleTiers[0].pointsRequired;
-    const maxPoints = visibleTiers[visibleTiers.length - 1].pointsRequired;
-    const denominator = maxPoints - minPoints;
-
-    if (denominator <= 0) {
-      return overview.totalPoints >= maxPoints ? 100 : 0;
-    }
-
-    return Math.max(
-      0,
-      Math.min(100, ((overview.totalPoints - minPoints) / denominator) * 100),
-    );
-  }, [overview, visibleTiers]);
+  const globalProgressPct = (() => {
+    if (!overview || sortedTiers.length === 0) return 0;
+    const maxPoints = sortedTiers[sortedTiers.length - 1].pointsRequired;
+    if (maxPoints <= 0) return 0;
+    return Math.max(0, Math.min(100, (overview.totalPoints / maxPoints) * 100));
+  })();
 
   useEffect(() => {
     if (!user?.id || !overview) {
@@ -295,26 +210,14 @@ export function SeriesSplitPage() {
       <SeriesSplitHero
         overview={overview}
         nextTier={nextTier}
-        progressPct={progressPct}
+        nextTierProgressPct={nextTierProgressPct}
+        globalProgressPct={globalProgressPct}
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <SeriesSplitTiersPanel
-          nextTier={nextTier}
-          pointsToNextTier={pointsToNextTier}
-          canGoPrevTierPage={canGoPrevTierPage}
-          canGoNextTierPage={canGoNextTierPage}
-          onPrevTierPage={() => {
-            setTierPageIndex((current) => Math.max(0, current - 1));
-          }}
-          onNextTierPage={() => {
-            setTierPageIndex((current) =>
-              Math.min(tierPages.length - 1, current + 1),
-            );
-          }}
-          visibleTrackProgressPct={visibleTrackProgressPct}
-          visibleTiers={visibleTiers}
-          visibleTierRangeLabel={visibleTierRangeLabel}
+          tiers={overview.tiers}
+          totalPoints={overview.totalPoints}
           claimingTierLevel={claimingTierLevel}
           onClaimTier={(tierLevel) => {
             void claimTier(tierLevel);

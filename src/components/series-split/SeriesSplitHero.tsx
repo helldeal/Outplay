@@ -29,10 +29,12 @@ function formatTimeLeft(endAt: string) {
 export function SeriesSplitHero(props: {
   overview: SeriesSplitOverview;
   nextTier: SeriesSplitTier | null;
-  progressPct: number;
+  nextTierProgressPct: number;
+  globalProgressPct: number;
 }) {
   const [animatedPoints, setAnimatedPoints] = useState(0);
-  const [animatedPct, setAnimatedPct] = useState(0);
+  const [animatedNextTierPct, setAnimatedNextTierPct] = useState(0);
+  const [animatedGlobalPct, setAnimatedGlobalPct] = useState(0);
 
   useEffect(() => {
     const durationMs = 800;
@@ -44,7 +46,8 @@ export function SeriesSplitHero(props: {
       const eased = 1 - (1 - progress) ** 3;
 
       setAnimatedPoints(Math.round(props.overview.totalPoints * eased));
-      setAnimatedPct(Math.round(props.progressPct * eased));
+      setAnimatedNextTierPct(Math.round(props.nextTierProgressPct * eased));
+      setAnimatedGlobalPct(Math.round(props.globalProgressPct * eased));
 
       if (progress < 1) {
         frameId = requestAnimationFrame(tick);
@@ -56,7 +59,11 @@ export function SeriesSplitHero(props: {
     return () => {
       cancelAnimationFrame(frameId);
     };
-  }, [props.overview.totalPoints, props.progressPct]);
+  }, [
+    props.overview.totalPoints,
+    props.nextTierProgressPct,
+    props.globalProgressPct,
+  ]);
 
   return (
     <motion.div
@@ -117,7 +124,7 @@ export function SeriesSplitHero(props: {
           transition={{ delay: 0.2, duration: 0.4 }}
         >
           <p className="text-[11px] uppercase tracking-[0.14em] text-slate-300">
-            Progression
+            Progression globale
           </p>
           <p className="mt-1 text-2xl font-black text-white">
             {pointsFormatter.format(animatedPoints)} pts
@@ -126,12 +133,16 @@ export function SeriesSplitHero(props: {
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400"
               initial={{ width: 0 }}
-              animate={{ width: `${animatedPct}%` }}
+              animate={{ width: `${animatedGlobalPct}%` }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
           <p className="mt-1 text-xs font-semibold text-cyan-200">
-            {animatedPct}% vers Tier {props.nextTier?.tierLevel ?? "MAX"}
+            {animatedGlobalPct}% du Split complété
+          </p>
+          <p className="mt-1 text-[11px] text-slate-300">
+            {animatedNextTierPct}% vers Tier{" "}
+            {props.nextTier?.tierLevel ?? "MAX"}
           </p>
         </motion.div>
       </div>
