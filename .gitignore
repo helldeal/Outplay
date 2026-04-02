@@ -27,3 +27,4 @@ dist-ssr
 /src/generated/prisma
 agent/
 public/assets
+dump.sql

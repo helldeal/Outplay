@@ -371,6 +371,8 @@ interface LeaderboardMatrixPlayerRpcRow {
   avatar_url: string | null;
   leaderboard_position: number;
   weighted_score: number;
+  card_score: number;
+  total_card_value: number;
   duplicate_rate: number | string | null;
   big_pull_rate: number | string | null;
   avg_pc_gained: number | string | null;
@@ -384,6 +386,8 @@ export interface LeaderboardMatrixPlayer {
   avatarUrl: string | null;
   leaderboardPosition: number;
   weightedScore: number;
+  cardScore: number;
+  totalCardValue: number;
   duplicateRate: number;
   bigPullRate: number;
   avgPcGained: number;
@@ -421,6 +425,8 @@ export function useLeaderboardMatrixPlayersQuery(
           avatarUrl: row.avatar_url,
           leaderboardPosition: row.leaderboard_position,
           weightedScore: row.weighted_score,
+          cardScore: row.card_score,
+          totalCardValue: row.total_card_value,
           duplicateRate: toNumber(row.duplicate_rate),
           bigPullRate: toNumber(row.big_pull_rate),
           avgPcGained: toNumber(row.avg_pc_gained),
