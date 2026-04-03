@@ -102,6 +102,22 @@ function formatPc(value: number): string {
   return `${Math.max(0, value).toFixed(1)} PC`;
 }
 
+function formatRatio(value: number): string {
+  return `${Math.max(0, value).toFixed(2)}x`;
+}
+
+function safeRatio(numerator: number, denominator: number): number {
+  if (!Number.isFinite(numerator) || numerator <= 0) {
+    return 0;
+  }
+
+  if (!Number.isFinite(denominator) || denominator <= 0) {
+    return 0;
+  }
+
+  return numerator / denominator;
+}
+
 function MatrixCard({
   title,
   subtitle,
@@ -247,9 +263,9 @@ export function LeaderboardMatrices({
   const profitPoints = buildCenteredPoints(
     sortedPlayers,
     currentUserId,
-    (player) => player.avgPcSpent,
-    (player) => player.bigPullRate,
-    { x: 20, y: 8 },
+    (player) => safeRatio(player.avgPcGained, player.avgPcSpent),
+    (player) => safeRatio(player.totalCardValue, player.cardScore),
+    { x: 0.4, y: 0.2 },
   );
 
   const current = sortedPlayers.find(
@@ -282,8 +298,9 @@ export function LeaderboardMatrices({
       </div>
 
       <p className="text-xs text-slate-400">
-        Matrices centrées sur la moyenne du panel (top 10 + toi si hors top 10),
-        échelle auto comme sur le profil.
+        Matrices centrées sur la moyenne du panel (top 10 + joueur) pour mieux
+        visualiser les écarts entre joueurs. Cliquez sur un point pour voir les
+        stats détaillées du joueur.
       </p>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -309,17 +326,17 @@ export function LeaderboardMatrices({
 
         <MatrixCard
           title="Matrice de rentabilité"
-          subtitle="Taux de gros tirages (Y) vs dépense moyenne (X)"
+          subtitle="Ratio valeur cartes / score réel cartes (Y) vs ratio gain / dépense (X)"
           icon={<Coins className="h-4 w-4 text-amber-300" />}
           points={profitPoints}
           cornerLabels={{
-            topLeft: "Efficace",
-            topRight: "Baleine",
-            bottomLeft: "Économe",
-            bottomRight: "Déficit",
+            topLeft: "Efficient",
+            topRight: "Gagnant",
+            bottomLeft: "Stable",
+            bottomRight: "Sous-optimal",
           }}
           tooltipFormatter={(point) =>
-            `${point.username} · ${formatPc(point.xValue)} dépensés / ${formatPercent(point.yValue)} gros tirages`
+            `${point.username} · ${formatRatio(point.xValue)} gain/dépense · ${formatRatio(point.yValue)} valeur/score réel cartes`
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}

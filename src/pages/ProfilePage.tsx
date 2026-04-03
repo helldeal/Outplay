@@ -25,11 +25,12 @@ import {
   updateCurrentUserProfileIdentity,
   usePublicProfileCollectionQuery,
   usePublicProfileOverviewQuery,
+  usePublicProfileRadarStatsQuery,
   usePublicProfileRecentAchievementsQuery,
   usePublicProfileRecentOpeningsQuery,
 } from "../query/profile";
 import { getTitleColorClass } from "../utils/title-style";
-import { rarityLabel, rarityTextColor } from "../utils/rarity";
+import { rarityLabel, rarityNameGradient } from "../utils/rarity";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
 export function ProfilePage() {
@@ -59,6 +60,7 @@ export function ProfilePage() {
   const availableTitlesQuery = useCurrentUserAvailableTitlesQuery(
     isOwnProfile ? user?.id : undefined,
   );
+  const radarStatsQuery = usePublicProfileRadarStatsQuery(targetUserId);
   const leaderboardQuery = useLeaderboardQuery(Boolean(user));
 
   const [tab, setTab] = useState<"collection" | "stats" | "activity">(
@@ -94,25 +96,25 @@ export function ProfilePage() {
     return availableTitlesQuery.data ?? [];
   }, [availableTitlesQuery.data, isOwnProfile]);
 
-  const rarityCards = overviewQuery.data
-    ? [
-        {
-          label: "Legends",
-          value: overviewQuery.data.legendsOwned,
-          tone: "text-amber-300",
-        },
-        {
-          label: "World Class",
-          value: overviewQuery.data.worldClassOwned,
-          tone: "text-orange-300",
-        },
-        {
-          label: "Champion",
-          value: overviewQuery.data.championOwned,
-          tone: "text-purple-300",
-        },
-      ]
-    : [];
+  const safeRatio = (numerator: number, denominator: number) => {
+    if (!Number.isFinite(numerator) || numerator <= 0) return 0;
+    if (!Number.isFinite(denominator) || denominator <= 0) return 0;
+    return numerator / denominator;
+  };
+
+  const overviewData = overviewQuery.data;
+  const collectionData = collectionQuery.data ?? [];
+  const leaderboardRow = overviewData
+    ? (leaderboardQuery.data ?? []).find(
+        (row) => row.userId === overviewData.userId,
+      )
+    : null;
+  const playerTotalCardValueBase = collectionData.reduce(
+    (sum, row) => sum + (row.card.pc_value ?? 0),
+    0,
+  );
+
+  const radarStats = radarStatsQuery.data;
 
   if (!targetUserId) {
     return (
@@ -140,9 +142,6 @@ export function ProfilePage() {
 
   const overview = overviewQuery.data;
   const collection = collectionQuery.data ?? [];
-  const leaderboardRow = (leaderboardQuery.data ?? []).find(
-    (row) => row.userId === overview.userId,
-  );
 
   const scoreCardPoints = leaderboardRow?.cardScore ?? overview.weightedScore;
   const scoreAchievementPoints = leaderboardRow?.achievementScore ?? 0;
@@ -340,7 +339,9 @@ export function ProfilePage() {
                 {overview.signatureCardName ? (
                   <>
                     <p
-                      className={`text-lg truncate font-black uppercase tracking-tighter ${rarityTextColor(overview.signatureCardRarity)}`}
+                      className={`text-lg truncate font-black uppercase tracking-tighter text-transparent bg-clip-text ${rarityNameGradient(
+                        overview.signatureCardRarity,
+                      )}`}
                     >
                       {overview.signatureCardName}
                     </p>
@@ -493,7 +494,67 @@ export function ProfilePage() {
         <ProfileStatsTab
           overview={overview}
           intFormatter={intFormatter}
-          rarityCards={rarityCards}
+          radarStats={
+            radarStats ?? {
+              player: {
+                duplicateRate: Math.max(0, overview.duplicateRate),
+                bigPullRate: Math.max(0, overview.bigPullRate),
+                avgPcGained: Math.max(0, overview.avgPcGained),
+                avgPcSpent:
+                  overview.totalOpenings > 0
+                    ? overview.totalPcSpent / overview.totalOpenings
+                    : 0,
+                valueScoreRatio: safeRatio(
+                  playerTotalCardValueBase,
+                  scoreCardPoints,
+                ),
+              },
+              average: {
+                duplicateRate: Math.max(0, overview.globalAvgDuplicateRate),
+                bigPullRate: Math.max(0, overview.globalAvgBigPullRate),
+                avgPcGained: Math.max(0, overview.avgPcGained),
+                avgPcSpent: Math.max(0, overview.globalAvgPcSpent),
+                valueScoreRatio: safeRatio(
+                  playerTotalCardValueBase,
+                  scoreCardPoints,
+                ),
+              },
+              max: {
+                duplicateRate: Math.max(
+                  Math.max(0, overview.duplicateRate),
+                  Math.max(0, overview.globalAvgDuplicateRate),
+                  1,
+                ),
+                bigPullRate: Math.max(
+                  Math.max(0, overview.bigPullRate),
+                  Math.max(0, overview.globalAvgBigPullRate),
+                  1,
+                ),
+                avgPcGained: Math.max(Math.max(0, overview.avgPcGained), 1),
+                avgPcSpent: Math.max(Math.max(0, overview.globalAvgPcSpent), 1),
+                valueScoreRatio: Math.max(
+                  safeRatio(playerTotalCardValueBase, scoreCardPoints),
+                  1,
+                ),
+              },
+              min: {
+                duplicateRate: Math.min(
+                  Math.max(0, overview.duplicateRate),
+                  Math.max(0, overview.globalAvgDuplicateRate),
+                ),
+                bigPullRate: Math.min(
+                  Math.max(0, overview.bigPullRate),
+                  Math.max(0, overview.globalAvgBigPullRate),
+                ),
+                avgPcGained: Math.max(0, overview.avgPcGained),
+                avgPcSpent: Math.max(0, overview.globalAvgPcSpent),
+                valueScoreRatio: safeRatio(
+                  playerTotalCardValueBase,
+                  scoreCardPoints,
+                ),
+              },
+            }
+          }
         />
       ) : (
         <ProfileActivityTab

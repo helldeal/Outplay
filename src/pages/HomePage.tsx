@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -10,9 +11,30 @@ import {
   Target,
   Trophy,
 } from "lucide-react";
+import { useAuth } from "../auth/AuthProvider";
+import { useSeriesSplitQuery } from "../query/series-split";
 import { milestones } from "./PatchNotesPage";
 
 export function HomePage() {
+  const { user } = useAuth();
+  const seriesSplitQuery = useSeriesSplitQuery(user?.id);
+  const activeSplit = seriesSplitQuery.data;
+  const pointsToNextTier = useMemo(() => {
+    if (!activeSplit) {
+      return 0;
+    }
+
+    const nextTier = [...activeSplit.tiers]
+      .sort((left, right) => left.pointsRequired - right.pointsRequired)
+      .find((tier) => activeSplit.totalPoints < tier.pointsRequired);
+
+    if (!nextTier) {
+      return 0;
+    }
+
+    return Math.max(0, nextTier.pointsRequired - activeSplit.totalPoints);
+  }, [activeSplit]);
+
   const hubItems = [
     {
       to: "/shop",
@@ -78,6 +100,24 @@ export function HomePage() {
               Ouvre des boosters, monte ton score, complète ton legendex et
               débloque les achievements.
             </p>
+
+            {activeSplit ? (
+              <Link
+                to="/series-split"
+                className="mt-4 inline-flex max-w-full items-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-left transition hover:border-cyan-200/70 hover:bg-cyan-300/20"
+              >
+                <Target className="h-4 w-4 shrink-0 text-cyan-200" />
+                <span className="min-w-0">
+                  <span className="block truncate text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100">
+                    Series Split en cours · {activeSplit.seriesCode}
+                  </span>
+                  <span className="block truncate text-xs text-slate-200">
+                    {activeSplit.totalPoints} pts · {pointsToNextTier} pts avant
+                    le prochain palier
+                  </span>
+                </span>
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>
@@ -141,11 +181,11 @@ export function HomePage() {
             Phase 2
           </p>
           <h3 className="mt-1 text-sm font-black uppercase text-white">
-            Achievements + Streak
+            Series Split + Achievements
           </h3>
           <p className="mt-1 text-xs text-slate-300">
-            Enchaîne les actions quotidiennes pour débloquer des récompenses
-            supplémentaires.
+            Continue ton rythme quotidien: transforme tes ouvertures en points,
+            complète tes missions et débloque tes achievements.
           </p>
         </div>
         <div className="rounded-2xl border border-fuchsia-300/30 bg-slate-900/60 p-4">

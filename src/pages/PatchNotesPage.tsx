@@ -2,6 +2,32 @@ import { CalendarDays, Sparkles, Tag } from "lucide-react";
 
 export const milestones = [
   {
+    version: "ROADMAP",
+    date: "N/A",
+    title: "à venir",
+    tone: "border-slate-300/35 bg-slate-400/10 text-slate-100",
+    updates: [
+      "Saison 4: Rift Makers",
+      "Cartes 'Prestige' à partir de 10 doublons de la même carte.",
+      "Ajouts d'autres animations et améliorations visuelles.",
+      "Responsivité mobile améliorée pour une expérience optimale sur tous les appareils.",
+      "Système de pickup de cartes: possibilité de choisir une carte parmi les boosters ouverts.",
+      "Et bien plus encore...",
+    ],
+  },
+  {
+    version: "v1.2.1",
+    date: "3 avril 2026",
+    title: "Corrections de bugs & Ajustements visuels",
+    tone: "border-cyan-300/35 bg-cyan-400/10 text-cyan-100",
+    updates: [
+      "Correction du bug d'affichage des titres sur le profil et le leaderboard.",
+      "Ajouts d'animations et autres améliorations visuelles.",
+      "Ajouts de nouvelles statistiques sur le profil et le leaderboard.",
+      "Refonte de la page de Split de série.",
+    ],
+  },
+  {
     version: "v1.2",
     date: "28 mars 2026",
     title: "Split de série S3 - French Touch",

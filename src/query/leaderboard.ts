@@ -18,6 +18,9 @@ interface LeaderboardRpcRow {
   username: string;
   title?: string | null;
   avatar_url: string | null;
+  signature_card_name?: string | null;
+  signature_card_rarity?: Rarity | null;
+  signature_card_image_url?: string | null;
   total_cards: number;
   weighted_score: number;
   card_score: number;
@@ -30,6 +33,9 @@ export interface LeaderboardRow {
   username: string;
   title: string | null;
   avatarUrl: string | null;
+  signatureCardName: string | null;
+  signatureCardRarity: Rarity | null;
+  signatureCardImageUrl: string | null;
   totalCards: number;
   weightedScore: number;
   cardScore: number;
@@ -39,30 +45,84 @@ export interface LeaderboardRow {
 
 export const leaderboardQueryKey = ["leaderboard"] as const;
 
-async function fetchTitlesByUserIds(
-  userIds: string[],
-): Promise<Map<string, string | null>> {
-  const titlesByUserId = new Map<string, string | null>();
+interface PublicProfileIdentityRpcRow {
+  user_id: string;
+  title: string | null;
+  signature_card_name: string | null;
+  signature_card_rarity: Rarity | null;
+  signature_card_image_url: string | null;
+}
 
-  if (userIds.length === 0) {
-    return titlesByUserId;
-  }
-
-  const { data: titleRows, error: titleError } = await supabase
-    .from("users")
-    .select("id,title")
-    .in("id", userIds);
-
-  if (!titleError) {
-    for (const entry of (titleRows ?? []) as Array<{
-      id: string;
+async function fetchPublicIdentityByUserIds(userIds: string[]): Promise<
+  Map<
+    string,
+    {
       title: string | null;
-    }>) {
-      titlesByUserId.set(entry.id, entry.title ?? null);
+      signatureCardName: string | null;
+      signatureCardRarity: Rarity | null;
+      signatureCardImageUrl: string | null;
     }
+  >
+> {
+  const byUserId = new Map<
+    string,
+    {
+      title: string | null;
+      signatureCardName: string | null;
+      signatureCardRarity: Rarity | null;
+      signatureCardImageUrl: string | null;
+    }
+  >();
+
+  const uniqueUserIds = Array.from(new Set(userIds)).filter(Boolean);
+  if (uniqueUserIds.length === 0) {
+    return byUserId;
   }
 
-  return titlesByUserId;
+  const results = await Promise.allSettled(
+    uniqueUserIds.map(async (userId) => {
+      const { data, error } = await supabase.rpc(
+        "get_public_profile_overview",
+        {
+          p_user_id: userId,
+        },
+      );
+
+      if (error) {
+        return null;
+      }
+
+      const row = (data as PublicProfileIdentityRpcRow[] | null)?.[0] ?? null;
+      if (!row || row.user_id !== userId) {
+        return null;
+      }
+
+      return {
+        userId,
+        title: row.title ?? null,
+        signatureCardName: row.signature_card_name ?? null,
+        signatureCardRarity: row.signature_card_rarity ?? null,
+        signatureCardImageUrl: row.signature_card_image_url
+          ? resolveAssetUrl(row.signature_card_image_url)
+          : null,
+      };
+    }),
+  );
+
+  for (const result of results) {
+    if (result.status !== "fulfilled" || !result.value) {
+      continue;
+    }
+
+    byUserId.set(result.value.userId, {
+      title: result.value.title,
+      signatureCardName: result.value.signatureCardName,
+      signatureCardRarity: result.value.signatureCardRarity,
+      signatureCardImageUrl: result.value.signatureCardImageUrl,
+    });
+  }
+
+  return byUserId;
 }
 
 export function useLeaderboardQuery(isEnabled: boolean) {
@@ -80,6 +140,11 @@ export function useLeaderboardQuery(isEnabled: boolean) {
         username: displayName(row.username),
         title: row.title ?? null,
         avatarUrl: row.avatar_url,
+        signatureCardName: row.signature_card_name ?? null,
+        signatureCardRarity: row.signature_card_rarity ?? null,
+        signatureCardImageUrl: row.signature_card_image_url
+          ? resolveAssetUrl(row.signature_card_image_url)
+          : null,
         totalCards: row.total_cards,
         weightedScore: row.weighted_score,
         cardScore: row.card_score,
@@ -87,13 +152,37 @@ export function useLeaderboardQuery(isEnabled: boolean) {
         achievementsUnlocked: row.achievements_unlocked,
       }));
 
-      const userIds = rows.map((row) => row.userId);
-      const titlesByUserId = await fetchTitlesByUserIds(userIds);
+      const missingIdentityUserIds = rows
+        .filter(
+          (row) =>
+            !row.title ||
+            (!row.signatureCardName && !row.signatureCardImageUrl),
+        )
+        .map((row) => row.userId);
 
-      return rows.map((row) => ({
-        ...row,
-        title: row.title ?? titlesByUserId.get(row.userId) ?? null,
-      }));
+      if (missingIdentityUserIds.length === 0) {
+        return rows;
+      }
+
+      const fallbackIdentity = await fetchPublicIdentityByUserIds(
+        missingIdentityUserIds,
+      );
+
+      return rows.map((row) => {
+        const identity = fallbackIdentity.get(row.userId);
+        return {
+          ...row,
+          title: row.title ?? identity?.title ?? null,
+          signatureCardName:
+            row.signatureCardName ?? identity?.signatureCardName ?? null,
+          signatureCardRarity:
+            row.signatureCardRarity ?? identity?.signatureCardRarity ?? null,
+          signatureCardImageUrl:
+            row.signatureCardImageUrl ??
+            identity?.signatureCardImageUrl ??
+            null,
+        };
+      });
     },
   });
 }
@@ -175,13 +264,13 @@ export function useRecentDropsQuery(isEnabled: boolean) {
       if (error) throw error;
 
       const rows = ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
-      const titlesByUserId = await fetchTitlesByUserIds(
+      const identityByUserId = await fetchPublicIdentityByUserIds(
         rows.map((row) => row.userId),
       );
 
       return rows.map((row) => ({
         ...row,
-        title: titlesByUserId.get(row.userId) ?? null,
+        title: identityByUserId.get(row.userId)?.title ?? null,
       }));
     },
   });
@@ -198,13 +287,13 @@ export async function fetchMoreRecentDrops(
   if (error) throw error;
 
   const rows = ((data ?? []) as RecentDropRpcRow[]).map(mapDropRow);
-  const titlesByUserId = await fetchTitlesByUserIds(
+  const identityByUserId = await fetchPublicIdentityByUserIds(
     rows.map((row) => row.userId),
   );
 
   return rows.map((row) => ({
     ...row,
-    title: titlesByUserId.get(row.userId) ?? null,
+    title: identityByUserId.get(row.userId)?.title ?? null,
   }));
 }
 
@@ -216,6 +305,8 @@ interface LeaderboardGlobalStatsRpcRow {
   total_openings: number | string | null;
   booster_distribution: unknown;
   top_drop_cards: unknown;
+  top_best_score_cards: unknown;
+  top_worst_score_cards: unknown;
 }
 
 interface BoosterDistributionRpcItem {
@@ -229,6 +320,14 @@ interface TopDropCardRpcItem {
   card_rarity: Rarity | null;
   card_image_url: string | null;
   drops_count: number | string;
+}
+
+interface TopScoreCardRpcItem {
+  card_id: string;
+  card_name: string;
+  card_rarity: Rarity | null;
+  card_image_url: string | null;
+  score_value: number | string;
 }
 
 export interface BoosterDistributionItem {
@@ -245,12 +344,22 @@ export interface TopDropCard {
   dropsCount: number;
 }
 
+export interface TopScoreCard {
+  cardId: string;
+  cardName: string;
+  cardRarity: Rarity | null;
+  cardImageUrl: string | null;
+  scoreValue: number;
+}
+
 export interface LeaderboardGlobalStats {
   totalPcSpent: number;
   totalCardsOpened: number;
   totalOpenings: number;
   boosterDistribution: BoosterDistributionItem[];
   topDropCards: TopDropCard[];
+  topBestScoreCards: TopScoreCard[];
+  topWorstScoreCards: TopScoreCard[];
 }
 
 export const leaderboardGlobalStatsQueryKey = [
@@ -300,6 +409,21 @@ function toTopDropCardsArray(value: unknown): TopDropCardRpcItem[] {
   );
 }
 
+function toTopScoreCardsArray(value: unknown): TopScoreCardRpcItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(
+    (item): item is TopScoreCardRpcItem =>
+      typeof item === "object" &&
+      item !== null &&
+      "card_id" in item &&
+      "card_name" in item &&
+      "score_value" in item,
+  );
+}
+
 export function useLeaderboardGlobalStatsQuery(isEnabled: boolean) {
   return useQuery({
     queryKey: leaderboardGlobalStatsQueryKey,
@@ -321,6 +445,8 @@ export function useLeaderboardGlobalStatsQuery(isEnabled: boolean) {
           totalOpenings: 0,
           boosterDistribution: [],
           topDropCards: [],
+          topBestScoreCards: [],
+          topWorstScoreCards: [],
         };
       }
 
@@ -352,12 +478,34 @@ export function useLeaderboardGlobalStatsQuery(isEnabled: boolean) {
         }),
       );
 
+      const topBestScoreCards = toTopScoreCardsArray(
+        row.top_best_score_cards,
+      ).map((item) => ({
+        cardId: item.card_id,
+        cardName: item.card_name,
+        cardRarity: item.card_rarity,
+        cardImageUrl: resolveAssetUrl(item.card_image_url),
+        scoreValue: toNumber(item.score_value),
+      }));
+
+      const topWorstScoreCards = toTopScoreCardsArray(
+        row.top_worst_score_cards,
+      ).map((item) => ({
+        cardId: item.card_id,
+        cardName: item.card_name,
+        cardRarity: item.card_rarity,
+        cardImageUrl: resolveAssetUrl(item.card_image_url),
+        scoreValue: toNumber(item.score_value),
+      }));
+
       return {
         totalPcSpent: toNumber(row.total_pc_spent),
         totalCardsOpened: toNumber(row.total_cards_opened),
         totalOpenings,
         boosterDistribution,
         topDropCards,
+        topBestScoreCards,
+        topWorstScoreCards,
       };
     },
   });
@@ -371,6 +519,8 @@ interface LeaderboardMatrixPlayerRpcRow {
   avatar_url: string | null;
   leaderboard_position: number;
   weighted_score: number;
+  card_score: number;
+  total_card_value: number;
   duplicate_rate: number | string | null;
   big_pull_rate: number | string | null;
   avg_pc_gained: number | string | null;
@@ -384,6 +534,8 @@ export interface LeaderboardMatrixPlayer {
   avatarUrl: string | null;
   leaderboardPosition: number;
   weightedScore: number;
+  cardScore: number;
+  totalCardValue: number;
   duplicateRate: number;
   bigPullRate: number;
   avgPcGained: number;
@@ -421,6 +573,8 @@ export function useLeaderboardMatrixPlayersQuery(
           avatarUrl: row.avatar_url,
           leaderboardPosition: row.leaderboard_position,
           weightedScore: row.weighted_score,
+          cardScore: row.card_score,
+          totalCardValue: row.total_card_value,
           duplicateRate: toNumber(row.duplicate_rate),
           bigPullRate: toNumber(row.big_pull_rate),
           avgPcGained: toNumber(row.avg_pc_gained),
@@ -428,14 +582,17 @@ export function useLeaderboardMatrixPlayersQuery(
         }),
       );
 
-      const titlesByUserId = await fetchTitlesByUserIds(
+      const fallbackIdentity = await fetchPublicIdentityByUserIds(
         rows.map((row) => row.userId),
       );
 
-      return rows.map((row) => ({
-        ...row,
-        title: titlesByUserId.get(row.userId) ?? null,
-      }));
+      return rows.map((row) => {
+        const identity = fallbackIdentity.get(row.userId);
+        return {
+          ...row,
+          title: identity?.title ?? null,
+        };
+      });
     },
   });
 }

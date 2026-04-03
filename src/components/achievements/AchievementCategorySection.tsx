@@ -6,6 +6,7 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { RewardTypeBadge } from "../rewards/reward-theme";
 import type { AchievementProgressRow } from "../../query/achievements";
 
@@ -27,9 +28,13 @@ export function AchievementCategorySection({
   onClaim: (row: AchievementProgressRow) => void;
 }) {
   return (
-    <div
+    <motion.div
       key={group.category}
       className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
     >
       <div
         className={`pointer-events-none absolute inset-0 bg-gradient-to-r ${categoryTone[group.category] ?? "from-slate-500/15 via-transparent to-transparent"}`}
@@ -137,7 +142,7 @@ export function AchievementCategorySection({
               </div>
 
               <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-800">
-                <div
+                <motion.div
                   className={`h-full rounded-full transition-all ${
                     row.unlocked
                       ? row.reward_claimed
@@ -145,7 +150,9 @@ export function AchievementCategorySection({
                         : "bg-gradient-to-r from-amber-300 to-amber-500"
                       : "bg-gradient-to-r from-cyan-300 to-blue-500"
                   }`}
-                  style={{ width: `${progressPct}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
                 />
               </div>
 
@@ -174,6 +181,6 @@ export function AchievementCategorySection({
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }

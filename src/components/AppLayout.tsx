@@ -55,10 +55,14 @@ function formatSplitCountdown(millisecondsLeft: number) {
   const minutes = totalMinutes % 60;
 
   if (days > 0) {
-    return `${days}j ${hours}h`;
+    return `${days}j`;
   }
 
-  return `${hours}h ${minutes}m`;
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+
+  return `${minutes}m`;
 }
 
 function getInitials(name: string): string {

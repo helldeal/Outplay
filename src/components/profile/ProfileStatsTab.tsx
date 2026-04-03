@@ -6,11 +6,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { PublicProfileOverview } from "../../query/profile";
-import {
-  rarityBorderColor,
-  rarityLabel,
-  rarityTextColor,
-} from "../../utils/rarity";
+import { rarityLabel, rarityTextColor } from "../../utils/rarity";
 
 const percentFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 2,
@@ -28,11 +24,40 @@ function formatPercent2(value: number): string {
 export function ProfileStatsTab({
   overview,
   intFormatter,
-  rarityCards,
+  radarStats,
 }: {
   overview: PublicProfileOverview;
   intFormatter: Intl.NumberFormat;
-  rarityCards: Array<{ label: string; value: number; tone: string }>;
+  radarStats: {
+    player: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+    average: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+    max: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+    min: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+  };
 }) {
   const luckyPullRate = overview.bigPullRate;
   const playerDuplicateRate = Math.min(
@@ -91,6 +116,127 @@ export function ProfileStatsTab({
     1,
     ...boosterTypeShares.map((entry) => entry.value),
   );
+
+  const radarAxes = [
+    {
+      key: "duplicateRate",
+      label: "% Doublons",
+      player: Math.max(0, radarStats.player.duplicateRate),
+      average: Math.max(0, radarStats.average.duplicateRate),
+      max: Math.max(1, radarStats.max.duplicateRate),
+      min: Math.max(0, radarStats.min.duplicateRate),
+    },
+    {
+      key: "bigPullRate",
+      label: "% Gros pull",
+      player: Math.max(0, radarStats.player.bigPullRate),
+      average: Math.max(0, radarStats.average.bigPullRate),
+      max: Math.max(1, radarStats.max.bigPullRate),
+      min: Math.max(0, radarStats.min.bigPullRate),
+    },
+    {
+      key: "avgPcGained",
+      label: "PC gagnés moyen",
+      player: Math.max(0, radarStats.player.avgPcGained),
+      average: Math.max(0, radarStats.average.avgPcGained),
+      max: Math.max(1, radarStats.max.avgPcGained),
+      min: Math.max(0, radarStats.min.avgPcGained),
+    },
+    {
+      key: "avgPcSpent",
+      label: "PC dépensés moyen",
+      player: Math.max(0, radarStats.player.avgPcSpent),
+      average: Math.max(0, radarStats.average.avgPcSpent),
+      max: Math.max(1, radarStats.max.avgPcSpent),
+      min: Math.max(0, radarStats.min.avgPcSpent),
+    },
+    {
+      key: "valueScoreRatio",
+      label: "Ratio valeur / score",
+      player: Math.max(0, radarStats.player.valueScoreRatio),
+      average: Math.max(0, radarStats.average.valueScoreRatio),
+      max: Math.max(1, radarStats.max.valueScoreRatio),
+      min: Math.max(0, radarStats.min.valueScoreRatio),
+    },
+  ] as const;
+
+  const radarSize = 360;
+  const center = radarSize / 2;
+  const outerRadius = 116;
+
+  const axisPoints = radarAxes.map((axis, index) => {
+    const angle = -Math.PI / 2 + (index * 2 * Math.PI) / radarAxes.length;
+    const axisMin = Math.min(axis.min, axis.max);
+    const axisMax = Math.max(axis.max, axisMin);
+    const span = axisMax - axisMin;
+    const normalize = (value: number) => {
+      if (span <= 0) {
+        return 1;
+      }
+
+      const normalized = (value - axisMin) / span;
+      return Math.min(1, Math.max(0, normalized));
+    };
+
+    return {
+      ...axis,
+      angle,
+      axisMin,
+      axisMax,
+      x: center + Math.cos(angle) * outerRadius,
+      y: center + Math.sin(angle) * outerRadius,
+      labelX: center + Math.cos(angle) * (outerRadius + 44),
+      labelY: center + Math.sin(angle) * (outerRadius + 44),
+      labelAnchor:
+        Math.cos(angle) > 0.35
+          ? ("start" as const)
+          : Math.cos(angle) < -0.35
+            ? ("end" as const)
+            : ("middle" as const),
+      playerNorm: normalize(axis.player),
+      averageNorm: normalize(axis.average),
+    };
+  });
+
+  const formatRadarAxisValue = (
+    axisKey: (typeof radarAxes)[number]["key"],
+    value: number,
+  ) => {
+    if (axisKey === "duplicateRate" || axisKey === "bigPullRate") {
+      return formatPercent2(value);
+    }
+    if (axisKey === "valueScoreRatio") {
+      return value.toFixed(3);
+    }
+    return intFormatter.format(Math.round(value));
+  };
+
+  const toPolygon = (values: number[]) =>
+    values
+      .map((value, index) => {
+        const point = axisPoints[index];
+        const x = center + Math.cos(point.angle) * outerRadius * value;
+        const y = center + Math.sin(point.angle) * outerRadius * value;
+        return `${x},${y}`;
+      })
+      .join(" ");
+
+  const playerPolygon = toPolygon(axisPoints.map((point) => point.playerNorm));
+  const averagePolygon = toPolygon(
+    axisPoints.map((point) => point.averageNorm),
+  );
+
+  const playerDots = axisPoints.map((point) => ({
+    key: point.key,
+    x: center + Math.cos(point.angle) * outerRadius * point.playerNorm,
+    y: center + Math.sin(point.angle) * outerRadius * point.playerNorm,
+  }));
+
+  const averageDots = axisPoints.map((point) => ({
+    key: point.key,
+    x: center + Math.cos(point.angle) * outerRadius * point.averageNorm,
+    y: center + Math.sin(point.angle) * outerRadius * point.averageNorm,
+  }));
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -245,98 +391,232 @@ export function ProfileStatsTab({
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <ShieldCheck className="h-4 w-4 text-amber-300" />
-          Stats cartes
+          Stats joueur
         </h2>
 
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {rarityCards.map((entry) => (
-            <div
-              key={entry.label}
-              className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-2"
+        <div className="mt-3 rounded-xl border border-slate-700/70 bg-slate-950/55 p-3">
+          <div className="mx-auto w-full max-w-[500px] overflow-visible">
+            <svg
+              viewBox={`0 0 ${radarSize} ${radarSize}`}
+              className="h-[360px] w-full overflow-visible"
             >
-              <p className={`text-xs font-semibold ${entry.tone}`}>
-                {entry.label}
-              </p>
-              <p className="mt-1 text-xl font-black text-white">
-                {intFormatter.format(entry.value)}
-              </p>
-            </div>
-          ))}
-        </div>
+              <defs>
+                <radialGradient id="radar-core" cx="50%" cy="50%" r="65%">
+                  <stop offset="0%" stopColor="rgba(56,189,248,0.14)" />
+                  <stop offset="100%" stopColor="rgba(15,23,42,0.05)" />
+                </radialGradient>
+              </defs>
 
-        <div className="mt-4 space-y-2 text-sm text-slate-300">
-          <p>
-            Jeu favori:
-            <span className="ml-2 font-semibold text-cyan-200">
-              {overview.favoriteGame ?? "N/A"}
+              <circle
+                cx={center}
+                cy={center}
+                r={outerRadius + 8}
+                fill="url(#radar-core)"
+              />
+
+              {[0.25, 0.5, 0.75, 1].map((level) => (
+                <polygon
+                  key={level}
+                  points={toPolygon(axisPoints.map(() => level))}
+                  fill="none"
+                  stroke="rgba(100,116,139,0.42)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {axisPoints.map((point) => (
+                <line
+                  key={`line-${point.key}`}
+                  x1={center}
+                  y1={center}
+                  x2={point.x}
+                  y2={point.y}
+                  stroke="rgba(100,116,139,0.35)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              <polygon
+                points={averagePolygon}
+                fill="rgba(251,191,36,0.2)"
+                stroke="rgba(251,191,36,0.9)"
+                strokeWidth="2"
+              />
+              <polygon
+                points={playerPolygon}
+                fill="rgba(34,211,238,0.2)"
+                stroke="rgba(34,211,238,0.95)"
+                strokeWidth="2"
+              />
+
+              {averageDots.map((dot) => (
+                <circle
+                  key={`avg-dot-${dot.key}`}
+                  cx={dot.x}
+                  cy={dot.y}
+                  r="3.2"
+                  fill="rgba(251,191,36,1)"
+                  stroke="rgba(15,23,42,0.9)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {playerDots.map((dot) => (
+                <circle
+                  key={`player-dot-${dot.key}`}
+                  cx={dot.x}
+                  cy={dot.y}
+                  r="3.2"
+                  fill="rgba(34,211,238,1)"
+                  stroke="rgba(15,23,42,0.9)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {axisPoints.map((point) => (
+                <text
+                  key={`label-${point.key}`}
+                  x={point.labelX}
+                  y={point.labelY}
+                  textAnchor={point.labelAnchor}
+                  dominantBaseline="middle"
+                  fill="rgba(241,245,249,0.96)"
+                  fontSize="11"
+                  fontWeight="700"
+                  style={{
+                    paintOrder: "stroke",
+                    stroke: "rgba(2,6,23,0.9)",
+                    strokeWidth: 2,
+                  }}
+                >
+                  <tspan x={point.labelX} dy="0">
+                    {point.label}
+                  </tspan>
+                  <tspan
+                    x={point.labelX}
+                    dy="12"
+                    fill="rgba(34,211,238,0.95)"
+                    fontSize="9.5"
+                  >
+                    J {formatRadarAxisValue(point.key, point.player)}
+                  </tspan>
+                  <tspan
+                    x={point.labelX}
+                    dy="11"
+                    fill="rgba(251,191,36,0.95)"
+                    fontSize="9.5"
+                  >
+                    M {formatRadarAxisValue(point.key, point.average)}
+                  </tspan>
+                </text>
+              ))}
+            </svg>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+            <span className="inline-flex items-center gap-1 text-cyan-200">
+              <span className="h-2.5 w-2.5 rounded-full bg-cyan-300" />
+              Joueur
             </span>
-          </p>
-          <p>
-            Valeur moyenne récupérée par ouverture:
-            <span className="ml-2 font-black text-cyan-200">
-              {intFormatter.format(Math.round(overview.avgPcGained))} PC
+            <span className="inline-flex items-center gap-1 text-amber-200">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+              Moyenne
             </span>
-          </p>
-          <p>
-            Meilleure carte obtenue:
-            <span className="ml-2 font-semibold text-white">
-              {overview.bestCardName ?? "N/A"}
-            </span>
-            {overview.bestCardRarity ? (
-              <span
-                className={`ml-2 text-xs font-bold ${rarityTextColor(overview.bestCardRarity)}`}
-              >
-                {rarityLabel(overview.bestCardRarity)}
-              </span>
-            ) : null}
-          </p>
+          </div>
         </div>
       </article>
 
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <ScanSearch className="h-4 w-4 text-fuchsia-300" />
-          Cartes les plus tirées
+          Stats cartes
         </h2>
 
-        {(overview.topDropCards ?? []).length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">Aucune donnée de tirage.</p>
-        ) : (
-          <div className="mt-3 space-y-2">
-            {(overview.topDropCards ?? []).map((card) => (
-              <div
-                key={card.cardId}
-                className={`flex items-center gap-3 rounded-xl border bg-slate-950/55 p-2 ${rarityBorderColor(
-                  card.cardRarity,
-                )}`}
-              >
-                <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
-                  {card.cardImageUrl ? (
-                    <img
-                      src={card.cardImageUrl}
-                      alt={card.cardName}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.1em] text-emerald-300">
+              Top 5 meilleures cartes
+            </p>
+            {(overview.topBestScoreCards ?? []).length === 0 ? (
+              <p className="mt-2 text-sm text-slate-400">Aucune donnée.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {(overview.topBestScoreCards ?? []).map((card) => (
+                  <div
+                    key={`best-${card.cardId}`}
+                    className={`flex items-center gap-3 rounded-xl border bg-slate-950/55 p-2 border-slate-800`}
                   >
-                    {rarityLabel(card.cardRarity)}
-                  </p>
-                  <p className="truncate text-sm font-semibold text-white">
-                    {card.cardName}
-                  </p>
-                </div>
-                <p className="text-xs font-black text-fuchsia-300">
-                  x{intFormatter.format(card.dropsCount)}
-                </p>
+                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
+                      {card.cardImageUrl ? (
+                        <img
+                          src={card.cardImageUrl}
+                          alt={card.cardName}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+                      >
+                        {rarityLabel(card.cardRarity)}
+                      </p>
+                      <p className="truncate text-sm font-semibold text-white">
+                        {card.cardName}
+                      </p>
+                    </div>
+                    <p className="text-xs font-black text-emerald-300">
+                      {intFormatter.format(card.scoreValue)}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.1em] text-rose-300">
+              Top 5 pires cartes
+            </p>
+            {(overview.topWorstScoreCards ?? []).length === 0 ? (
+              <p className="mt-2 text-sm text-slate-400">Aucune donnée.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {(overview.topWorstScoreCards ?? []).map((card) => (
+                  <div
+                    key={`worst-${card.cardId}`}
+                    className={`flex items-center gap-3 rounded-xl border bg-slate-950/55 p-2 border-slate-800`}
+                  >
+                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
+                      {card.cardImageUrl ? (
+                        <img
+                          src={card.cardImageUrl}
+                          alt={card.cardName}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+                      >
+                        {rarityLabel(card.cardRarity)}
+                      </p>
+                      <p className="truncate text-sm font-semibold text-white">
+                        {card.cardName}
+                      </p>
+                    </div>
+                    <p className="text-xs font-black text-rose-300">
+                      {intFormatter.format(card.scoreValue)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </article>
     </div>
   );
