@@ -86,14 +86,14 @@ export function LeaderboardTable({
                 </td>
                 <td className="px-4 py-3">
                   {isPlaceholder ? (
-                    <span className="inline-flex items-center gap-2.5 text-slate-600">
+                    <span className="flex items-center gap-2.5 text-slate-600">
                       <span className="h-7 w-7 rounded-full bg-slate-800/70" />
                       <span className="h-3.5 w-24 rounded bg-slate-800/70" />
                     </span>
                   ) : (
                     <Link
                       to={`/profile/${row.userId}`}
-                      className="inline-flex items-center gap-2.5 transition hover:text-cyan-100"
+                      className="flex items-center gap-2.5 transition hover:text-cyan-100"
                     >
                       <PlayerAvatar
                         avatarUrl={row.avatarUrl}
