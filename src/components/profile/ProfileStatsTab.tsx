@@ -21,16 +21,43 @@ function formatPercent2(value: number): string {
   return `${percentFormatter.format(Math.max(0, value))}%`;
 }
 
-function formatPc(value: number): string {
-  return `${Math.max(0, value).toFixed(1)} PC`;
-}
-
 export function ProfileStatsTab({
   overview,
   intFormatter,
+  radarStats,
 }: {
   overview: PublicProfileOverview;
   intFormatter: Intl.NumberFormat;
+  radarStats: {
+    player: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+    average: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+    max: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+    min: {
+      duplicateRate: number;
+      bigPullRate: number;
+      avgPcGained: number;
+      avgPcSpent: number;
+      valueScoreRatio: number;
+    };
+  };
 }) {
   const luckyPullRate = overview.bigPullRate;
   const playerDuplicateRate = Math.min(
@@ -90,10 +117,126 @@ export function ProfileStatsTab({
     ...boosterTypeShares.map((entry) => entry.value),
   );
 
-  const playerAvgPcSpent =
-    overview.totalOpenings > 0
-      ? overview.totalPcSpent / overview.totalOpenings
-      : 0;
+  const radarAxes = [
+    {
+      key: "duplicateRate",
+      label: "% Doublons",
+      player: Math.max(0, radarStats.player.duplicateRate),
+      average: Math.max(0, radarStats.average.duplicateRate),
+      max: Math.max(1, radarStats.max.duplicateRate),
+      min: Math.max(0, radarStats.min.duplicateRate),
+    },
+    {
+      key: "bigPullRate",
+      label: "% Gros pull",
+      player: Math.max(0, radarStats.player.bigPullRate),
+      average: Math.max(0, radarStats.average.bigPullRate),
+      max: Math.max(1, radarStats.max.bigPullRate),
+      min: Math.max(0, radarStats.min.bigPullRate),
+    },
+    {
+      key: "avgPcGained",
+      label: "PC gagnés moyen",
+      player: Math.max(0, radarStats.player.avgPcGained),
+      average: Math.max(0, radarStats.average.avgPcGained),
+      max: Math.max(1, radarStats.max.avgPcGained),
+      min: Math.max(0, radarStats.min.avgPcGained),
+    },
+    {
+      key: "avgPcSpent",
+      label: "PC dépensés moyen",
+      player: Math.max(0, radarStats.player.avgPcSpent),
+      average: Math.max(0, radarStats.average.avgPcSpent),
+      max: Math.max(1, radarStats.max.avgPcSpent),
+      min: Math.max(0, radarStats.min.avgPcSpent),
+    },
+    {
+      key: "valueScoreRatio",
+      label: "Ratio valeur / score",
+      player: Math.max(0, radarStats.player.valueScoreRatio),
+      average: Math.max(0, radarStats.average.valueScoreRatio),
+      max: Math.max(1, radarStats.max.valueScoreRatio),
+      min: Math.max(0, radarStats.min.valueScoreRatio),
+    },
+  ] as const;
+
+  const radarSize = 360;
+  const center = radarSize / 2;
+  const outerRadius = 116;
+
+  const axisPoints = radarAxes.map((axis, index) => {
+    const angle = -Math.PI / 2 + (index * 2 * Math.PI) / radarAxes.length;
+    const axisMin = Math.min(axis.min, axis.max);
+    const axisMax = Math.max(axis.max, axisMin);
+    const span = axisMax - axisMin;
+    const normalize = (value: number) => {
+      if (span <= 0) {
+        return 1;
+      }
+
+      const normalized = (value - axisMin) / span;
+      return Math.min(1, Math.max(0, normalized));
+    };
+
+    return {
+      ...axis,
+      angle,
+      axisMin,
+      axisMax,
+      x: center + Math.cos(angle) * outerRadius,
+      y: center + Math.sin(angle) * outerRadius,
+      labelX: center + Math.cos(angle) * (outerRadius + 44),
+      labelY: center + Math.sin(angle) * (outerRadius + 44),
+      labelAnchor:
+        Math.cos(angle) > 0.35
+          ? ("start" as const)
+          : Math.cos(angle) < -0.35
+            ? ("end" as const)
+            : ("middle" as const),
+      playerNorm: normalize(axis.player),
+      averageNorm: normalize(axis.average),
+    };
+  });
+
+  const formatRadarAxisValue = (
+    axisKey: (typeof radarAxes)[number]["key"],
+    value: number,
+  ) => {
+    if (axisKey === "duplicateRate" || axisKey === "bigPullRate") {
+      return formatPercent2(value);
+    }
+    if (axisKey === "valueScoreRatio") {
+      return value.toFixed(3);
+    }
+    return intFormatter.format(Math.round(value));
+  };
+
+  const toPolygon = (values: number[]) =>
+    values
+      .map((value, index) => {
+        const point = axisPoints[index];
+        const x = center + Math.cos(point.angle) * outerRadius * value;
+        const y = center + Math.sin(point.angle) * outerRadius * value;
+        return `${x},${y}`;
+      })
+      .join(" ");
+
+  const playerPolygon = toPolygon(axisPoints.map((point) => point.playerNorm));
+  const averagePolygon = toPolygon(
+    axisPoints.map((point) => point.averageNorm),
+  );
+
+  const playerDots = axisPoints.map((point) => ({
+    key: point.key,
+    x: center + Math.cos(point.angle) * outerRadius * point.playerNorm,
+    y: center + Math.sin(point.angle) * outerRadius * point.playerNorm,
+  }));
+
+  const averageDots = axisPoints.map((point) => ({
+    key: point.key,
+    x: center + Math.cos(point.angle) * outerRadius * point.averageNorm,
+    y: center + Math.sin(point.angle) * outerRadius * point.averageNorm,
+  }));
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -251,54 +394,135 @@ export function ProfileStatsTab({
           Stats joueur
         </h2>
 
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
-            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
-              Doublons
-            </p>
-            <p className="text-sm font-black text-cyan-200">
-              {formatPercent(overview.duplicateRate)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
-            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
-              Gros pulls
-            </p>
-            <p className="text-sm font-black text-emerald-200">
-              {formatPercent(overview.bigPullRate)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
-            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
-              PC gagnés moyen
-            </p>
-            <p className="text-sm font-black text-fuchsia-200">
-              {formatPc(overview.avgPcGained)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
-            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
-              PC dépensés moyen
-            </p>
-            <p className="text-sm font-black text-amber-200">
-              {formatPc(playerAvgPcSpent)}
-            </p>
-          </div>
-        </div>
+        <div className="mt-3 rounded-xl border border-slate-700/70 bg-slate-950/55 p-3">
+          <div className="mx-auto w-full max-w-[500px] overflow-visible">
+            <svg
+              viewBox={`0 0 ${radarSize} ${radarSize}`}
+              className="h-[360px] w-full overflow-visible"
+            >
+              <defs>
+                <radialGradient id="radar-core" cx="50%" cy="50%" r="65%">
+                  <stop offset="0%" stopColor="rgba(56,189,248,0.14)" />
+                  <stop offset="100%" stopColor="rgba(15,23,42,0.05)" />
+                </radialGradient>
+              </defs>
 
-        <div className="mt-4 space-y-2 text-sm text-slate-300">
-          <p>
-            Jeu favori:
-            <span className="ml-2 font-semibold text-cyan-200">
-              {overview.favoriteGame ?? "N/A"}
+              <circle
+                cx={center}
+                cy={center}
+                r={outerRadius + 8}
+                fill="url(#radar-core)"
+              />
+
+              {[0.25, 0.5, 0.75, 1].map((level) => (
+                <polygon
+                  key={level}
+                  points={toPolygon(axisPoints.map(() => level))}
+                  fill="none"
+                  stroke="rgba(100,116,139,0.42)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {axisPoints.map((point) => (
+                <line
+                  key={`line-${point.key}`}
+                  x1={center}
+                  y1={center}
+                  x2={point.x}
+                  y2={point.y}
+                  stroke="rgba(100,116,139,0.35)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              <polygon
+                points={averagePolygon}
+                fill="rgba(251,191,36,0.2)"
+                stroke="rgba(251,191,36,0.9)"
+                strokeWidth="2"
+              />
+              <polygon
+                points={playerPolygon}
+                fill="rgba(34,211,238,0.2)"
+                stroke="rgba(34,211,238,0.95)"
+                strokeWidth="2"
+              />
+
+              {averageDots.map((dot) => (
+                <circle
+                  key={`avg-dot-${dot.key}`}
+                  cx={dot.x}
+                  cy={dot.y}
+                  r="3.2"
+                  fill="rgba(251,191,36,1)"
+                  stroke="rgba(15,23,42,0.9)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {playerDots.map((dot) => (
+                <circle
+                  key={`player-dot-${dot.key}`}
+                  cx={dot.x}
+                  cy={dot.y}
+                  r="3.2"
+                  fill="rgba(34,211,238,1)"
+                  stroke="rgba(15,23,42,0.9)"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {axisPoints.map((point) => (
+                <text
+                  key={`label-${point.key}`}
+                  x={point.labelX}
+                  y={point.labelY}
+                  textAnchor={point.labelAnchor}
+                  dominantBaseline="middle"
+                  fill="rgba(241,245,249,0.96)"
+                  fontSize="11"
+                  fontWeight="700"
+                  style={{
+                    paintOrder: "stroke",
+                    stroke: "rgba(2,6,23,0.9)",
+                    strokeWidth: 2,
+                  }}
+                >
+                  <tspan x={point.labelX} dy="0">
+                    {point.label}
+                  </tspan>
+                  <tspan
+                    x={point.labelX}
+                    dy="12"
+                    fill="rgba(34,211,238,0.95)"
+                    fontSize="9.5"
+                  >
+                    J {formatRadarAxisValue(point.key, point.player)}
+                  </tspan>
+                  <tspan
+                    x={point.labelX}
+                    dy="11"
+                    fill="rgba(251,191,36,0.95)"
+                    fontSize="9.5"
+                  >
+                    M {formatRadarAxisValue(point.key, point.average)}
+                  </tspan>
+                </text>
+              ))}
+            </svg>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+            <span className="inline-flex items-center gap-1 text-cyan-200">
+              <span className="h-2.5 w-2.5 rounded-full bg-cyan-300" />
+              Joueur
             </span>
-          </p>
-          <p>
-            Valeur moyenne récupérée par ouverture:
-            <span className="ml-2 font-black text-cyan-200">
-              {intFormatter.format(Math.round(overview.avgPcGained))} PC
+            <span className="inline-flex items-center gap-1 text-amber-200">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+              Moyenne
             </span>
-          </p>
+          </div>
         </div>
       </article>
 

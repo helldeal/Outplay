@@ -208,7 +208,7 @@ export function SeriesSplitTiersPanel(props: {
                         aria-label={`Claim tier ${tier.tierLevel}`}
                       >
                         <div
-                          className={`relative flex h-10 w-10 items-center justify-center rounded-full border-[3px] transition-all duration-200 ${"border-amber-400 bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-[0_0_16px_rgba(251,191,36,0.4)]"}`}
+                          className={`relative flex h-10 w-10 items-center justify-center rounded-full border-[3px] transition-all duration-200 ${"border-amber-400 bg-gradient-to-r from-amber-300 to-amber-500  text-amber-700 shadow-[0_0_16px_rgba(251,191,36,0.4)]"}`}
                         >
                           {isClaimingThisTier ? (
                             <LoaderCircle className="h-4 w-4 animate-spin" />
