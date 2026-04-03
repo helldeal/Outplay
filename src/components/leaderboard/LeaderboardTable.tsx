@@ -159,7 +159,7 @@ export function LeaderboardTable({
                         <span className="inline-block h-8 w-6 rounded bg-slate-800/70" />
                       )}
                       <span
-                        className={`truncate text-xs font-black uppercase text-transparent bg-clip-text ${rarityNameGradient(
+                        className={`truncate text-xs font-black text-transparent bg-clip-text ${rarityNameGradient(
                           row.signatureCardRarity,
                         )}`}
                       >
