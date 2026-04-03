@@ -83,6 +83,23 @@ export function rarityLabel(rarity: Rarity | string | null): string {
   }
 }
 
+export function rarityNameGradient(rarity: Rarity | string | null): string {
+  switch (rarity) {
+    case "LEGENDS":
+      return "bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-400";
+    case "WORLD_CLASS":
+      return "bg-gradient-to-r from-orange-400 to-orange-600";
+    case "CHAMPION":
+      return "bg-gradient-to-r from-purple-400 to-purple-600";
+    case "CHALLENGER":
+      return "bg-gradient-to-r from-blue-400 to-blue-600";
+    case "ROOKIE":
+      return "bg-gradient-to-r from-slate-200 to-slate-400";
+    default:
+      return "bg-gradient-to-r from-slate-300 to-slate-500";
+  }
+}
+
 /** Tailwind border-color class for a rarity. */
 export function rarityBorderColor(rarity: Rarity | string | null): string {
   switch (rarity) {

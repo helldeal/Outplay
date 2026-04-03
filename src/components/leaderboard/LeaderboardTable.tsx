@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardRow } from "../../query/leaderboard";
+import { rarityNameGradient } from "../../utils/rarity";
 import { getTitleColorClass } from "../../utils/title-style";
 import { ScoreBreakdownTooltip } from "../score/ScoreBreakdownTooltip";
 import { PlayerAvatar } from "./PlayerAvatar";
@@ -47,9 +48,11 @@ export function LeaderboardTable({
           <tr className="border-b border-slate-800 text-[10px] uppercase tracking-widest text-slate-500">
             <th className="px-4 py-3 text-center font-bold">#</th>
             <th className="px-4 py-3 text-left font-bold">Joueur</th>
+            <th className="px-4 py-3 text-center font-bold">Titre</th>
             <th className="px-4 py-3 text-center font-bold">Score</th>
             <th className="px-4 py-3 text-center font-bold">Cartes</th>
             <th className="px-4 py-3 text-center font-bold">Achv.</th>
+            <th className="px-4 py-3 text-left font-bold">Signature</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800/60">
@@ -100,14 +103,21 @@ export function LeaderboardTable({
                         username={row.username}
                         size="sm"
                       />
-                      <span
-                        className={`truncate font-semibold ${getTitleColorClass(
-                          row.title,
-                        )}`}
-                      >
+                      <span className="block truncate font-semibold text-white">
                         {row.username}
                       </span>
                     </Link>
+                  )}
+                </td>
+                <td
+                  className={`px-4 py-3 text-center ${getTitleColorClass(row?.title)}`}
+                >
+                  {isPlaceholder ? (
+                    <span className="inline-block h-3.5 w-14 rounded bg-slate-800/70" />
+                  ) : (
+                    <span className="block truncate font-bold">
+                      {row.title || "-"}
+                    </span>
                   )}
                 </td>
                 <td className="relative px-4 py-3 text-center text-indigo-300">
@@ -132,6 +142,33 @@ export function LeaderboardTable({
                 </td>
                 <td className="px-4 py-3 text-center text-amber-300">
                   {isPlaceholder ? "-" : row.achievementsUnlocked}
+                </td>
+                <td className="px-4">
+                  {isPlaceholder ? (
+                    <span className="inline-block h-3.5 w-24 rounded bg-slate-800/70" />
+                  ) : row.signatureCardName ? (
+                    <div className="flex min-w-0 items-center gap-2">
+                      {row.signatureCardImageUrl ? (
+                        <img
+                          src={row.signatureCardImageUrl}
+                          alt={row.signatureCardName}
+                          loading="lazy"
+                          className="h-8 w-6 rounded object-cover"
+                        />
+                      ) : (
+                        <span className="inline-block h-8 w-6 rounded bg-slate-800/70" />
+                      )}
+                      <span
+                        className={`truncate text-xs font-black uppercase text-transparent bg-clip-text ${rarityNameGradient(
+                          row.signatureCardRarity,
+                        )}`}
+                      >
+                        {row.signatureCardName}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-500">-</span>
+                  )}
                 </td>
               </tr>
             );

@@ -156,7 +156,7 @@ export function LeaderboardGlobalStats({
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <article className="rounded-xl border border-slate-800 bg-slate-950/65 p-4">
+        <article className="rounded-xl border border-slate-800 bg-slate-950/65 p-4 flex flex-col">
           <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-300">
             <PieChart className="h-4 w-4 text-cyan-300" />
             Répartition des boosters
@@ -165,8 +165,8 @@ export function LeaderboardGlobalStats({
           {stats.boosterDistribution.length === 0 ? (
             <p className="mt-3 text-sm text-slate-500">Aucune donnée.</p>
           ) : (
-            <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-              <div className="relative h-64 overflow-hidden rounded-lg border border-slate-800/80 bg-slate-900/70">
+            <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3 flex-1 flex flex-col">
+              <div className="relative h-64 overflow-hidden rounded-lg border border-slate-800/80 bg-slate-900/70 flex-1">
                 <div className="absolute inset-0 grid grid-rows-4">
                   <div className="border-b border-slate-800/60" />
                   <div className="border-b border-slate-800/60" />
@@ -233,58 +233,120 @@ export function LeaderboardGlobalStats({
 
         <article className="rounded-xl border border-slate-800 bg-slate-950/65 p-4">
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-300">
-            Cartes les plus tirées
+            Top score cartes
           </h3>
 
-          {stats.topDropCards.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Aucune donnée.</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {stats.topDropCards.map((card, index) => {
-                const imgSrc = resolveAssetUrl(card.cardImageUrl);
-                return (
-                  <li
-                    key={card.cardId}
-                    className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/70 p-2"
-                    style={{
-                      opacity: hasBeenVisible ? 1 : 0,
-                      transform: hasBeenVisible
-                        ? "translateY(0px)"
-                        : "translateY(16px)",
-                      transitionProperty: "opacity, transform",
-                      transitionDuration: "500ms",
-                      transitionTimingFunction: "ease-out",
-                      transitionDelay: `${180 + index * 65}ms`,
-                    }}
-                  >
-                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
-                      {imgSrc ? (
-                        <img
-                          src={imgSrc}
-                          alt={card.cardName}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.1em] text-emerald-300">
+                Top 5 meilleures
+              </p>
+              {stats.topBestScoreCards.length === 0 ? (
+                <p className="mt-2 text-sm text-slate-500">Aucune donnée.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {stats.topBestScoreCards.map((card, index) => {
+                    const imgSrc = resolveAssetUrl(card.cardImageUrl);
+                    return (
+                      <li
+                        key={`best-${card.cardId}`}
+                        className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/70 p-2"
+                        style={{
+                          opacity: hasBeenVisible ? 1 : 0,
+                          transform: hasBeenVisible
+                            ? "translateY(0px)"
+                            : "translateY(16px)",
+                          transitionProperty: "opacity, transform",
+                          transitionDuration: "500ms",
+                          transitionTimingFunction: "ease-out",
+                          transitionDelay: `${180 + index * 55}ms`,
+                        }}
                       >
-                        {rarityLabel(card.cardRarity)}
-                      </p>
-                      <p className="truncate text-sm font-semibold text-white">
-                        {card.cardName}
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold text-cyan-300">
-                      {scoreFormatter.format(card.dropsCount)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                        <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
+                          {imgSrc ? (
+                            <img
+                              src={imgSrc}
+                              alt={card.cardName}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+                          >
+                            {rarityLabel(card.cardRarity)}
+                          </p>
+                          <p className="truncate text-sm font-semibold text-white">
+                            {card.cardName}
+                          </p>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-300">
+                          {scoreFormatter.format(card.scoreValue)}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.1em] text-rose-300">
+                Top 5 pires
+              </p>
+              {stats.topWorstScoreCards.length === 0 ? (
+                <p className="mt-2 text-sm text-slate-500">Aucune donnée.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {stats.topWorstScoreCards.map((card, index) => {
+                    const imgSrc = resolveAssetUrl(card.cardImageUrl);
+                    return (
+                      <li
+                        key={`worst-${card.cardId}`}
+                        className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/70 p-2"
+                        style={{
+                          opacity: hasBeenVisible ? 1 : 0,
+                          transform: hasBeenVisible
+                            ? "translateY(0px)"
+                            : "translateY(16px)",
+                          transitionProperty: "opacity, transform",
+                          transitionDuration: "500ms",
+                          transitionTimingFunction: "ease-out",
+                          transitionDelay: `${240 + index * 55}ms`,
+                        }}
+                      >
+                        <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
+                          {imgSrc ? (
+                            <img
+                              src={imgSrc}
+                              alt={card.cardName}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+                          >
+                            {rarityLabel(card.cardRarity)}
+                          </p>
+                          <p className="truncate text-sm font-semibold text-white">
+                            {card.cardName}
+                          </p>
+                        </div>
+                        <span className="text-xs font-bold text-rose-300">
+                          {scoreFormatter.format(card.scoreValue)}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
         </article>
       </div>
     </section>

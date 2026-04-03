@@ -54,6 +54,8 @@ interface PublicProfileOverviewRpcRow {
   global_avg_duplicate_rate: number | string;
   global_avg_pc_spent: number | string;
   top_drop_cards: unknown;
+  top_best_score_cards: unknown;
+  top_worst_score_cards: unknown;
 }
 
 export interface PublicProfileOverview {
@@ -117,6 +119,32 @@ export interface PublicProfileOverview {
       | null;
     cardImageUrl: string | null;
     dropsCount: number;
+  }>;
+  topBestScoreCards: Array<{
+    cardId: string;
+    cardName: string;
+    cardRarity:
+      | "LEGENDS"
+      | "WORLD_CLASS"
+      | "CHAMPION"
+      | "CHALLENGER"
+      | "ROOKIE"
+      | null;
+    cardImageUrl: string | null;
+    scoreValue: number;
+  }>;
+  topWorstScoreCards: Array<{
+    cardId: string;
+    cardName: string;
+    cardRarity:
+      | "LEGENDS"
+      | "WORLD_CLASS"
+      | "CHAMPION"
+      | "CHALLENGER"
+      | "ROOKIE"
+      | null;
+    cardImageUrl: string | null;
+    scoreValue: number;
   }>;
 }
 
@@ -224,6 +252,11 @@ interface PublicProfileRecentAchievementRpcRow {
   reward_booster_type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
 }
 
+interface PublicProfileScoreCardsRpcRow {
+  top_best_score_cards: unknown;
+  top_worst_score_cards: unknown;
+}
+
 function parseNumber(input: number | string | null | undefined): number {
   if (typeof input === "number") {
     return Number.isFinite(input) ? input : 0;
@@ -235,6 +268,40 @@ function parseNumber(input: number | string | null | undefined): number {
   }
 
   return 0;
+}
+
+function parseTopScoreCards(value: unknown) {
+  const rows = Array.isArray(value)
+    ? (value as Array<Record<string, unknown>>)
+    : [];
+
+  return rows
+    .filter(
+      (item) =>
+        typeof item.card_id === "string" &&
+        typeof item.card_name === "string" &&
+        (typeof item.score_value === "number" ||
+          typeof item.score_value === "string"),
+    )
+    .map((item) => ({
+      cardId: item.card_id as string,
+      cardName: item.card_name as string,
+      cardRarity:
+        (item.card_rarity as
+          | "LEGENDS"
+          | "WORLD_CLASS"
+          | "CHAMPION"
+          | "CHALLENGER"
+          | "ROOKIE"
+          | null
+          | undefined) ?? null,
+      cardImageUrl: item.card_image_url
+        ? resolveAssetUrl(item.card_image_url as string)
+        : null,
+      scoreValue: parseNumber(
+        item.score_value as number | string | null | undefined,
+      ),
+    }));
 }
 
 function mapOverview(row: PublicProfileOverviewRpcRow): PublicProfileOverview {
@@ -269,6 +336,9 @@ function mapOverview(row: PublicProfileOverviewRpcRow): PublicProfileOverview {
         item.drops_count as number | string | null | undefined,
       ),
     }));
+
+  const topBestScoreCards = parseTopScoreCards(row.top_best_score_cards);
+  const topWorstScoreCards = parseTopScoreCards(row.top_worst_score_cards);
 
   return {
     userId: row.user_id,
@@ -310,6 +380,8 @@ function mapOverview(row: PublicProfileOverviewRpcRow): PublicProfileOverview {
     globalAvgDuplicateRate: parseNumber(row.global_avg_duplicate_rate),
     globalAvgPcSpent: parseNumber(row.global_avg_pc_spent),
     topDropCards,
+    topBestScoreCards,
+    topWorstScoreCards,
   };
 }
 
@@ -369,15 +441,24 @@ export function usePublicProfileOverviewQuery(userId?: string) {
     queryKey: publicProfileOverviewQueryKey(userId),
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.rpc(
-        "get_public_profile_overview",
-        {
+      const [
+        { data, error },
+        { data: scoreCardsData, error: scoreCardsError },
+      ] = await Promise.all([
+        supabase.rpc("get_public_profile_overview", {
           p_user_id: userId!,
-        },
-      );
+        }),
+        supabase.rpc("get_public_profile_score_cards", {
+          p_user_id: userId!,
+        }),
+      ]);
 
       if (error) {
         throw error;
+      }
+
+      if (scoreCardsError) {
+        throw scoreCardsError;
       }
 
       const first = ((data ?? []) as PublicProfileOverviewRpcRow[])[0];
@@ -399,9 +480,20 @@ export function usePublicProfileOverviewQuery(userId?: string) {
         ((descriptionData ?? []) as Array<{ description: string | null }>)[0] ??
         null;
 
+      const scoreCardsRow =
+        ((scoreCardsData ?? []) as PublicProfileScoreCardsRpcRow[])[0] ?? null;
+
+      const mappedOverview = mapOverview(first);
+
       return {
-        ...mapOverview(first),
+        ...mappedOverview,
         description: descriptionRow?.description ?? null,
+        topBestScoreCards: scoreCardsRow
+          ? parseTopScoreCards(scoreCardsRow.top_best_score_cards)
+          : mappedOverview.topBestScoreCards,
+        topWorstScoreCards: scoreCardsRow
+          ? parseTopScoreCards(scoreCardsRow.top_worst_score_cards)
+          : mappedOverview.topWorstScoreCards,
       };
     },
   });

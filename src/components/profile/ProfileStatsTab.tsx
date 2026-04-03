@@ -6,11 +6,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { PublicProfileOverview } from "../../query/profile";
-import {
-  rarityBorderColor,
-  rarityLabel,
-  rarityTextColor,
-} from "../../utils/rarity";
+import { rarityLabel, rarityTextColor } from "../../utils/rarity";
 
 const percentFormatter = new Intl.NumberFormat("fr-FR", {
   minimumFractionDigits: 2,
@@ -25,14 +21,16 @@ function formatPercent2(value: number): string {
   return `${percentFormatter.format(Math.max(0, value))}%`;
 }
 
+function formatPc(value: number): string {
+  return `${Math.max(0, value).toFixed(1)} PC`;
+}
+
 export function ProfileStatsTab({
   overview,
   intFormatter,
-  rarityCards,
 }: {
   overview: PublicProfileOverview;
   intFormatter: Intl.NumberFormat;
-  rarityCards: Array<{ label: string; value: number; tone: string }>;
 }) {
   const luckyPullRate = overview.bigPullRate;
   const playerDuplicateRate = Math.min(
@@ -91,6 +89,11 @@ export function ProfileStatsTab({
     1,
     ...boosterTypeShares.map((entry) => entry.value),
   );
+
+  const playerAvgPcSpent =
+    overview.totalOpenings > 0
+      ? overview.totalPcSpent / overview.totalOpenings
+      : 0;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -245,23 +248,42 @@ export function ProfileStatsTab({
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <ShieldCheck className="h-4 w-4 text-amber-300" />
-          Stats cartes
+          Stats joueur
         </h2>
 
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {rarityCards.map((entry) => (
-            <div
-              key={entry.label}
-              className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-2"
-            >
-              <p className={`text-xs font-semibold ${entry.tone}`}>
-                {entry.label}
-              </p>
-              <p className="mt-1 text-xl font-black text-white">
-                {intFormatter.format(entry.value)}
-              </p>
-            </div>
-          ))}
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
+            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
+              Doublons
+            </p>
+            <p className="text-sm font-black text-cyan-200">
+              {formatPercent(overview.duplicateRate)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
+            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
+              Gros pulls
+            </p>
+            <p className="text-sm font-black text-emerald-200">
+              {formatPercent(overview.bigPullRate)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
+            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
+              PC gagnés moyen
+            </p>
+            <p className="text-sm font-black text-fuchsia-200">
+              {formatPc(overview.avgPcGained)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-2">
+            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">
+              PC dépensés moyen
+            </p>
+            <p className="text-sm font-black text-amber-200">
+              {formatPc(playerAvgPcSpent)}
+            </p>
+          </div>
         </div>
 
         <div className="mt-4 space-y-2 text-sm text-slate-300">
@@ -277,66 +299,100 @@ export function ProfileStatsTab({
               {intFormatter.format(Math.round(overview.avgPcGained))} PC
             </span>
           </p>
-          <p>
-            Meilleure carte obtenue:
-            <span className="ml-2 font-semibold text-white">
-              {overview.bestCardName ?? "N/A"}
-            </span>
-            {overview.bestCardRarity ? (
-              <span
-                className={`ml-2 text-xs font-bold ${rarityTextColor(overview.bestCardRarity)}`}
-              >
-                {rarityLabel(overview.bestCardRarity)}
-              </span>
-            ) : null}
-          </p>
         </div>
       </article>
 
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <ScanSearch className="h-4 w-4 text-fuchsia-300" />
-          Cartes les plus tirées
+          Stats cartes
         </h2>
 
-        {(overview.topDropCards ?? []).length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">Aucune donnée de tirage.</p>
-        ) : (
-          <div className="mt-3 space-y-2">
-            {(overview.topDropCards ?? []).map((card) => (
-              <div
-                key={card.cardId}
-                className={`flex items-center gap-3 rounded-xl border bg-slate-950/55 p-2 ${rarityBorderColor(
-                  card.cardRarity,
-                )}`}
-              >
-                <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
-                  {card.cardImageUrl ? (
-                    <img
-                      src={card.cardImageUrl}
-                      alt={card.cardName}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.1em] text-emerald-300">
+              Top 5 meilleures cartes
+            </p>
+            {(overview.topBestScoreCards ?? []).length === 0 ? (
+              <p className="mt-2 text-sm text-slate-400">Aucune donnée.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {(overview.topBestScoreCards ?? []).map((card) => (
+                  <div
+                    key={`best-${card.cardId}`}
+                    className={`flex items-center gap-3 rounded-xl border bg-slate-950/55 p-2 border-slate-800`}
                   >
-                    {rarityLabel(card.cardRarity)}
-                  </p>
-                  <p className="truncate text-sm font-semibold text-white">
-                    {card.cardName}
-                  </p>
-                </div>
-                <p className="text-xs font-black text-fuchsia-300">
-                  x{intFormatter.format(card.dropsCount)}
-                </p>
+                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
+                      {card.cardImageUrl ? (
+                        <img
+                          src={card.cardImageUrl}
+                          alt={card.cardName}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+                      >
+                        {rarityLabel(card.cardRarity)}
+                      </p>
+                      <p className="truncate text-sm font-semibold text-white">
+                        {card.cardName}
+                      </p>
+                    </div>
+                    <p className="text-xs font-black text-emerald-300">
+                      {intFormatter.format(card.scoreValue)}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.1em] text-rose-300">
+              Top 5 pires cartes
+            </p>
+            {(overview.topWorstScoreCards ?? []).length === 0 ? (
+              <p className="mt-2 text-sm text-slate-400">Aucune donnée.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {(overview.topWorstScoreCards ?? []).map((card) => (
+                  <div
+                    key={`worst-${card.cardId}`}
+                    className={`flex items-center gap-3 rounded-xl border bg-slate-950/55 p-2 border-slate-800`}
+                  >
+                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-black">
+                      {card.cardImageUrl ? (
+                        <img
+                          src={card.cardImageUrl}
+                          alt={card.cardName}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-wider ${rarityTextColor(card.cardRarity)}`}
+                      >
+                        {rarityLabel(card.cardRarity)}
+                      </p>
+                      <p className="truncate text-sm font-semibold text-white">
+                        {card.cardName}
+                      </p>
+                    </div>
+                    <p className="text-xs font-black text-rose-300">
+                      {intFormatter.format(card.scoreValue)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </article>
     </div>
   );

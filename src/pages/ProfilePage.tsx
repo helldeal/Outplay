@@ -29,7 +29,7 @@ import {
   usePublicProfileRecentOpeningsQuery,
 } from "../query/profile";
 import { getTitleColorClass } from "../utils/title-style";
-import { rarityLabel, rarityTextColor } from "../utils/rarity";
+import { rarityLabel, rarityNameGradient } from "../utils/rarity";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
 export function ProfilePage() {
@@ -93,26 +93,6 @@ export function ProfilePage() {
 
     return availableTitlesQuery.data ?? [];
   }, [availableTitlesQuery.data, isOwnProfile]);
-
-  const rarityCards = overviewQuery.data
-    ? [
-        {
-          label: "Legends",
-          value: overviewQuery.data.legendsOwned,
-          tone: "text-amber-300",
-        },
-        {
-          label: "World Class",
-          value: overviewQuery.data.worldClassOwned,
-          tone: "text-orange-300",
-        },
-        {
-          label: "Champion",
-          value: overviewQuery.data.championOwned,
-          tone: "text-purple-300",
-        },
-      ]
-    : [];
 
   if (!targetUserId) {
     return (
@@ -340,7 +320,9 @@ export function ProfilePage() {
                 {overview.signatureCardName ? (
                   <>
                     <p
-                      className={`text-lg truncate font-black uppercase tracking-tighter ${rarityTextColor(overview.signatureCardRarity)}`}
+                      className={`text-lg truncate font-black uppercase tracking-tighter text-transparent bg-clip-text ${rarityNameGradient(
+                        overview.signatureCardRarity,
+                      )}`}
                     >
                       {overview.signatureCardName}
                     </p>
@@ -490,11 +472,7 @@ export function ProfilePage() {
       {tab === "collection" ? (
         <ProfileCollectionTab collection={collection} />
       ) : tab === "stats" ? (
-        <ProfileStatsTab
-          overview={overview}
-          intFormatter={intFormatter}
-          rarityCards={rarityCards}
-        />
+        <ProfileStatsTab overview={overview} intFormatter={intFormatter} />
       ) : (
         <ProfileActivityTab
           intFormatter={intFormatter}
