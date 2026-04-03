@@ -84,7 +84,7 @@ export function HomePage() {
           className="absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-fuchsia-300/45 bg-fuchsia-300/12 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-100 transition hover:border-fuchsia-200/70 hover:bg-fuchsia-300/22"
         >
           <GitCommitHorizontal className="h-3.5 w-3.5" />
-          Patch Notes {milestones[0].version}
+          Patch Notes {milestones[1].version}
         </Link>
 
         <div className="relative flex flex-wrap items-start justify-between gap-5">
