@@ -67,8 +67,6 @@ export function SeriesSplitMissionsPanel(props: {
                   ? "border-amber-300/45 bg-amber-500/10 relative overflow-hidden"
                   : "border-slate-800 bg-slate-950/70"
             }`}
-            whileHover={{ scale: 1.02, y: -2 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
             {mission.completed ? (
               <motion.div

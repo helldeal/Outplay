@@ -18,6 +18,28 @@ import type { SeriesSplitTier } from "../../query/series-split";
 
 const pointsFormatter = new Intl.NumberFormat("fr-FR");
 
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+    },
+  },
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
+
 function RewardIcon({ type }: { type: "pc" | "booster" | "title" }) {
   switch (type) {
     case "pc":
@@ -88,9 +110,9 @@ export function SeriesSplitTiersPanel(props: {
   return (
     <motion.div
       className="space-y-4"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -106,10 +128,15 @@ export function SeriesSplitTiersPanel(props: {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.06),transparent_60%)]" />
 
         <div className="relative p-4">
-          <div className="relative flex flex-col gap-1">
+          <motion.div
+            className="relative flex flex-col gap-1"
+            variants={containerVariants}
+          >
             {sortedTiers.map((tier, index) => {
               const isReached = props.totalPoints >= tier.pointsRequired;
               const isNextTier = index === nextTierIndex;
+              const isClaimingThisTier =
+                props.claimingTierLevel === tier.tierLevel;
 
               const rewards = [] as Array<{
                 key: string;
@@ -153,9 +180,7 @@ export function SeriesSplitTiersPanel(props: {
                 <motion.div
                   key={tier.tierLevel}
                   className="relative flex items-center gap-3 py-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03, duration: 0.3 }}
+                  variants={itemVariants}
                 >
                   {/* Tier node */}
                   <div className="relative z-10 flex-shrink-0">
@@ -174,29 +199,45 @@ export function SeriesSplitTiersPanel(props: {
                       />
                     )}
 
-                    <div
-                      className={`relative flex h-10 w-10 items-center justify-center rounded-full border-[3px] transition-all duration-200 ${
-                        tier.claimed
-                          ? "border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_0_16px_rgba(16,185,129,0.4)]"
-                          : tier.canClaim
-                            ? "border-amber-400 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-[0_0_16px_rgba(251,191,36,0.4)]"
+                    {tier.canClaim ? (
+                      <button
+                        type="button"
+                        disabled={props.claimingTierLevel !== null}
+                        onClick={() => props.onClaimTier(tier.tierLevel)}
+                        className="cursor-pointer"
+                        aria-label={`Claim tier ${tier.tierLevel}`}
+                      >
+                        <div
+                          className={`relative flex h-10 w-10 items-center justify-center rounded-full border-[3px] transition-all duration-200 ${"border-amber-400 bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-[0_0_16px_rgba(251,191,36,0.4)]"}`}
+                        >
+                          {isClaimingThisTier ? (
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Crown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </button>
+                    ) : (
+                      <div
+                        className={`relative flex h-10 w-10 items-center justify-center rounded-full border-[3px] transition-all duration-200 ${
+                          tier.claimed
+                            ? "border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_0_16px_rgba(16,185,129,0.4)]"
                             : isReached
                               ? "border-cyan-400 bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-[0_0_12px_rgba(34,211,238,0.3)]"
                               : "border-slate-700 bg-slate-900 text-slate-500"
-                      }`}
-                    >
-                      {tier.claimed ? (
-                        <CheckCircle2 className="h-4 w-4" />
-                      ) : tier.canClaim ? (
-                        <Crown className="h-4 w-4" />
-                      ) : isReached ? (
-                        <Sparkles className="h-4 w-4" />
-                      ) : (
-                        <span className="text-xs font-black">
-                          {tier.tierLevel}
-                        </span>
-                      )}
-                    </div>
+                        }`}
+                      >
+                        {tier.claimed ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : isReached ? (
+                          <Sparkles className="h-4 w-4" />
+                        ) : (
+                          <span className="text-xs font-black">
+                            {tier.tierLevel}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     {!isReached && (
                       <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 ring-2 ring-slate-900">
@@ -211,7 +252,7 @@ export function SeriesSplitTiersPanel(props: {
                       tier.claimed
                         ? "border-emerald-500/20 bg-emerald-950/40"
                         : tier.canClaim
-                          ? "border-amber-500/30 bg-amber-950/40"
+                          ? "border-amber-400/35 bg-amber-500/10"
                           : isReached
                             ? "border-cyan-500/20 bg-cyan-950/30"
                             : "border-slate-800 bg-slate-900/50"
@@ -264,38 +305,17 @@ export function SeriesSplitTiersPanel(props: {
                       </div>
                     </div>
 
-                    {/* Right: Points & Claim */}
+                    {/* Right: Points & state */}
                     <div className="relative z-10 flex items-center gap-3">
                       <span className="text-[10px] font-medium text-slate-500">
                         {pointsFormatter.format(tier.pointsRequired)} pts
                       </span>
-
-                      {tier.canClaim ? (
-                        <button
-                          type="button"
-                          disabled={props.claimingTierLevel !== null}
-                          onClick={() => props.onClaimTier(tier.tierLevel)}
-                          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-lg transition hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/25 disabled:opacity-50"
-                        >
-                          {props.claimingTierLevel === tier.tierLevel ? (
-                            <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <>
-                              <Gift className="h-3.5 w-3.5" />
-                            </>
-                          )}
-                        </button>
-                      ) : tier.claimed ? (
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        </span>
-                      ) : null}
                     </div>
                   </div>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </div>
     </motion.div>
