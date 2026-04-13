@@ -35,6 +35,8 @@ export function ProfileStatsTab({
       avgPcGained: number;
       avgPcSpent: number;
       valueScoreRatio: number;
+      avgBoosterOpeningsPerDay: number;
+      avgBoosterProfitability: number;
     };
     average: {
       duplicateRate: number;
@@ -42,6 +44,8 @@ export function ProfileStatsTab({
       avgPcGained: number;
       avgPcSpent: number;
       valueScoreRatio: number;
+      avgBoosterOpeningsPerDay: number;
+      avgBoosterProfitability: number;
     };
     max: {
       duplicateRate: number;
@@ -49,6 +53,8 @@ export function ProfileStatsTab({
       avgPcGained: number;
       avgPcSpent: number;
       valueScoreRatio: number;
+      avgBoosterOpeningsPerDay: number;
+      avgBoosterProfitability: number;
     };
     min: {
       duplicateRate: number;
@@ -56,6 +62,8 @@ export function ProfileStatsTab({
       avgPcGained: number;
       avgPcSpent: number;
       valueScoreRatio: number;
+      avgBoosterOpeningsPerDay: number;
+      avgBoosterProfitability: number;
     };
   };
 }) {
@@ -152,11 +160,27 @@ export function ProfileStatsTab({
     },
     {
       key: "valueScoreRatio",
-      label: "Ratio valeur / score",
+      label: "Ratio score / valeur",
       player: Math.max(0, radarStats.player.valueScoreRatio),
       average: Math.max(0, radarStats.average.valueScoreRatio),
       max: Math.max(1, radarStats.max.valueScoreRatio),
       min: Math.max(0, radarStats.min.valueScoreRatio),
+    },
+    {
+      key: "avgBoosterOpeningsPerDay",
+      label: "Ouvertures / jour",
+      player: Math.max(0, radarStats.player.avgBoosterOpeningsPerDay),
+      average: Math.max(0, radarStats.average.avgBoosterOpeningsPerDay),
+      max: Math.max(1, radarStats.max.avgBoosterOpeningsPerDay),
+      min: Math.max(0, radarStats.min.avgBoosterOpeningsPerDay),
+    },
+    {
+      key: "avgBoosterProfitability",
+      label: "Rentabilité boosters",
+      player: Math.max(0, radarStats.player.avgBoosterProfitability),
+      average: Math.max(0, radarStats.average.avgBoosterProfitability),
+      max: Math.max(1, radarStats.max.avgBoosterProfitability),
+      min: Math.max(0, radarStats.min.avgBoosterProfitability),
     },
   ] as const;
 
@@ -207,6 +231,12 @@ export function ProfileStatsTab({
     }
     if (axisKey === "valueScoreRatio") {
       return value.toFixed(3);
+    }
+    if (
+      axisKey === "avgBoosterOpeningsPerDay" ||
+      axisKey === "avgBoosterProfitability"
+    ) {
+      return value.toFixed(2);
     }
     return intFormatter.format(Math.round(value));
   };

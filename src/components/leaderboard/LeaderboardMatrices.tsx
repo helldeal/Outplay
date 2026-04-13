@@ -264,7 +264,7 @@ export function LeaderboardMatrices({
     sortedPlayers,
     currentUserId,
     (player) => safeRatio(player.avgPcGained, player.avgPcSpent),
-    (player) => safeRatio(player.totalCardValue, player.cardScore),
+    (player) => safeRatio(player.cardScore, player.totalCardValue),
     { x: 0.4, y: 0.2 },
   );
 
@@ -326,7 +326,7 @@ export function LeaderboardMatrices({
 
         <MatrixCard
           title="Matrice de rentabilité"
-          subtitle="Ratio valeur cartes / score réel cartes (Y) vs ratio gain / dépense (X)"
+          subtitle="Ratio score réel cartes / valeur cartes (Y) vs ratio gain / dépense (X)"
           icon={<Coins className="h-4 w-4 text-amber-300" />}
           points={profitPoints}
           cornerLabels={{
@@ -336,7 +336,7 @@ export function LeaderboardMatrices({
             bottomRight: "Sous-optimal",
           }}
           tooltipFormatter={(point) =>
-            `${point.username} · ${formatRatio(point.xValue)} gain/dépense · ${formatRatio(point.yValue)} valeur/score réel cartes`
+            `${point.username} · ${formatRatio(point.xValue)} gain/dépense · ${formatRatio(point.yValue)} score réel/valeur cartes`
           }
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}
