@@ -14,7 +14,14 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 type NavClassParams = { isActive: boolean };
 
@@ -52,6 +59,7 @@ type AppHeaderProps = {
   avatarUrl: string | null;
   username: string;
   userEmail?: string | null;
+  profileMenuContent?: ReactNode;
   onLogout: () => void;
   initials: string;
 };
@@ -90,6 +98,7 @@ export function AppHeader({
   avatarUrl,
   username,
   userEmail,
+  profileMenuContent,
   onLogout,
   initials,
 }: AppHeaderProps) {
@@ -435,7 +444,7 @@ export function AppHeader({
                 </button>
 
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-slate-700/80 bg-slate-900/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl">
+                  <div className="absolute right-0 z-20 mt-2 w-64 rounded-2xl border border-slate-700/80 bg-slate-900/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl">
                     <div className="mb-2 rounded-xl bg-slate-800/70 px-3 py-2">
                       <p className="truncate text-sm font-medium text-slate-100">
                         {username}
@@ -444,6 +453,9 @@ export function AppHeader({
                         {userEmail}
                       </p>
                     </div>
+                    {profileMenuContent ? (
+                      <div className="mb-2 px-1 py-1">{profileMenuContent}</div>
+                    ) : null}
                     <Link
                       to="/profile"
                       onClick={onCloseProfileMenu}

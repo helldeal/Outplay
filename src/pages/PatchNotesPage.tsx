@@ -16,6 +16,19 @@ export const milestones = [
     ],
   },
   {
+    version: "v1.2.2",
+    date: "14 avril 2026",
+    title: "Améliorations des stats & Corrections de bugs",
+    tone: "border-emerald-300/35 bg-emerald-400/10 text-emerald-100",
+    updates: [
+      "Ajout de nouvelles statistiques sur le profil.",
+      "Correction du bug qui auto attibuait les titres du series split au claim.",
+      "Correction du ratio score réel / valeur des cartes pour la 2ème matrice du leaderboard. (Le ratio était inversé, Oups.., c'est plus logique comme maintenant)",
+      "Affichage et sélection de la série ciblé dans le dropdown de l'utilisateur.",
+      "Parrainage ajouté dans le dropdown de l'utilisateur.",
+    ],
+  },
+  {
     version: "v1.2.1",
     date: "3 avril 2026",
     title: "Corrections de bugs & Ajustements visuels",

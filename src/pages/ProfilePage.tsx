@@ -505,8 +505,13 @@ export function ProfilePage() {
                     ? overview.totalPcSpent / overview.totalOpenings
                     : 0,
                 valueScoreRatio: safeRatio(
-                  playerTotalCardValueBase,
                   scoreCardPoints,
+                  playerTotalCardValueBase,
+                ),
+                avgBoosterOpeningsPerDay: 0,
+                avgBoosterProfitability: safeRatio(
+                  playerTotalCardValueBase,
+                  overview.totalPcSpent,
                 ),
               },
               average: {
@@ -515,8 +520,13 @@ export function ProfilePage() {
                 avgPcGained: Math.max(0, overview.avgPcGained),
                 avgPcSpent: Math.max(0, overview.globalAvgPcSpent),
                 valueScoreRatio: safeRatio(
-                  playerTotalCardValueBase,
                   scoreCardPoints,
+                  playerTotalCardValueBase,
+                ),
+                avgBoosterOpeningsPerDay: 0,
+                avgBoosterProfitability: safeRatio(
+                  playerTotalCardValueBase,
+                  overview.totalPcSpent,
                 ),
               },
               max: {
@@ -533,7 +543,12 @@ export function ProfilePage() {
                 avgPcGained: Math.max(Math.max(0, overview.avgPcGained), 1),
                 avgPcSpent: Math.max(Math.max(0, overview.globalAvgPcSpent), 1),
                 valueScoreRatio: Math.max(
-                  safeRatio(playerTotalCardValueBase, scoreCardPoints),
+                  safeRatio(scoreCardPoints, playerTotalCardValueBase),
+                  1,
+                ),
+                avgBoosterOpeningsPerDay: 1,
+                avgBoosterProfitability: Math.max(
+                  safeRatio(playerTotalCardValueBase, overview.totalPcSpent),
                   1,
                 ),
               },
@@ -549,8 +564,13 @@ export function ProfilePage() {
                 avgPcGained: Math.max(0, overview.avgPcGained),
                 avgPcSpent: Math.max(0, overview.globalAvgPcSpent),
                 valueScoreRatio: safeRatio(
-                  playerTotalCardValueBase,
                   scoreCardPoints,
+                  playerTotalCardValueBase,
+                ),
+                avgBoosterOpeningsPerDay: 0,
+                avgBoosterProfitability: safeRatio(
+                  playerTotalCardValueBase,
+                  overview.totalPcSpent,
                 ),
               },
             }

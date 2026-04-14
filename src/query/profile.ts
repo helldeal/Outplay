@@ -266,21 +266,29 @@ interface PublicProfileRadarStatsRpcRow {
   player_avg_pc_gained: number | string;
   player_avg_pc_spent: number | string;
   player_value_score_ratio: number | string;
+  player_avg_booster_openings_per_day: number | string;
+  player_avg_booster_profitability: number | string;
   avg_duplicate_rate: number | string;
   avg_big_pull_rate: number | string;
   avg_avg_pc_gained: number | string;
   avg_avg_pc_spent: number | string;
   avg_value_score_ratio: number | string;
+  avg_avg_booster_openings_per_day: number | string;
+  avg_avg_booster_profitability: number | string;
   max_duplicate_rate: number | string;
   max_big_pull_rate: number | string;
   max_avg_pc_gained: number | string;
   max_avg_pc_spent: number | string;
   max_value_score_ratio: number | string;
+  max_avg_booster_openings_per_day: number | string;
+  max_avg_booster_profitability: number | string;
   min_duplicate_rate: number | string;
   min_big_pull_rate: number | string;
   min_avg_pc_gained: number | string;
   min_avg_pc_spent: number | string;
   min_value_score_ratio: number | string;
+  min_avg_booster_openings_per_day: number | string;
+  min_avg_booster_profitability: number | string;
 }
 
 export interface PublicProfileRadarStats {
@@ -290,6 +298,8 @@ export interface PublicProfileRadarStats {
     avgPcGained: number;
     avgPcSpent: number;
     valueScoreRatio: number;
+    avgBoosterOpeningsPerDay: number;
+    avgBoosterProfitability: number;
   };
   average: {
     duplicateRate: number;
@@ -297,6 +307,8 @@ export interface PublicProfileRadarStats {
     avgPcGained: number;
     avgPcSpent: number;
     valueScoreRatio: number;
+    avgBoosterOpeningsPerDay: number;
+    avgBoosterProfitability: number;
   };
   max: {
     duplicateRate: number;
@@ -304,6 +316,8 @@ export interface PublicProfileRadarStats {
     avgPcGained: number;
     avgPcSpent: number;
     valueScoreRatio: number;
+    avgBoosterOpeningsPerDay: number;
+    avgBoosterProfitability: number;
   };
   min: {
     duplicateRate: number;
@@ -311,6 +325,8 @@ export interface PublicProfileRadarStats {
     avgPcGained: number;
     avgPcSpent: number;
     valueScoreRatio: number;
+    avgBoosterOpeningsPerDay: number;
+    avgBoosterProfitability: number;
   };
 }
 
@@ -720,6 +736,12 @@ export function usePublicProfileRadarStatsQuery(userId?: string) {
           avgPcGained: parseNumber(row.player_avg_pc_gained),
           avgPcSpent: parseNumber(row.player_avg_pc_spent),
           valueScoreRatio: parseNumber(row.player_value_score_ratio),
+          avgBoosterOpeningsPerDay: parseNumber(
+            row.player_avg_booster_openings_per_day,
+          ),
+          avgBoosterProfitability: parseNumber(
+            row.player_avg_booster_profitability,
+          ),
         },
         average: {
           duplicateRate: parseNumber(row.avg_duplicate_rate),
@@ -727,6 +749,12 @@ export function usePublicProfileRadarStatsQuery(userId?: string) {
           avgPcGained: parseNumber(row.avg_avg_pc_gained),
           avgPcSpent: parseNumber(row.avg_avg_pc_spent),
           valueScoreRatio: parseNumber(row.avg_value_score_ratio),
+          avgBoosterOpeningsPerDay: parseNumber(
+            row.avg_avg_booster_openings_per_day,
+          ),
+          avgBoosterProfitability: parseNumber(
+            row.avg_avg_booster_profitability,
+          ),
         },
         max: {
           duplicateRate: Math.max(1, parseNumber(row.max_duplicate_rate)),
@@ -734,6 +762,14 @@ export function usePublicProfileRadarStatsQuery(userId?: string) {
           avgPcGained: Math.max(1, parseNumber(row.max_avg_pc_gained)),
           avgPcSpent: Math.max(1, parseNumber(row.max_avg_pc_spent)),
           valueScoreRatio: Math.max(1, parseNumber(row.max_value_score_ratio)),
+          avgBoosterOpeningsPerDay: Math.max(
+            1,
+            parseNumber(row.max_avg_booster_openings_per_day),
+          ),
+          avgBoosterProfitability: Math.max(
+            1,
+            parseNumber(row.max_avg_booster_profitability),
+          ),
         },
         min: {
           duplicateRate: parseNumber(row.min_duplicate_rate),
@@ -741,6 +777,12 @@ export function usePublicProfileRadarStatsQuery(userId?: string) {
           avgPcGained: parseNumber(row.min_avg_pc_gained),
           avgPcSpent: parseNumber(row.min_avg_pc_spent),
           valueScoreRatio: parseNumber(row.min_value_score_ratio),
+          avgBoosterOpeningsPerDay: parseNumber(
+            row.min_avg_booster_openings_per_day,
+          ),
+          avgBoosterProfitability: parseNumber(
+            row.min_avg_booster_profitability,
+          ),
         },
       } as PublicProfileRadarStats;
     },

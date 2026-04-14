@@ -2,6 +2,8 @@ import { useLegendexSeriesQuery } from "../query/legendex";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthProvider";
+import { supabase } from "../lib/supabase";
+import { useUpdateUserTargetSeriesMutation } from "../query/legendex";
 import { resolveRewardTone } from "./rewards/reward-theme";
 import {
   AchievementToasts,
@@ -98,11 +100,18 @@ export function AppLayout() {
   const { user, profile, logout, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
   const seriesQuery = useLegendexSeriesQuery();
+  const updateTargetSeriesMutation = useUpdateUserTargetSeriesMutation(
+    user?.id,
+  );
   const navigate = useNavigate();
   const [isOpeningDaily, setIsOpeningDaily] = useState(false);
   const [isClaimingStreak, setIsClaimingStreak] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
+  const [targetSeriesDraftId, setTargetSeriesDraftId] = useState("");
+  const [referralCodeDraft, setReferralCodeDraft] = useState("");
+  const [targetSeriesFeedback, setTargetSeriesFeedback] = useState("");
+  const [referralFeedback, setReferralFeedback] = useState("");
   const [dailyCountdown, setDailyCountdown] = useState("00:00:00");
   const [hasTriggeredResetRefresh, setHasTriggeredResetRefresh] =
     useState(false);
@@ -129,6 +138,10 @@ export function AppLayout() {
   const seriesSplitNotificationsQuery = useSeriesSplitNotificationsQuery(
     user?.id,
   );
+
+  useEffect(() => {
+    setTargetSeriesDraftId(profile?.target_series_id ?? "");
+  }, [profile?.target_series_id]);
 
   const rawUsername =
     profile?.username ??
@@ -318,6 +331,151 @@ export function AppLayout() {
     (seriesQuery.data ?? []).find(
       (series) => series.id === profile?.target_series_id,
     )?.code ?? dailyTargetQuery.data?.series.code;
+  const referredByAlreadyUsed = Boolean(profile?.referred_by_user_id);
+
+  const saveTargetSeries = async () => {
+    if (!user?.id || !targetSeriesDraftId) {
+      return;
+    }
+
+    if (targetSeriesDraftId === profile?.target_series_id) {
+      setTargetSeriesFeedback("=");
+      return;
+    }
+
+    try {
+      await updateTargetSeriesMutation.mutateAsync(targetSeriesDraftId);
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["user-target-series", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["login-streak-status", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-progress", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-unseen-count", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["achievements-notifications", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["series-split", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["series-split-unseen-count", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["series-split-notifications", user.id],
+        }),
+        refreshProfile(),
+      ]);
+      setTargetSeriesFeedback("✓");
+    } catch {
+      setTargetSeriesFeedback("!");
+    }
+  };
+
+  const applyReferralCode = async () => {
+    if (!user || referredByAlreadyUsed) {
+      return;
+    }
+
+    const normalizedReferralCode = referralCodeDraft.trim().toUpperCase();
+    if (!normalizedReferralCode) {
+      return;
+    }
+
+    const { error } = await supabase.rpc("claim_referral_code", {
+      p_referral_code: normalizedReferralCode,
+      p_user_id: user.id,
+    });
+
+    if (error) {
+      setReferralFeedback("!");
+      return;
+    }
+
+    setReferralCodeDraft("");
+    setReferralFeedback("✓");
+    await refreshProfile();
+    await queryClient.invalidateQueries({
+      queryKey: ["leaderboard"],
+      refetchType: "active",
+    });
+  };
+
+  const profileMenuContent = (
+    <div className="space-y-1.5 text-xs">
+      <div className="flex items-center gap-1.5">
+        <span className="w-10 shrink-0 text-slate-400">Série</span>
+        <select
+          value={targetSeriesDraftId}
+          onChange={(event) => {
+            setTargetSeriesDraftId(event.target.value);
+            setTargetSeriesFeedback("");
+          }}
+          className="h-8 min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-2 text-xs text-slate-100 outline-none transition focus:border-cyan-400"
+        >
+          {(seriesQuery.data ?? []).map((series) => (
+            <option key={series.id} value={series.id}>
+              {series.code}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => {
+            void saveTargetSeries();
+          }}
+          disabled={
+            updateTargetSeriesMutation.isPending ||
+            !targetSeriesDraftId ||
+            targetSeriesDraftId === profile?.target_series_id
+          }
+          className="h-8 rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-2 text-[11px] font-semibold text-cyan-100 transition hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          OK
+        </button>
+        <span className="w-3 text-center text-slate-400">
+          {targetSeriesFeedback}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <span className="w-10 shrink-0 text-slate-400">Code</span>
+        <input
+          value={referralCodeDraft}
+          onChange={(event) => {
+            setReferralCodeDraft(event.target.value);
+            setReferralFeedback("");
+          }}
+          disabled={referredByAlreadyUsed}
+          placeholder={referredByAlreadyUsed ? "Utilisé" : "Parrainage"}
+          className="h-8 min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-2 text-xs text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            void applyReferralCode();
+          }}
+          disabled={referredByAlreadyUsed || !referralCodeDraft.trim()}
+          className="h-8 rounded-lg border border-amber-400/40 bg-amber-400/10 px-2 text-[11px] font-semibold text-amber-100 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          OK
+        </button>
+        <span
+          className={`w-8 text-center text-[10px] ${
+            referredByAlreadyUsed ? "text-amber-200" : "text-slate-400"
+          }`}
+        >
+          {referredByAlreadyUsed ? "" : referralFeedback}
+        </span>
+      </div>
+    </div>
+  );
 
   const nextStreakTone = resolveRewardTone({
     rewardPc:
@@ -537,6 +695,7 @@ export function AppLayout() {
         avatarUrl={avatarUrl}
         username={username}
         userEmail={user?.email}
+        profileMenuContent={profileMenuContent}
         onLogout={() => {
           setIsProfileMenuOpen(false);
           void logout();

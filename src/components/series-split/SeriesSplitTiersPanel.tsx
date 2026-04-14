@@ -24,7 +24,7 @@ const itemVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.4,
+      duration: 0.22,
     },
   },
 };
@@ -34,8 +34,8 @@ const containerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
+      staggerChildren: 0.04,
+      delayChildren: 0.05,
     },
   },
 };
@@ -192,7 +192,7 @@ export function SeriesSplitTiersPanel(props: {
                           opacity: [0.6, 0, 0.6],
                         }}
                         transition={{
-                          duration: 2,
+                          duration: 1.4,
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
@@ -264,7 +264,7 @@ export function SeriesSplitTiersPanel(props: {
                           className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400/20 via-sky-400/15 to-transparent"
                           initial={{ width: 0 }}
                           animate={{ width: `${nextTierProgressPct}%` }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
                         />
                       </div>
                     ) : null}
