@@ -471,7 +471,7 @@ export function AppLayout() {
             referredByAlreadyUsed ? "text-amber-200" : "text-slate-400"
           }`}
         >
-          {referredByAlreadyUsed ? "pris" : referralFeedback}
+          {referredByAlreadyUsed ? "" : referralFeedback}
         </span>
       </div>
     </div>
