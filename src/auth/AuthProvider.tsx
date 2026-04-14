@@ -16,6 +16,7 @@ interface UserProfile {
   username: string | null;
   pc_balance: number;
   referral_code?: string | null;
+  referred_by_user_id?: string | null;
   target_series_id?: string | null;
 }
 
@@ -96,7 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, username, pc_balance, referral_code, target_series_id")
+      .select(
+        "id, username, pc_balance, referral_code, referred_by_user_id, target_series_id",
+      )
       .eq("id", user.id)
       .maybeSingle();
 
