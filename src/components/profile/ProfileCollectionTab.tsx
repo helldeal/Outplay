@@ -6,7 +6,14 @@ import type { UserCardRow } from "../../types";
 
 const ALL = "__ALL__";
 type CardRarity = UserCardRow["card"]["rarity"];
-type FilterKey = "series" | "rarity" | "game" | "team" | "role" | "nationality";
+type FilterKey =
+  | "series"
+  | "rarity"
+  | "prestige"
+  | "game"
+  | "team"
+  | "role"
+  | "nationality";
 
 const RARITY_ORDER: CardRarity[] = [
   "LEGENDS",
@@ -37,6 +44,7 @@ function matchesFilters(
   filters: {
     series: string;
     rarity: string;
+    prestige: string;
     game: string;
     team: string;
     role: string;
@@ -58,6 +66,13 @@ function matchesFilters(
     row.card.rarity !== filters.rarity
   ) {
     return false;
+  }
+
+  if (exclude !== "prestige" && filters.prestige !== ALL) {
+    const stars = String(Math.max(0, Math.min(3, row.prestige_stars ?? 0)));
+    if (stars !== filters.prestige) {
+      return false;
+    }
   }
 
   if (
@@ -125,6 +140,7 @@ export function ProfileCollectionTab({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [seriesFilter, setSeriesFilter] = useState<string>(ALL);
   const [rarityFilter, setRarityFilter] = useState<string>(ALL);
+  const [prestigeFilter, setPrestigeFilter] = useState<string>(ALL);
   const [gameFilter, setGameFilter] = useState<string>(ALL);
   const [teamFilter, setTeamFilter] = useState<string>(ALL);
   const [roleFilter, setRoleFilter] = useState<string>(ALL);
@@ -133,6 +149,7 @@ export function ProfileCollectionTab({
   const activeFilters = {
     series: seriesFilter,
     rarity: rarityFilter,
+    prestige: prestigeFilter,
     game: gameFilter,
     team: teamFilter,
     role: roleFilter,
@@ -153,6 +170,15 @@ export function ProfileCollectionTab({
     const rarities = RARITY_ORDER.filter((rarity) =>
       availableRarities.has(rarity),
     );
+
+    const prestigeRows = getRowsForFacet("prestige");
+    const prestiges = Array.from(
+      new Set(
+        prestigeRows.map((row) =>
+          String(Math.max(0, Math.min(3, row.prestige_stars ?? 0))),
+        ),
+      ),
+    ).sort((a, b) => Number(a) - Number(b));
 
     const gameRows = getRowsForFacet("game");
 
@@ -223,7 +249,7 @@ export function ProfileCollectionTab({
       ).values(),
     ).sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
-    return { series, rarities, games, teams, roles, nationalities };
+    return { series, rarities, prestiges, games, teams, roles, nationalities };
   }, [activeFilters, collection]);
 
   const filteredCollection = useMemo(() => {
@@ -235,6 +261,7 @@ export function ProfileCollectionTab({
   const hasActiveFilters =
     seriesFilter !== ALL ||
     rarityFilter !== ALL ||
+    prestigeFilter !== ALL ||
     gameFilter !== ALL ||
     teamFilter !== ALL ||
     roleFilter !== ALL ||
@@ -253,6 +280,16 @@ export function ProfileCollectionTab({
           key: "rarity",
           label: `Rarete: ${rarityLabel(rarityFilter as CardRarity)}`,
           onRemove: () => setRarityFilter(ALL),
+        }
+      : null,
+    prestigeFilter !== ALL
+      ? {
+          key: "prestige",
+          label:
+            Number(prestigeFilter) > 0
+              ? `Prestige: ${prestigeFilter}★`
+              : "Prestige: 0★",
+          onRemove: () => setPrestigeFilter(ALL),
         }
       : null,
     gameFilter !== ALL
@@ -313,6 +350,7 @@ export function ProfileCollectionTab({
                 onClick={() => {
                   setSeriesFilter(ALL);
                   setRarityFilter(ALL);
+                  setPrestigeFilter(ALL);
                   setGameFilter(ALL);
                   setTeamFilter(ALL);
                   setRoleFilter(ALL);
@@ -417,6 +455,43 @@ export function ProfileCollectionTab({
                     {rarityLabel(
                       value as (typeof collection)[number]["card"]["rarity"],
                     )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                Prestige
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPrestigeFilter(ALL)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                    prestigeFilter === ALL
+                      ? "border-amber-300/70 bg-amber-400/20 text-amber-100"
+                      : "border-slate-700 bg-slate-900/70 text-slate-300 hover:border-amber-400/50"
+                  }`}
+                >
+                  Tous
+                </button>
+                {filterOptions.prestiges.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() =>
+                      setPrestigeFilter((prev) =>
+                        prev === value ? ALL : value,
+                      )
+                    }
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                      prestigeFilter === value
+                        ? "border-amber-300/70 bg-amber-400/20 text-amber-100"
+                        : "border-slate-700 bg-slate-900/70 text-slate-300 hover:border-amber-400/50"
+                    }`}
+                  >
+                    {Number(value) > 0 ? `${value}★` : "0★"}
                   </button>
                 ))}
               </div>
