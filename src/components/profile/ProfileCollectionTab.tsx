@@ -585,6 +585,7 @@ export function ProfileCollectionTab({
               key={`${row.card_id}-${row.obtained_at}`}
               card={row.card}
               obtainedAt={row.obtained_at}
+              prestigeStars={row.prestige_stars ?? 0}
               isOwned
               disableExpand={false}
             />

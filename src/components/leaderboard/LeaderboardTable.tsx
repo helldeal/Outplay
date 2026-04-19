@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Info, Trophy, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInViewOnce } from "../../hooks/useInViewOnce";
 import type { LeaderboardRow } from "../../query/leaderboard";
@@ -22,6 +23,7 @@ export function LeaderboardTable({
   onNext: () => void;
   scoreFormatter: Intl.NumberFormat;
 }) {
+  const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const { ref, hasBeenVisible } = useInViewOnce<HTMLDivElement>({
     threshold: 0.15,
     rootMargin: "0px 0px -5% 0px",
@@ -36,11 +38,22 @@ export function LeaderboardTable({
       ref={ref}
       className="min-w-0 flex-1 rounded-2xl border border-slate-800 bg-slate-900/50"
     >
-      <div className="flex items-center gap-2 border-b border-slate-800 px-5 py-4">
-        <Trophy className="h-5 w-5 text-amber-400" />
-        <h2 className="text-lg font-black italic uppercase text-white">
-          Top collectionneurs
-        </h2>
+      <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-amber-400" />
+          <h2 className="text-lg font-black italic uppercase text-white">
+            Top collectionneurs
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsScoreInfoOpen(true)}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-600 bg-slate-800/70 text-slate-300 transition hover:border-cyan-400 hover:text-cyan-200"
+          aria-label="Infos calcul des scores"
+          title="Comment les scores sont calculés"
+        >
+          <Info className="h-4 w-4" />
+        </button>
       </div>
 
       <table className="w-full text-sm">
@@ -199,6 +212,59 @@ export function LeaderboardTable({
           </div>
         </div>
       )}
+
+      {isScoreInfoOpen ? (
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.7)]">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <h3 className="text-base font-black uppercase tracking-wide text-white">
+                Calcul des scores
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsScoreInfoOpen(false)}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-600 bg-slate-800/70 text-slate-300 transition hover:border-rose-400 hover:text-rose-200"
+                aria-label="Fermer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-sm text-slate-200">
+              <div>
+                <p className="font-semibold text-cyan-300">
+                  Score carte (réel)
+                </p>
+                <p>
+                  Chaque carte a un score de base ajusté par son ratio de drop
+                  global (coefficient dynamique). Ensuite, un multiplicateur
+                  Prestige est appliqué selon les copies ouvertes:
+                </p>
+                <ul className="mt-2 space-y-1 text-slate-300">
+                  <li>• 2 copies = 1 étoile = x1.25</li>
+                  <li>• 5 copies = 2 étoiles = x1.75</li>
+                  <li>• 10 copies = 3 étoiles = x3.00</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="font-semibold text-violet-300">Score joueur</p>
+                <p>
+                  <span className="font-semibold text-white">Score total</span>{" "}
+                  = somme des scores cartes réels + points d’achievements.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsScoreInfoOpen(false)}
+            className="absolute inset-0 -z-10"
+            aria-label="Fermer la fenêtre"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Lock, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { Lock, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
 import "../cards.css";
 import type { CSSProperties } from "react";
 import type { CardWithRelations, Rarity } from "../types";
@@ -10,6 +10,7 @@ interface CardTileProps {
   card: CardWithRelations;
   obtainedAt?: string;
   isOwned?: boolean;
+  prestigeStars?: number;
   disableExpand?: boolean;
 }
 
@@ -101,11 +102,13 @@ function CardInner({
   card,
   obtainedAt,
   isOwned,
+  prestigeStars,
   hasHolo,
 }: {
   card: CardWithRelations;
   obtainedAt?: string;
   isOwned: boolean;
+  prestigeStars: number;
   hasHolo: boolean;
 }) {
   return (
@@ -123,6 +126,19 @@ function CardInner({
               loading="lazy"
               draggable={false}
             />
+
+            {isOwned && prestigeStars > 0 ? (
+              <div className="absolute left-[3cqw] top-[3cqw] z-[3] inline-flex min-h-[7cqw] min-w-[7cqw] items-center justify-center gap-[0.6cqw] rounded-full border border-amber-200/90 bg-slate-950/70 px-[1.2cqw] text-amber-100 shadow-[0_0_16px_rgba(251,191,36,0.75)] backdrop-blur-[1px]">
+                {Array.from({ length: Math.min(3, prestigeStars) }).map(
+                  (_, index) => (
+                    <Star
+                      key={index}
+                      className="h-[3.8cqw] w-[3.8cqw] fill-current drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]"
+                    />
+                  ),
+                )}
+              </div>
+            ) : null}
 
             <div className="absolute right-3 bottom-3 z-[1] flex flex-col items-center gap-1.5">
               {card.game?.logoUrl ? (
@@ -211,6 +227,7 @@ export function CardTile({
   card,
   obtainedAt,
   isOwned = true,
+  prestigeStars = 0,
   disableExpand = false,
 }: CardTileProps) {
   const { cardRef, interacting, active, closing, close, handlers } =
@@ -404,6 +421,7 @@ export function CardTile({
               card={card}
               obtainedAt={obtainedAt}
               isOwned={isOwned}
+              prestigeStars={prestigeStars}
               hasHolo={hasHolo}
             />
           </div>

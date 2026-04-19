@@ -4,6 +4,11 @@ import { normalizeCard } from "../utils/normalize";
 import { supabase } from "../lib/supabase";
 import type { CardWithRelations, Series } from "../types";
 
+export interface LegendexOwnedCardStatus {
+  obtainedAt: string;
+  prestigeStars: number;
+}
+
 export function useLegendexSeriesQuery() {
   return useQuery({
     queryKey: ["legendex-series"],
@@ -91,22 +96,37 @@ export function useLegendexOwnedCardsQuery(
   return useQuery({
     queryKey: ["legendex-owned", userId, selectedSeriesId],
     enabled: Boolean(userId && selectedSeriesId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_cards")
-        .select("card_id, obtained_at, card:cards!inner(series_id)")
-        .eq("user_id", userId!)
-        .eq("card.series_id", selectedSeriesId!);
+    queryFn: async (): Promise<Map<string, LegendexOwnedCardStatus>> => {
+      const { data, error } = await supabase.rpc(
+        "get_user_owned_cards_status",
+        {
+          p_user_id: userId!,
+          p_series_id: selectedSeriesId!,
+        },
+      );
 
       if (error) {
         throw error;
       }
 
+      const rows = (data ?? []) as Array<{
+        card_id: string;
+        obtained_at: string;
+        prestige_stars: number;
+      }>;
+
       return new Map(
-        (data ?? []).map((entry) => [
-          entry.card_id as string,
-          entry.obtained_at as string,
-        ]),
+        rows.map((row) => {
+          return [
+            row.card_id,
+            {
+              obtainedAt: row.obtained_at,
+              prestigeStars: Number.isFinite(row.prestige_stars)
+                ? Math.max(0, Math.min(3, row.prestige_stars))
+                : 0,
+            },
+          ] as const;
+        }),
       );
     },
   });

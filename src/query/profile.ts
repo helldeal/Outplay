@@ -155,6 +155,9 @@ interface PublicProfileCollectionRpcRow {
   card_rarity: "LEGENDS" | "WORLD_CLASS" | "CHAMPION" | "CHALLENGER" | "ROOKIE";
   card_image_url: string;
   card_pc_value: number;
+  copies_count: number;
+  prestige_stars: number;
+  is_prestige: boolean;
   series_name: string | null;
   series_code: string | null;
   game_name: string;
@@ -462,6 +465,11 @@ function mapCollectionRow(row: PublicProfileCollectionRpcRow): UserCardRow {
   return {
     card_id: row.card_id,
     obtained_at: row.obtained_at,
+    copies_count: Number.isFinite(row.copies_count) ? row.copies_count : 1,
+    prestige_stars: Number.isFinite(row.prestige_stars)
+      ? Math.max(0, Math.min(3, row.prestige_stars))
+      : 0,
+    is_prestige: Boolean(row.is_prestige),
     card: {
       id: row.card_id,
       name: row.card_name,
