@@ -367,6 +367,7 @@ export function LegendexPage() {
               const ownedStatus = owned.get(card.id);
               const isOwned = Boolean(ownedStatus);
               const obtainedAt = ownedStatus?.obtainedAt;
+              const copiesCount = ownedStatus?.copiesCount;
               const prestigeStars = ownedStatus?.prestigeStars ?? 0;
               return (
                 <CardTile
@@ -374,6 +375,7 @@ export function LegendexPage() {
                   card={card}
                   isOwned={isOwned}
                   obtainedAt={obtainedAt}
+                  copiesCount={copiesCount}
                   prestigeStars={prestigeStars}
                 />
               );

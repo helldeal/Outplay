@@ -57,6 +57,7 @@ export function CollectionPage() {
               key={entry.card_id}
               card={entry.card}
               obtainedAt={entry.obtained_at}
+              copiesCount={entry.copies_count}
               prestigeStars={entry.prestige_stars ?? 0}
             />
           ))}

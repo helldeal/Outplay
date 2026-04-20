@@ -5,10 +5,12 @@ import type { CSSProperties } from "react";
 import type { CardWithRelations, Rarity } from "../types";
 import { useCardHolo } from "../hooks/useCardHolo";
 import { usePublicCardStatsQuery } from "../query/card-stats";
+import { getTitleColorClass } from "../utils/title-style";
 
 interface CardTileProps {
   card: CardWithRelations;
   obtainedAt?: string;
+  copiesCount?: number;
   isOwned?: boolean;
   prestigeStars?: number;
   disableExpand?: boolean;
@@ -101,12 +103,14 @@ function rarityGlowVars(
 function CardInner({
   card,
   obtainedAt,
+  copiesCount,
   isOwned,
   prestigeStars,
   hasHolo,
 }: {
   card: CardWithRelations;
   obtainedAt?: string;
+  copiesCount?: number;
   isOwned: boolean;
   prestigeStars: number;
   hasHolo: boolean;
@@ -200,6 +204,9 @@ function CardInner({
               {obtainedAt ? (
                 <span>
                   Obtenue le {new Date(obtainedAt).toLocaleDateString()}
+                  {Number.isFinite(copiesCount)
+                    ? ` · x${Math.max(1, Math.floor(copiesCount ?? 1))}`
+                    : ""}
                 </span>
               ) : (
                 <span></span>
@@ -226,6 +233,7 @@ function CardInner({
 export function CardTile({
   card,
   obtainedAt,
+  copiesCount,
   isOwned = true,
   prestigeStars = 0,
   disableExpand = false,
@@ -282,6 +290,7 @@ export function CardTile({
           slot: "bottom-left",
           label: "Top drop",
           value: stats.topHolder?.username ?? "—",
+          title: stats.topHolder?.title ?? null,
           avatarUrl: stats.topHolder?.avatarUrl ?? null,
           meta: stats.topHolder
             ? `${formatInt(stats.topHolder.drops)} drops`
@@ -292,6 +301,7 @@ export function CardTile({
           slot: "bottom-right",
           label: "Premier drop",
           value: stats.firstHolder?.username ?? "—",
+          title: stats.firstHolder?.title ?? null,
           avatarUrl: stats.firstHolder?.avatarUrl ?? null,
           meta: stats.firstHolder?.obtainedAt
             ? new Date(stats.firstHolder.obtainedAt).toLocaleDateString()
@@ -363,7 +373,9 @@ export function CardTile({
                       )}
                       <div className="card-stats-profile__text">
                         <span className="card-stats-badge__value">
-                          {item.value}
+                          <span className={getTitleColorClass(item.title)}>
+                            {item.value}
+                          </span>
                         </span>
                         {item.meta ? (
                           <span className="card-stats-profile__meta">
@@ -420,6 +432,7 @@ export function CardTile({
             <CardInner
               card={card}
               obtainedAt={obtainedAt}
+              copiesCount={copiesCount}
               isOwned={isOwned}
               prestigeStars={prestigeStars}
               hasHolo={hasHolo}

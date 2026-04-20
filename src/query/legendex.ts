@@ -6,6 +6,7 @@ import type { CardWithRelations, Series } from "../types";
 
 export interface LegendexOwnedCardStatus {
   obtainedAt: string;
+  copiesCount: number;
   prestigeStars: number;
 }
 
@@ -112,6 +113,7 @@ export function useLegendexOwnedCardsQuery(
       const rows = (data ?? []) as Array<{
         card_id: string;
         obtained_at: string;
+        copies_count: number;
         prestige_stars: number;
       }>;
 
@@ -121,6 +123,9 @@ export function useLegendexOwnedCardsQuery(
             row.card_id,
             {
               obtainedAt: row.obtained_at,
+              copiesCount: Number.isFinite(row.copies_count)
+                ? Math.max(1, row.copies_count)
+                : 1,
               prestigeStars: Number.isFinite(row.prestige_stars)
                 ? Math.max(0, Math.min(3, row.prestige_stars))
                 : 0,

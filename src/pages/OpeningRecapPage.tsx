@@ -16,6 +16,7 @@ import { fetchCardsByIds } from "../query/booster";
 import { usePublicOpeningRecapQuery } from "../query/opening-recap";
 import type { Rarity } from "../types";
 import { rarityLabel, rarityTextColor } from "../utils/rarity";
+import { getTitleColorClass } from "../utils/title-style";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
 
@@ -205,7 +206,9 @@ export function OpeningRecapPage() {
                 <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">
                   Ouvert par
                 </p>
-                <span className="text-lg font-bold text-white">
+                <span
+                  className={`text-lg font-bold ${getTitleColorClass(opening.title)}`}
+                >
                   {opening.username}
                 </span>
               </div>
