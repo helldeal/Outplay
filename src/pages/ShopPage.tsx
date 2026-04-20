@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Gift, Info, LoaderCircle, X } from "lucide-react";
+import { Gift, Info, LoaderCircle, Sparkles, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import {
@@ -13,11 +13,14 @@ import {
   computeDuplicateIndices,
   fetchCardsByIds,
   getOwnedCardIds,
+  openCardCompleterRpc,
   openBoosterRpc,
+  useCardCompleterOfferQuery,
   useShopBoostersQuery,
 } from "../query/booster";
 import type { ShopBoosterWithSeries } from "../query/booster";
 import { useSeriesSplitQuery } from "../query/series-split";
+import type { CardCompleterOpeningNavigationState } from "./CardCompleterOpeningPage";
 
 const BOOSTER_DRAW_COUNT = 5;
 
@@ -35,9 +38,12 @@ export function ShopPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const boostersQuery = useShopBoostersQuery();
+  const cardCompleterOfferQuery = useCardCompleterOfferQuery(user?.id);
   const seriesSplitQuery = useSeriesSplitQuery(user?.id);
   const [openingError, setOpeningError] = useState<string | null>(null);
   const [openingBoosterId, setOpeningBoosterId] = useState<string | null>(null);
+  const [openingCompleter, setOpeningCompleter] = useState(false);
+  const [completerError, setCompleterError] = useState<string | null>(null);
   const [dropRatesModalBoosterId, setDropRatesModalBoosterId] = useState<
     string | null
   >(null);
@@ -60,7 +66,11 @@ export function ShopPage() {
     ROOKIE: "from-zinc-300 via-zinc-400 to-zinc-500",
   };
 
-  const boosters = boostersQuery.data ?? [];
+  const boosters = useMemo(
+    () => boostersQuery.data ?? [],
+    [boostersQuery.data],
+  );
+  const cardCompleterOffer = cardCompleterOfferQuery.data;
   const activeSplitSeriesCode = seriesSplitQuery.data?.seriesCode ?? null;
   const orderedBoosters = useMemo(() => {
     if (!activeSplitSeriesCode) {
@@ -118,6 +128,81 @@ export function ShopPage() {
 
     return accumulator;
   }, new Map());
+
+  const openCardCompleter = async () => {
+    if (!user) {
+      setCompleterError("Tu dois être connecté pour utiliser le compléteur.");
+      return;
+    }
+
+    if (!cardCompleterOffer?.canPurchase) {
+      setCompleterError("Ta collection est déjà complète.");
+      return;
+    }
+
+    const currentPcBalance = profile?.pc_balance ?? 0;
+    if (cardCompleterOffer.pricePc > currentPcBalance) {
+      setCompleterError(
+        `PC insuffisants: il faut ${cardCompleterOffer.pricePc} PC pour utiliser le compléteur.`,
+      );
+      return;
+    }
+
+    setCompleterError(null);
+    setOpeningCompleter(true);
+
+    try {
+      const result = await openCardCompleterRpc(user.id);
+      const winnerCards = await fetchCardsByIds(result.cards ?? []);
+      const winner = winnerCards[0];
+
+      if (!winner) {
+        throw new Error("Impossible de récupérer la carte gagnée.");
+      }
+
+      const previewCardIds = cardCompleterOffer.missingCardIds.slice(0, 120);
+      const previewCards = await fetchCardsByIds(previewCardIds);
+      const candidates = previewCards.length > 0 ? previewCards : [winner];
+
+      const sequenceLength = 70;
+      const sequence = Array.from({ length: sequenceLength }, (_, index) => {
+        const candidate =
+          candidates[Math.floor(Math.random() * candidates.length)];
+        if (index === sequenceLength - 6) {
+          return winner;
+        }
+        return candidate;
+      });
+
+      const winnerIndex = sequence.length - 6;
+
+      navigate("/card-completer-opening", {
+        state: {
+          sequence,
+          winner,
+          winnerIndex,
+          chargedPc: result.chargedPc ?? cardCompleterOffer.pricePc,
+        } satisfies CardCompleterOpeningNavigationState,
+      });
+
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["card-completer-offer", user.id],
+        }),
+        refreshProfile(),
+      ]).catch(() => undefined);
+    } catch (error) {
+      setCompleterError(
+        error instanceof Error
+          ? error.message
+          : "Impossible d'utiliser le compléteur.",
+      );
+    } finally {
+      setOpeningCompleter(false);
+    }
+  };
 
   const openShopBooster = async (booster: ShopBoosterWithSeries) => {
     if (!user) {
@@ -205,6 +290,75 @@ export function ShopPage() {
             {openingError}
           </div>
         ) : null}
+
+        {completerError ? (
+          <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+            {completerError}
+          </div>
+        ) : null}
+
+        <div className="relative overflow-hidden rounded-2xl border border-amber-300/35 bg-[linear-gradient(160deg,rgba(146,64,14,0.25),rgba(15,23,42,0.96))] p-4 shadow-[0_14px_38px_rgba(2,6,23,0.52)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,191,36,0.18),transparent_45%)]" />
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+                <Sparkles className="h-3 w-3" />
+                Compléteur
+              </p>
+              <h2 className="mt-2 text-xl font-black uppercase italic text-white">
+                Case cartes manquantes
+              </h2>
+              <p className="mt-1 text-xs text-slate-300">
+                Une carte manquante garantie. Rareté tirée avec les probabilités
+                d’un premium booster.
+              </p>
+              <p className="mt-2 text-xs text-slate-400">
+                Manquantes: {cardCompleterOffer?.missingCount ?? 0} · Prix:{" "}
+                <span className="font-black text-amber-300">
+                  {cardCompleterOffer?.pricePc ?? 0} PC
+                </span>
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                void openCardCompleter();
+              }}
+              disabled={
+                !user ||
+                openingBoosterId !== null ||
+                openingCompleter ||
+                cardCompleterOfferQuery.isLoading ||
+                !cardCompleterOffer?.canPurchase ||
+                (profile?.pc_balance ?? 0) < (cardCompleterOffer?.pricePc ?? 0)
+              }
+              className="inline-flex min-w-[170px] items-center justify-center gap-2 rounded-md border border-amber-300/55 bg-amber-300/20 px-4 py-2 text-sm font-black uppercase tracking-[0.08em] text-amber-100 transition hover:bg-amber-300/30 disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {openingCompleter ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Ouverture...
+                </>
+              ) : cardCompleterOfferQuery.isLoading ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Calcul du prix...
+                </>
+              ) : !cardCompleterOffer?.canPurchase ? (
+                "Collection complète"
+              ) : (profile?.pc_balance ?? 0) <
+                (cardCompleterOffer?.pricePc ?? 0) ? (
+                "PC insuffisants"
+              ) : (
+                <>
+                  <Gift className="h-4 w-4" />
+                  Acheter
+                </>
+              )}
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-8">
           {isBoostersLoading && (

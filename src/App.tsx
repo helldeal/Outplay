@@ -5,6 +5,7 @@ import { AppLayout } from "./components/AppLayout";
 import { AchievementsPage } from "./pages/AchievementsPage";
 import { AboutPage } from "./pages/AboutPage";
 import { BoosterPage } from "./pages/BoosterPage";
+import { CardCompleterOpeningPage } from "./pages/CardCompleterOpeningPage";
 import { HomePage } from "./pages/HomePage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LegendexPage } from "./pages/LegendexPage";
@@ -39,6 +40,15 @@ export default function App() {
         element={
           <RequireAuth>
             <BoosterPage />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/card-completer-opening"
+        element={
+          <RequireAuth>
+            <CardCompleterOpeningPage />
           </RequireAuth>
         }
       />

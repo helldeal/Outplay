@@ -194,7 +194,8 @@ interface RecentDropRpcRow {
   user_id: string;
   username: string;
   avatar_url: string | null;
-  booster_name: string;
+  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
+  booster_name: string | null;
   opened_at: string;
   best_card_id: string | null;
   best_card_name: string | null;
@@ -215,7 +216,8 @@ export interface RecentDrop {
   username: string;
   title: string | null;
   avatarUrl: string | null;
-  boosterName: string;
+  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
+  boosterName: string | null;
   openedAt: string;
   bestCardId: string | null;
   bestCardName: string | null;
@@ -241,6 +243,7 @@ function mapDropRow(row: RecentDropRpcRow): RecentDrop {
     username: displayName(row.username),
     title: null,
     avatarUrl: row.avatar_url,
+    openingType: row.opening_type,
     boosterName: row.booster_name,
     openedAt: row.opened_at,
     bestCardId: row.best_card_id,

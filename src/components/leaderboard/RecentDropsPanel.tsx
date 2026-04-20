@@ -11,6 +11,31 @@ import {
 import { getTitleColorClass } from "../../utils/title-style";
 import { PlayerAvatar } from "./PlayerAvatar";
 
+function getOpeningTypeTone(openingType: RecentDrop["openingType"]): string {
+  switch (openingType) {
+    case "SHOP":
+      return "text-cyan-200";
+    case "DAILY":
+      return "text-emerald-200";
+    case "STREAK":
+      return "text-fuchsia-200";
+    case "ACHIEVEMENT":
+      return "text-amber-200";
+    case "COMPLETER":
+      return "text-violet-200";
+    default:
+      return "text-slate-300";
+  }
+}
+
+function getOpeningTypeLabel(openingType: RecentDrop["openingType"]): string {
+  if (openingType === "COMPLETER") {
+    return "COMPLÉTEUR";
+  }
+
+  return openingType;
+}
+
 function inferBoosterType(
   boosterName: string,
 ): "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null {
@@ -40,14 +65,20 @@ function inferBoosterType(
 
 export function RecentDropsPanel({
   drops,
-  noMore,
-  loadingMore,
-  onLoadMore,
+  page,
+  canPrev,
+  canNext,
+  loadingPage,
+  onPrev,
+  onNext,
 }: {
   drops: RecentDrop[];
-  noMore: boolean;
-  loadingMore: boolean;
-  onLoadMore: () => void;
+  page: number;
+  canPrev: boolean;
+  canNext: boolean;
+  loadingPage: boolean;
+  onPrev: () => void;
+  onNext: () => void;
 }) {
   const navigate = useNavigate();
   const { ref, hasBeenVisible } = useInViewOnce<HTMLElement>({
@@ -105,17 +136,23 @@ export function RecentDropsPanel({
               }}
             >
               {(() => {
-                const boosterType = inferBoosterType(drop.boosterName);
+                const boosterType = inferBoosterType(drop.boosterName ?? "");
                 const boosterTone = resolveBoosterTone(boosterType);
+                const isCompleter = drop.openingType === "COMPLETER";
 
                 return (
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em]">
-                    {boosterType ? (
+                    <span className={getOpeningTypeTone(drop.openingType)}>
+                      {getOpeningTypeLabel(drop.openingType)}
+                    </span>
+                    {!isCompleter && boosterType ? (
                       <span className={boosterTone.rewardTextClass}>
                         {boosterType}
                       </span>
                     ) : null}
-                    <span className="text-slate-400">{drop.boosterName}</span>
+                    {drop.boosterName ? (
+                      <span className="text-slate-400">{drop.boosterName}</span>
+                    ) : null}
                   </div>
                 );
               })()}
@@ -176,18 +213,30 @@ export function RecentDropsPanel({
             </article>
           ))}
 
-          {!noMore && (
+          <div className="grid grid-cols-3 items-center gap-2">
             <button
-              disabled={loadingMore}
-              onClick={onLoadMore}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-800 bg-white/5 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-400 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
+              disabled={!canPrev || loadingPage}
+              onClick={onPrev}
+              className="flex items-center justify-center rounded-xl border border-slate-800 bg-white/5 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
             >
-              {loadingMore ? (
+              Précédent
+            </button>
+
+            <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400">
+              Page {page + 1}
+            </p>
+
+            <button
+              disabled={!canNext || loadingPage}
+              onClick={onNext}
+              className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-white/5 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
+            >
+              {loadingPage ? (
                 <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
               ) : null}
-              Charger plus
+              Suivant
             </button>
-          )}
+          </div>
         </div>
       )}
     </aside>

@@ -8,7 +8,7 @@ interface PublicOpeningRecapRpcRow {
   username: string;
   avatar_url: string | null;
   opened_at: string;
-  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
   booster_name: string | null;
   booster_type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
   booster_price_pc: number | null;
@@ -24,7 +24,7 @@ export interface PublicOpeningRecap {
   username: string;
   avatarUrl: string | null;
   openedAt: string;
-  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
   boosterName: string | null;
   boosterType: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
   boosterPricePc: number;

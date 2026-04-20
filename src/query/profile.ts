@@ -195,7 +195,7 @@ export const publicProfileRadarStatsQueryKey = (userId?: string) =>
 export interface PublicProfileRecentOpening {
   openingId: string;
   openedAt: string;
-  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
   boosterName: string | null;
   boosterType: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
   seriesName: string | null;
@@ -228,7 +228,7 @@ export interface PublicProfileRecentAchievement {
 interface PublicProfileRecentOpeningRpcRow {
   opening_id: string;
   opened_at: string;
-  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
   booster_name: string | null;
   booster_type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
   series_name: string | null;

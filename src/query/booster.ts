@@ -11,7 +11,19 @@ export interface OpenBoosterResponse {
   cards: string[];
   pcGained: number;
   chargedPc: number;
-  type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
+}
+
+export interface CardCompleterOffer {
+  canPurchase: boolean;
+  pricePc: number;
+  missingCount: number;
+  missingCardIds: string[];
+  basePremiumBoosterId: string | null;
+  basePremiumPricePc: number;
+  premiumDropRates: Record<string, number>;
+  missingByRarity: Record<string, number>;
+  effectiveHitChancePercent: number;
 }
 
 export interface LoginStreakStatus {
@@ -61,6 +73,54 @@ export async function openBoosterRpc(
     p_booster_id: boosterId,
     p_user_id: userId,
     p_target_series_id: targetSeriesId ?? null,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as OpenBoosterResponse;
+}
+
+export async function getCardCompleterOfferRpc(userId: string) {
+  const { data, error } = await supabase.rpc("get_card_completer_offer", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const row = (data ?? {}) as Partial<CardCompleterOffer>;
+  return {
+    canPurchase: Boolean(row.canPurchase),
+    pricePc: Number(row.pricePc ?? 0),
+    missingCount: Number(row.missingCount ?? 0),
+    missingCardIds: Array.isArray(row.missingCardIds)
+      ? row.missingCardIds.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [],
+    basePremiumBoosterId:
+      typeof row.basePremiumBoosterId === "string"
+        ? row.basePremiumBoosterId
+        : null,
+    basePremiumPricePc: Number(row.basePremiumPricePc ?? 0),
+    premiumDropRates:
+      row.premiumDropRates && typeof row.premiumDropRates === "object"
+        ? (row.premiumDropRates as Record<string, number>)
+        : {},
+    missingByRarity:
+      row.missingByRarity && typeof row.missingByRarity === "object"
+        ? (row.missingByRarity as Record<string, number>)
+        : {},
+    effectiveHitChancePercent: Number(row.effectiveHitChancePercent ?? 0),
+  } as CardCompleterOffer;
+}
+
+export async function openCardCompleterRpc(userId: string) {
+  const { data, error } = await supabase.rpc("open_card_completer", {
+    p_user_id: userId,
   });
 
   if (error) {
@@ -293,6 +353,14 @@ export function useShopBoostersQuery() {
   return useQuery({
     queryKey: ["shop-boosters"],
     queryFn: fetchShopBoosters,
+  });
+}
+
+export function useCardCompleterOfferQuery(userId?: string) {
+  return useQuery({
+    queryKey: ["card-completer-offer", userId],
+    enabled: Boolean(userId),
+    queryFn: () => getCardCompleterOfferRpc(userId!),
   });
 }
 
