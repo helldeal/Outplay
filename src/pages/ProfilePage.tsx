@@ -17,6 +17,8 @@ import { PageLoading } from "../components/PageLoading";
 import { ProfileActivityTab } from "../components/profile/ProfileActivityTab";
 import { ProfileCollectionTab } from "../components/profile/ProfileCollectionTab";
 import { ProfileStatsTab } from "../components/profile/ProfileStatsTab";
+import { ColoredTitleSelect } from "../components/profile/ColoredTitleSelect";
+import { ColoredSignatureCardSelect } from "../components/profile/ColoredSignatureCardSelect";
 import { ScoreBreakdownTooltip } from "../components/score/ScoreBreakdownTooltip";
 import { useLeaderboardQuery } from "../query/leaderboard";
 import {
@@ -30,7 +32,7 @@ import {
   usePublicProfileRecentOpeningsQuery,
 } from "../query/profile";
 import { getTitleColorClass } from "../utils/title-style";
-import { rarityLabel, rarityNameGradient } from "../utils/rarity";
+import { rarityNameGradient } from "../utils/rarity";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
 export function ProfilePage() {
@@ -151,7 +153,8 @@ export function ProfilePage() {
     .sort((a, b) => b.card.pc_value - a.card.pc_value)
     .map((row) => ({
       value: row.card_id,
-      label: `${row.card_id} · ${rarityLabel(row.card.rarity)} · ${row.card.name}`,
+      label: `${row.card_id} · ${row.card.name}`,
+      rarity: row.card.rarity,
     }));
 
   const handleSave = async () => {
@@ -229,10 +232,9 @@ export function ProfilePage() {
               <h1 className="mt-1 text-3xl font-black uppercase italic tracking-tight text-white md:text-4xl">
                 {overview.username}
               </h1>
-              <p className="mt-1 text-sm text-slate-300">
+              <p className="mt-1 font-medium text-slate-300">
                 {overview.title ? (
                   <>
-                    Titre :{" "}
                     <span className={getTitleColorClass(overview.title)}>
                       {overview.title}
                     </span>
@@ -379,38 +381,24 @@ export function ProfilePage() {
               <span className="ml-1 text-xs font-semibold text-slate-300">
                 Titre
               </span>
-              <select
+              <ColoredTitleSelect
                 value={titleDraft}
-                onChange={(event) => setTitleDraft(event.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60"
-              >
-                <option value="">Aucun titre</option>
-                {availableTitles.map((title) => (
-                  <option key={title} value={title}>
-                    {title}
-                  </option>
-                ))}
-              </select>
+                onChange={setTitleDraft}
+                options={availableTitles}
+                placeholder="Aucun titre"
+              />
             </label>
 
             <label className="space-y-1">
               <span className="ml-1 text-xs font-semibold text-slate-300">
                 Carte signature
               </span>
-              <select
+              <ColoredSignatureCardSelect
                 value={signatureCardIdDraft}
-                onChange={(event) =>
-                  setSignatureCardIdDraft(event.target.value)
-                }
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60"
-              >
-                <option value="">Aucune carte signature</option>
-                {signatureCardOptions.map((card) => (
-                  <option key={card.value} value={card.value}>
-                    {card.label}
-                  </option>
-                ))}
-              </select>
+                onChange={setSignatureCardIdDraft}
+                options={signatureCardOptions}
+                placeholder="Aucune carte signature"
+              />
             </label>
             <label className="space-y-1 col-span-2">
               <span className="ml-1 text-xs font-semibold text-slate-300">

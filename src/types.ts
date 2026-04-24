@@ -29,6 +29,9 @@ export interface CardWithRelations {
 export interface UserCardRow {
   card_id: string;
   obtained_at: string;
+  copies_count?: number;
+  prestige_stars?: number;
+  is_prestige?: boolean;
   card: CardWithRelations;
 }
 

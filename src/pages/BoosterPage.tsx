@@ -10,6 +10,7 @@ import { resolveBoosterTone } from "../components/rewards/reward-theme";
 import type { CardWithRelations, Rarity } from "../types";
 import { rarityRank } from "../utils/rarity";
 import { useImagePreload } from "../hooks/useImagePreload";
+import { useCollectionQuery } from "../query/collection";
 import {
   computeDuplicateIndices,
   fetchCardsByIds,
@@ -37,6 +38,12 @@ export interface BoosterOpeningNavigationState {
 interface CardEntry {
   card: CardWithRelations;
   isDuplicate: boolean;
+}
+
+interface PrestigeInfo {
+  copiesCount: number;
+  prestigeStars: number;
+  nextTarget: number | null;
 }
 
 /* ─────────────────────── Constants ─────────────────────── */
@@ -77,6 +84,24 @@ function buildRevealPulseRarities(rarity: Rarity): Rarity[] {
   return progressiveOrder.filter(
     (entryRarity) => rarityRank(entryRarity) <= targetRank,
   );
+}
+
+function getPrestigeInfo(copiesCount: number): PrestigeInfo {
+  const normalized = Math.max(1, Math.floor(copiesCount || 1));
+
+  if (normalized >= 10) {
+    return { copiesCount: normalized, prestigeStars: 3, nextTarget: null };
+  }
+
+  if (normalized >= 5) {
+    return { copiesCount: normalized, prestigeStars: 2, nextTarget: 10 };
+  }
+
+  if (normalized >= 2) {
+    return { copiesCount: normalized, prestigeStars: 1, nextTarget: 5 };
+  }
+
+  return { copiesCount: normalized, prestigeStars: 0, nextTarget: 2 };
 }
 
 /* ─────────────────────── FUT-style Reveal ─────────────────────── */
@@ -282,6 +307,7 @@ function CardBack() {
 export function BoosterPage() {
   const { user, profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
+  const collectionQuery = useCollectionQuery(user?.id);
   const location = useLocation();
   const navigate = useNavigate();
   const opening =
@@ -314,6 +340,18 @@ export function BoosterPage() {
     [cards],
   );
   const { isReady: areCardAssetsReady } = useImagePreload(preloadUrls);
+  const collectionByCardId = useMemo(() => {
+    const rows = collectionQuery.data ?? [];
+    return new Map(
+      rows.map((row) => [
+        row.card_id,
+        {
+          copiesCount: row.copies_count ?? 1,
+          prestigeStars: row.prestige_stars ?? 0,
+        },
+      ]),
+    );
+  }, [collectionQuery.data]);
 
   /* State */
   const [phase, setPhase] = useState<"stack" | "spread">("stack");
@@ -534,6 +572,10 @@ export function BoosterPage() {
         >
           {cards.map((entry, i) => {
             const { card, isDuplicate } = entry;
+            const collectionInfo = collectionByCardId.get(card.id);
+            const prestigeInfo = getPrestigeInfo(
+              collectionInfo?.copiesCount ?? (isDuplicate ? 2 : 1),
+            );
             const revealed = cardRevealed(i);
             const isFutRev = futRevealed.has(i);
             const isNext = i === nextIdx && futIdx === null;
@@ -594,19 +636,44 @@ export function BoosterPage() {
                       >
                         <CardTile card={card} disableExpand />
                         {isDuplicate && (
-                          <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{
-                              delay: isFutRev ? 0.1 : 0.3,
-                              type: "spring",
-                              stiffness: 400,
-                              damping: 15,
-                            }}
-                            className="absolute -top-3 -right-3 z-30 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-lg shadow-emerald-500/30"
-                          >
-                            <Coins className="h-3.5 w-3.5" />+{card.pc_value} PC
-                          </motion.div>
+                          <>
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{
+                                delay: isFutRev ? 0.1 : 0.3,
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 15,
+                              }}
+                              className="absolute -bottom-3 left-0 right-0 z-30 flex justify-center"
+                            >
+                              <div className="rounded-full border border-amber-300/70 bg-slate-950/90 px-2.5 py-1 text-[11px] font-black text-amber-200 shadow-[0_0_18px_rgba(251,191,36,0.28)]">
+                                Prestige {prestigeInfo.prestigeStars}★ ·{" "}
+                                {prestigeInfo.copiesCount}
+                                {prestigeInfo.nextTarget
+                                  ? `/${prestigeInfo.nextTarget}`
+                                  : " max"}
+                              </div>
+                            </motion.div>
+
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{
+                                delay: isFutRev ? 0.1 : 0.3,
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 15,
+                              }}
+                              className="absolute -top-3 -right-3 z-30 flex flex-col items-end gap-1"
+                            >
+                              <div className="flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-lg shadow-emerald-500/30">
+                                <Coins className="h-3.5 w-3.5" />+
+                                {card.pc_value} PC
+                              </div>
+                            </motion.div>
+                          </>
                         )}
                       </motion.div>
                     ) : (

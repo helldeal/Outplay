@@ -16,6 +16,7 @@ import { fetchCardsByIds } from "../query/booster";
 import { usePublicOpeningRecapQuery } from "../query/opening-recap";
 import type { Rarity } from "../types";
 import { rarityLabel, rarityTextColor } from "../utils/rarity";
+import { getTitleColorClass } from "../utils/title-style";
 
 const intFormatter = new Intl.NumberFormat("fr-FR");
 
@@ -151,18 +152,24 @@ export function OpeningRecapPage() {
 
   const cards = cardsQuery.data ?? [];
 
-  const duplicateCardIndexSet = new Set(
-    computeDuplicateCardIndices(
-      cards,
-      opening.duplicateCards,
-      opening.pcGained,
-    ),
-  );
-
   const sortedCards = [...cards]
     .map((card, index) => ({ card, index }))
     .sort((a, b) => rarityOrder(a.card.rarity) - rarityOrder(b.card.rarity));
 
+  const isCompleterOpening = opening.openingType === "COMPLETER";
+  const duplicateCardIndexSet = new Set(
+    isCompleterOpening
+      ? []
+      : computeDuplicateCardIndices(
+          cards,
+          opening.duplicateCards,
+          opening.pcGained,
+        ),
+  );
+  const openingTitle = isCompleterOpening
+    ? "Compléteur de cartes"
+    : (opening.boosterName ?? "Booster");
+  const openedCardsCount = Math.max(1, opening.cardIds.length || cards.length);
   const wasPaidOpening =
     opening.openingType === "SHOP" && opening.boosterPricePc > 0;
   const netPc = opening.pcGained - opening.boosterPricePc;
@@ -179,10 +186,10 @@ export function OpeningRecapPage() {
                 Récap d&apos;ouverture
               </p>
               <h1 className="mt-1 text-2xl font-black text-white md:text-3xl">
-                {opening.boosterName ?? "Booster"}
+                {openingTitle}
               </h1>
               <p className="mt-1 text-sm text-slate-300">
-                {opening.seriesName ?? "Série inconnue"} · {opening.openingType}
+                {opening.openingType}
               </p>
             </div>
 
@@ -199,14 +206,18 @@ export function OpeningRecapPage() {
                 <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">
                   Ouvert par
                 </p>
-                <span className="text-lg font-bold text-white">
+                <span
+                  className={`text-lg font-bold ${getTitleColorClass(opening.title)}`}
+                >
                   {opening.username}
                 </span>
               </div>
             </Link>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            className={`grid gap-3 sm:grid-cols-2 ${isCompleterOpening ? "" : "lg:grid-cols-4"}`}
+          >
             <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
               <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
                 <Clock3 className="h-3.5 w-3.5 text-cyan-300" />
@@ -217,25 +228,30 @@ export function OpeningRecapPage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
-              <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
-                <Coins className="h-3.5 w-3.5 text-amber-300" />
-                PC récupérés
-              </p>
-              <p className="mt-2 text-sm font-black text-amber-300">
-                +{intFormatter.format(opening.pcGained)} PC
-              </p>
-            </div>
+            {!isCompleterOpening ? (
+              <>
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                  <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
+                    <Coins className="h-3.5 w-3.5 text-amber-300" />
+                    PC récupérés
+                  </p>
+                  <p className="mt-2 text-sm font-black text-amber-300">
+                    +{intFormatter.format(opening.pcGained)} PC
+                  </p>
+                </div>
 
-            <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
-              <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
-                <PackageOpen className="h-3.5 w-3.5 text-fuchsia-300" />
-                Doublons
-              </p>
-              <p className="mt-2 text-sm font-black text-fuchsia-200">
-                {intFormatter.format(opening.duplicateCards)} / 5
-              </p>
-            </div>
+                <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                  <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
+                    <PackageOpen className="h-3.5 w-3.5 text-fuchsia-300" />
+                    Doublons
+                  </p>
+                  <p className="mt-2 text-sm font-black text-fuchsia-200">
+                    {intFormatter.format(opening.duplicateCards)} /{" "}
+                    {openedCardsCount}
+                  </p>
+                </div>
+              </>
+            ) : null}
 
             <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
               <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-slate-400">
@@ -260,7 +276,9 @@ export function OpeningRecapPage() {
                 </div>
               ) : (
                 <p className="mt-2 text-sm font-black text-cyan-200">
-                  Ouverture gratuite
+                  {isCompleterOpening
+                    ? "Ouverture compléteur"
+                    : "Ouverture gratuite"}
                 </p>
               )}
             </div>
@@ -268,46 +286,52 @@ export function OpeningRecapPage() {
         </div>
       </header>
 
-      <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-        <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
-          <BarChart3 className="h-4 w-4 text-emerald-300" />
-          Distribution des raretés
-        </h2>
+      {!isCompleterOpening ? (
+        <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+          <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
+            <BarChart3 className="h-4 w-4 text-emerald-300" />
+            Distribution des raretés
+          </h2>
 
-        {cardsQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-400">Calcul des raretés...</p>
-        ) : cardsQuery.error ? (
-          <p className="mt-3 text-sm text-rose-300">
-            {(cardsQuery.error as Error).message}
-          </p>
-        ) : rarityDistribution.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-400">Aucune carte trouvée.</p>
-        ) : (
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {rarityDistribution.map((entry) => (
-              <div
-                key={entry.rarity}
-                className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3"
-              >
-                <p className="mt-1 text-xl font-black text-white">
-                  {intFormatter.format(entry.count)}x{" "}
-                  <span
-                    className={`font-black uppercase ${rarityTextColor(entry.rarity)}`}
-                  >
-                    {rarityLabel(entry.rarity)}
-                  </span>
-                </p>
-                <p className="text-xs text-slate-400">{entry.share}% du pack</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </article>
+          {cardsQuery.isLoading ? (
+            <p className="mt-3 text-sm text-slate-400">Calcul des raretés...</p>
+          ) : cardsQuery.error ? (
+            <p className="mt-3 text-sm text-rose-300">
+              {(cardsQuery.error as Error).message}
+            </p>
+          ) : rarityDistribution.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-400">Aucune carte trouvée.</p>
+          ) : (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {rarityDistribution.map((entry) => (
+                <div
+                  key={entry.rarity}
+                  className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3"
+                >
+                  <p className="mt-1 text-xl font-black text-white">
+                    {intFormatter.format(entry.count)}x{" "}
+                    <span
+                      className={`font-black uppercase ${rarityTextColor(entry.rarity)}`}
+                    >
+                      {rarityLabel(entry.rarity)}
+                    </span>
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {entry.share}% du pack
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </article>
+      ) : null}
 
       <article className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
         <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.11em] text-white">
           <Sparkles className="h-4 w-4 text-cyan-300" />
-          Les 5 cartes obtenues
+          {isCompleterOpening
+            ? "La carte obtenue"
+            : `Les ${openedCardsCount} carte${openedCardsCount > 1 ? "s" : ""} obtenue${openedCardsCount > 1 ? "s" : ""}`}
         </h2>
 
         {cardsQuery.isLoading ? (
@@ -318,6 +342,20 @@ export function OpeningRecapPage() {
           <p className="mt-3 text-sm text-rose-300">
             {(cardsQuery.error as Error).message}
           </p>
+        ) : isCompleterOpening ? (
+          <div className="mt-3 flex justify-center">
+            {sortedCards[0] ? (
+              <div className="w-[220px]">
+                <CardTile
+                  card={sortedCards[0].card}
+                  isOwned
+                  disableExpand={false}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">Aucune carte trouvée.</p>
+            )}
+          </div>
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {sortedCards.map(({ card, index }) => (

@@ -22,8 +22,10 @@ const categoryOrder = [
   "Collection",
   "Rarete",
   "Booster",
+  "Completeur",
   "Chance",
   "Economy",
+  "Prestige",
   "Activite",
   "Serie",
   "Esport",
@@ -33,12 +35,19 @@ const categoryOrder = [
 const categoryTone: Record<string, string> = {
   Collection: "from-cyan-400/30 via-cyan-300/10 to-transparent",
   Rarete: "from-fuchsia-400/30 via-fuchsia-300/10 to-transparent",
+  Rareté: "from-fuchsia-400/30 via-fuchsia-300/10 to-transparent",
   Booster: "from-amber-400/30 via-amber-300/10 to-transparent",
   Chance: "from-violet-400/30 via-violet-300/10 to-transparent",
   Social: "from-pink-400/30 via-pink-300/10 to-transparent",
   Economy: "from-emerald-400/30 via-emerald-300/10 to-transparent",
+  Économie: "from-emerald-400/30 via-emerald-300/10 to-transparent",
+  Completeur: "from-teal-400/30 via-teal-300/10 to-transparent",
+  Compléteur: "from-teal-400/30 via-teal-300/10 to-transparent",
+  Prestige: "from-yellow-400/30 via-amber-300/10 to-transparent",
   Activite: "from-orange-400/30 via-orange-300/10 to-transparent",
+  Activité: "from-orange-400/30 via-orange-300/10 to-transparent",
   Serie: "from-sky-400/30 via-sky-300/10 to-transparent",
+  Série: "from-sky-400/30 via-sky-300/10 to-transparent",
   Esport: "from-rose-400/30 via-rose-300/10 to-transparent",
 };
 
@@ -48,6 +57,7 @@ function categoryLabel(category: string): string {
     Activite: "Activité",
     Serie: "Série",
     Economy: "Économie",
+    Completeur: "Compléteur",
   };
 
   return labels[category] ?? category;

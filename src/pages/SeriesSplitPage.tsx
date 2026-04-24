@@ -159,7 +159,7 @@ export function SeriesSplitPage() {
           duplicateCardIndices,
           pcGained: result.opening.pcGained ?? 0,
           chargedPc: result.opening.chargedPc ?? 0,
-          boosterName: `Series Split S3 · Tier ${result.tierLevel}`,
+          boosterName: `Series Split ${overview.seriesCode} · Tier ${result.tierLevel}`,
           seriesName: overview.seriesName,
           seriesCode: overview.seriesCode,
           source: "ACHIEVEMENT",

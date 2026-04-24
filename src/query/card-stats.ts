@@ -14,10 +14,12 @@ interface PublicCardStatsRpcRow {
   owners_count: number | string;
   first_holder_user_id: string | null;
   first_holder_username: string | null;
+  first_holder_title: string | null;
   first_holder_avatar_url: string | null;
   first_holder_obtained_at: string | null;
   top_holder_user_id: string | null;
   top_holder_username: string | null;
+  top_holder_title: string | null;
   top_holder_avatar_url: string | null;
   top_holder_drops: number | string;
 }
@@ -36,12 +38,14 @@ export interface PublicCardStats {
   firstHolder: {
     userId: string;
     username: string;
+    title: string | null;
     avatarUrl: string | null;
     obtainedAt: string | null;
   } | null;
   topHolder: {
     userId: string;
     username: string;
+    title: string | null;
     avatarUrl: string | null;
     drops: number;
   } | null;
@@ -85,6 +89,7 @@ function mapRow(row: PublicCardStatsRpcRow): PublicCardStats {
       ? {
           userId: row.first_holder_user_id,
           username: displayName(row.first_holder_username),
+          title: row.first_holder_title ?? null,
           avatarUrl: row.first_holder_avatar_url,
           obtainedAt: row.first_holder_obtained_at,
         }
@@ -93,6 +98,7 @@ function mapRow(row: PublicCardStatsRpcRow): PublicCardStats {
       ? {
           userId: row.top_holder_user_id,
           username: displayName(row.top_holder_username),
+          title: row.top_holder_title ?? null,
           avatarUrl: row.top_holder_avatar_url,
           drops: parseNumber(row.top_holder_drops),
         }
