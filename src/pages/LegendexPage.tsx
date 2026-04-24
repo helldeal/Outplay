@@ -4,6 +4,7 @@ import { LoaderCircle, Target } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { CardTile } from "../components/CardTile";
 import {
+  type LegendexOwnedCardStatus,
   useLegendexCardsQuery,
   useLegendexOwnedCardsQuery,
   useLegendexSeriesQuery,
@@ -125,7 +126,9 @@ export function LegendexPage() {
   );
   const ownedData = ownedQuery.data;
   const owned =
-    ownedData instanceof Map ? ownedData : new Map<string, string>();
+    ownedData instanceof Map
+      ? ownedData
+      : new Map<string, LegendexOwnedCardStatus>();
 
   const selectedSeries =
     (seriesQuery.data ?? []).find((series) => series.id === selectedSeriesId) ??
@@ -361,14 +364,19 @@ export function LegendexPage() {
               />
             ))
           : cards.map((card) => {
-              const isOwned = owned.has(card.id);
-              const obtainedAt = owned.get(card.id);
+              const ownedStatus = owned.get(card.id);
+              const isOwned = Boolean(ownedStatus);
+              const obtainedAt = ownedStatus?.obtainedAt;
+              const copiesCount = ownedStatus?.copiesCount;
+              const prestigeStars = ownedStatus?.prestigeStars ?? 0;
               return (
                 <CardTile
                   key={card.id}
                   card={card}
                   isOwned={isOwned}
                   obtainedAt={obtainedAt}
+                  copiesCount={copiesCount}
+                  prestigeStars={prestigeStars}
                 />
               );
             })}

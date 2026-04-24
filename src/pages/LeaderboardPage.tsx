@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { LeaderboardGlobalStats } from "../components/leaderboard/LeaderboardGlobalStats";
 import { LeaderboardMatrices } from "../components/leaderboard/LeaderboardMatrices";
@@ -35,25 +35,58 @@ export function LeaderboardPage() {
   /* pagination state */
   const [page, setPage] = useState(0);
 
-  /* recent drops load-more state */
-  const [extraDrops, setExtraDrops] = useState<RecentDrop[]>([]);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [noMore, setNoMore] = useState(false);
+  /* recent drops pagination state */
+  const [dropsPage, setDropsPage] = useState(0);
+  const [dropsPages, setDropsPages] = useState<Record<number, RecentDrop[]>>(
+    {},
+  );
+  const [loadingDropsPage, setLoadingDropsPage] = useState(false);
+  const [lastDropsPage, setLastDropsPage] = useState<number | null>(null);
 
-  const loadMore = useCallback(async () => {
-    const currentLen = (recentDropsQuery.data?.length ?? 0) + extraDrops.length;
-    setLoadingMore(true);
+  useEffect(() => {
+    const firstPageDrops = recentDropsQuery.data;
+    if (!firstPageDrops) {
+      return;
+    }
+
+    setDropsPages((prev) => ({
+      ...prev,
+      0: firstPageDrops,
+    }));
+
+    if (firstPageDrops.length === 0) {
+      setLastDropsPage(0);
+    } else if (firstPageDrops.length < 5) {
+      setLastDropsPage(0);
+    }
+  }, [recentDropsQuery.data]);
+
+  const loadDropsPage = useCallback(async (targetPage: number) => {
+    setLoadingDropsPage(true);
     try {
-      const more = await fetchMoreRecentDrops(currentLen);
-      if (more.length === 0) {
-        setNoMore(true);
-      } else {
-        setExtraDrops((prev) => [...prev, ...more]);
+      const more = await fetchMoreRecentDrops(targetPage * 5);
+
+      setDropsPages((prev) => ({
+        ...prev,
+        [targetPage]: more,
+      }));
+
+      if (more.length < 5) {
+        setLastDropsPage(targetPage);
       }
     } finally {
-      setLoadingMore(false);
+      setLoadingDropsPage(false);
     }
-  }, [recentDropsQuery.data, extraDrops]);
+  }, []);
+
+  const goToNextDropsPage = useCallback(() => {
+    const nextPage = dropsPage + 1;
+    setDropsPage(nextPage);
+
+    if (!(nextPage in dropsPages)) {
+      void loadDropsPage(nextPage);
+    }
+  }, [dropsPage, dropsPages, loadDropsPage]);
 
   /* ── guards ── */
 
@@ -81,7 +114,13 @@ export function LeaderboardPage() {
   const podium = allRows.slice(0, 3);
   const totalPages = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
   const pageRows = allRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const allDrops = [...(recentDropsQuery.data ?? []), ...extraDrops];
+  const currentDropsPageRows =
+    dropsPage === 0
+      ? (recentDropsQuery.data ?? [])
+      : (dropsPages[dropsPage] ?? []);
+  const canPrevDropsPage = dropsPage > 0;
+  const canNextDropsPage =
+    lastDropsPage === null ? true : dropsPage < lastDropsPage;
 
   return (
     <section className="space-y-10">
@@ -109,12 +148,15 @@ export function LeaderboardPage() {
         />
 
         <RecentDropsPanel
-          drops={allDrops}
-          noMore={noMore}
-          loadingMore={loadingMore}
-          onLoadMore={() => {
-            void loadMore();
+          drops={currentDropsPageRows}
+          page={dropsPage}
+          canPrev={canPrevDropsPage}
+          canNext={canNextDropsPage}
+          loadingPage={loadingDropsPage}
+          onPrev={() => {
+            setDropsPage((value) => Math.max(0, value - 1));
           }}
+          onNext={goToNextDropsPage}
         />
       </div>
 

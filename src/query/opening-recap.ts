@@ -6,9 +6,10 @@ interface PublicOpeningRecapRpcRow {
   opening_id: string;
   user_id: string;
   username: string;
+  title: string | null;
   avatar_url: string | null;
   opened_at: string;
-  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  opening_type: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
   booster_name: string | null;
   booster_type: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
   booster_price_pc: number | null;
@@ -22,9 +23,10 @@ export interface PublicOpeningRecap {
   openingId: string;
   userId: string;
   username: string;
+  title: string | null;
   avatarUrl: string | null;
   openedAt: string;
-  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT";
+  openingType: "SHOP" | "DAILY" | "STREAK" | "ACHIEVEMENT" | "COMPLETER";
   boosterName: string | null;
   boosterType: "NORMAL" | "LUCK" | "PREMIUM" | "GODPACK" | null;
   boosterPricePc: number;
@@ -68,6 +70,7 @@ export function usePublicOpeningRecapQuery(openingId?: string) {
         openingId: row.opening_id,
         userId: row.user_id,
         username: displayName(row.username),
+        title: row.title ?? null,
         avatarUrl: row.avatar_url,
         openedAt: row.opened_at,
         openingType: row.opening_type,

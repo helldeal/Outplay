@@ -68,6 +68,8 @@ function getOpeningTypeTone(openingType: string): string {
       return "text-fuchsia-200";
     case "ACHIEVEMENT":
       return "text-amber-200";
+    case "COMPLETER":
+      return "text-violet-200";
     default:
       return "text-slate-300";
   }
@@ -157,91 +159,104 @@ export function ProfileActivityTab({
           </p>
         ) : (
           <div className="mt-3 space-y-2">
-            {recentOpenings.map((opening) => (
-              <div
-                key={opening.openingId}
-                className="cursor-pointer rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:border-cyan-300/40"
-                onClick={() => {
-                  onOpenOpening(opening.openingId);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
+            {recentOpenings.map((opening) => {
+              const isCompleterOpening = opening.openingType === "COMPLETER";
+
+              return (
+                <div
+                  key={opening.openingId}
+                  className="cursor-pointer rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:border-cyan-300/40"
+                  onClick={() => {
                     onOpenOpening(opening.openingId);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-white">
-                    {opening.boosterName ?? "Booster"}
-                    {opening.seriesName ? ` - ${opening.seriesName}` : ""}
-                  </p>
-                  <span
-                    className="text-[11px] text-slate-400"
-                    title={formatFullDate(opening.openedAt)}
-                  >
-                    {formatRelativeTime(opening.openedAt)}
-                  </span>
-                </div>
-
-                <div className="mt-2 flex flex-wrap items-center text-[10px] font-black uppercase tracking-[0.1em]">
-                  <span className={getOpeningTypeTone(opening.openingType)}>
-                    {opening.openingType}
-                  </span>
-                  {opening.boosterType ? (
-                    <>
-                      <span className="mx-1 text-slate-500">·</span>
-                      <span className={getBoosterTypeTone(opening.boosterType)}>
-                        {opening.boosterType}
-                      </span>
-                    </>
-                  ) : null}
-                  <span className="mx-1 text-slate-500">·</span>
-                  <span className="text-amber-200">
-                    +{intFormatter.format(opening.pcGained)} PC
-                  </span>
-                  <span className="mx-1 text-slate-500">·</span>
-                  <span className="text-slate-300">
-                    {intFormatter.format(opening.duplicateCards)} doublon(s)
-                  </span>
-                </div>
-
-                {opening.bestCardName ? (
-                  <div
-                    className={`mt-2 flex items-center gap-3 rounded-lg border bg-slate-950/60 p-2 ${rarityBorderColor(
-                      opening.bestCardRarity,
-                    )}`}
-                  >
-                    <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-black">
-                      {opening.bestCardImageUrl ? (
-                        <img
-                          src={opening.bestCardImageUrl}
-                          alt={opening.bestCardName}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0">
-                      {opening.bestCardRarity ? (
-                        <p
-                          className={`text-[9px] font-black uppercase tracking-wider ${rarityTextColor(
-                            opening.bestCardRarity,
-                          )}`}
-                        >
-                          {rarityLabel(opening.bestCardRarity)}
-                        </p>
-                      ) : null}
-                      <p className="truncate text-xs font-bold text-white">
-                        {opening.bestCardName}
-                      </p>
-                    </div>
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onOpenOpening(opening.openingId);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-white">
+                      {opening.boosterName ?? "Booster"}
+                      {!isCompleterOpening && opening.seriesName
+                        ? ` - ${opening.seriesName}`
+                        : ""}
+                    </p>
+                    <span
+                      className="text-[11px] text-slate-400"
+                      title={formatFullDate(opening.openedAt)}
+                    >
+                      {formatRelativeTime(opening.openedAt)}
+                    </span>
                   </div>
-                ) : null}
-              </div>
-            ))}
+
+                  <div className="mt-2 flex flex-wrap items-center text-[10px] font-black uppercase tracking-[0.1em]">
+                    <span className={getOpeningTypeTone(opening.openingType)}>
+                      {opening.openingType}
+                    </span>
+                    {!isCompleterOpening && opening.boosterType ? (
+                      <>
+                        <span className="mx-1 text-slate-500">·</span>
+                        <span
+                          className={getBoosterTypeTone(opening.boosterType)}
+                        >
+                          {opening.boosterType}
+                        </span>
+                      </>
+                    ) : null}
+                    {!isCompleterOpening ? (
+                      <>
+                        <span className="mx-1 text-slate-500">·</span>
+                        <span className="text-amber-200">
+                          +{intFormatter.format(opening.pcGained)} PC
+                        </span>
+                        <span className="mx-1 text-slate-500">·</span>
+                        <span className="text-slate-300">
+                          {intFormatter.format(opening.duplicateCards)}{" "}
+                          doublon(s)
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
+
+                  {opening.bestCardName ? (
+                    <div
+                      className={`mt-2 flex items-center gap-3 rounded-lg border bg-slate-950/60 p-2 ${rarityBorderColor(
+                        opening.bestCardRarity,
+                      )}`}
+                    >
+                      <div className="h-11 w-8 shrink-0 overflow-hidden rounded bg-black">
+                        {opening.bestCardImageUrl ? (
+                          <img
+                            src={opening.bestCardImageUrl}
+                            alt={opening.bestCardName}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0">
+                        {opening.bestCardRarity ? (
+                          <p
+                            className={`text-[9px] font-black uppercase tracking-wider ${rarityTextColor(
+                              opening.bestCardRarity,
+                            )}`}
+                          >
+                            {rarityLabel(opening.bestCardRarity)}
+                          </p>
+                        ) : null}
+                        <p className="truncate text-xs font-bold text-white">
+                          {opening.bestCardName}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
 
             {canLoadMoreOpenings ? (
               <div className="pt-1">
