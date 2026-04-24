@@ -232,10 +232,9 @@ export function ProfilePage() {
               <h1 className="mt-1 text-3xl font-black uppercase italic tracking-tight text-white md:text-4xl">
                 {overview.username}
               </h1>
-              <p className="mt-1 text-sm text-slate-300">
+              <p className="mt-1 font-medium text-slate-300">
                 {overview.title ? (
                   <>
-                    Titre :{" "}
                     <span className={getTitleColorClass(overview.title)}>
                       {overview.title}
                     </span>

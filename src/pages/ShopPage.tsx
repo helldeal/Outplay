@@ -306,7 +306,7 @@ export function ShopPage() {
                 Compléteur
               </p>
               <h2 className="mt-2 text-xl font-black uppercase italic text-white">
-                Case cartes manquantes
+                Cartes manquantes
               </h2>
               <p className="mt-1 text-xs text-slate-300">
                 Une carte manquante garantie. Rareté tirée avec les probabilités
