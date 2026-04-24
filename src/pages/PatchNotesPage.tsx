@@ -7,12 +7,25 @@ export const milestones = [
     title: "à venir",
     tone: "border-slate-300/35 bg-slate-400/10 text-slate-100",
     updates: [
-      "Saison 4: Rift Makers",
-      "Cartes 'Prestige' à partir de 10 doublons de la même carte.",
+      "Saison 5: This is Rocket League",
       "Ajouts d'autres animations et améliorations visuelles.",
       "Responsivité mobile améliorée pour une expérience optimale sur tous les appareils.",
       "Système de pickup de cartes: possibilité de choisir une carte parmi les boosters ouverts.",
       "Et bien plus encore...",
+    ],
+  },
+  {
+    version: "v1.3",
+    date: "25 avril 2026",
+    title: "Sortie de la S4 - Rift Makers",
+    tone: "border-fuchsia-300/35 bg-fuchsia-400/10 text-fuchsia-100",
+    updates: [
+      "Lancement de la série S4: Rift Makers.",
+      "Ajout des cartes prestige avec les doublons:",
+      "1★ = x1.25",
+      "2★ = x1.75",
+      "3★ = x3",
+      "Ajout du compléteur de cartes: tirage aléatoire d'une carte manquante de la collection à partir des stats d'un premium booster.",
     ],
   },
   {
