@@ -42,7 +42,7 @@ WITH team_data(name, slug, "logoUrl") AS (
     ('Samsung Galaxy', 'samsung-galaxy', '/src/assets/teams/samsung-galaxy.png'),
     ('CLG', 'clg', '/src/assets/teams/CLG_EU.webp'),
     ('H2K', 'h2k', '/src/assets/teams/H2k-Gaming_logo.png'),
-    ('Star Horn Royal Club', 'star-horn-royal-club', '/src/assets/teams/rng.png'),
+    ('Star Horn Royal Club', 'star-horn-royal-club', '/src/assets/teams/Star-horn-royal-club.png'),
     ('CJ Blaze', 'cj-blaze', '/src/assets/teams/CJ_Entus.webp'),
     ('Invictus Gaming', 'invictus-gaming', '/src/assets/teams/invictus-gaming.png'),
     ('Rox Tigers', 'rox-tigers', '/src/assets/teams/Rox tigers.webp'),
