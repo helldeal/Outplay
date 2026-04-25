@@ -238,12 +238,12 @@ export function LeaderboardTable({
                 <p>
                   Chaque carte a un score de base ajusté par son ratio de drop
                   global (coefficient dynamique). Ensuite, un multiplicateur
-                  Prestige est appliqué selon les copies ouvertes:
+                  Prestige est appliqué selon les doublons obtenus:
                 </p>
                 <ul className="mt-2 space-y-1 text-slate-300">
-                  <li>• 2 copies = 1 étoile = x1.25</li>
-                  <li>• 5 copies = 2 étoiles = x1.75</li>
-                  <li>• 10 copies = 3 étoiles = x3.00</li>
+                  <li>• 2 doublons = 1★ = x1.25</li>
+                  <li>• 5 doublons = 2★ = x1.75</li>
+                  <li>• 10 doublons = 3★ = x3.00</li>
                 </ul>
               </div>
 

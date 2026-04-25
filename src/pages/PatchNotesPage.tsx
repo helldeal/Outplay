@@ -22,9 +22,9 @@ export const milestones = [
     updates: [
       "Lancement de la série S4: Rift Makers.",
       "Ajout des cartes prestige avec les doublons:",
-      "1★ = x1.25",
-      "2★ = x1.75",
-      "3★ = x3",
+      "1★ = 2x la carte = x1.25 score",
+      "2★ = 5x la carte = x1.75 score",
+      "3★ = 10x la carte = x3 score",
       "Ajout du compléteur de cartes: tirage aléatoire d'une carte manquante de la collection à partir des stats d'un premium booster.",
     ],
   },
