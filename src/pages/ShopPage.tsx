@@ -34,6 +34,23 @@ function atLeastOneInBoosterRate(singleDrawPercent: number) {
   return (1 - Math.pow(1 - p, BOOSTER_DRAW_COUNT)) * 100;
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export function ShopPage() {
   const { user, profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
@@ -202,9 +219,7 @@ export function ShopPage() {
       ]).catch(() => undefined);
     } catch (error) {
       setCompleterError(
-        error instanceof Error
-          ? error.message
-          : "Impossible d'utiliser le compléteur.",
+        getErrorMessage(error, "Impossible d'utiliser le compléteur."),
       );
     } finally {
       setOpeningCompleter(false);
