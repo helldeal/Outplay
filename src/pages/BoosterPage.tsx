@@ -16,6 +16,7 @@ import {
   fetchCardsByIds,
   getOwnedCardIds,
   openBoosterRpc,
+  useUserOpeningLimitsQuery,
 } from "../query/booster";
 
 /* ─────────────────────── Types ─────────────────────── */
@@ -308,6 +309,7 @@ export function BoosterPage() {
   const { user, profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
   const collectionQuery = useCollectionQuery(user?.id);
+  const userOpeningLimitsQuery = useUserOpeningLimitsQuery(user?.id);
   const location = useLocation();
   const navigate = useNavigate();
   const opening =
@@ -323,6 +325,11 @@ export function BoosterPage() {
   const rebuyTone = resolveBoosterTone(boosterType);
   const currentPcBalance = profile?.pc_balance ?? 0;
   const canAffordRebuy = rebuyCostPc <= currentPcBalance;
+  const activeSplitSeriesCode = userOpeningLimitsQuery.data?.activeSplitCode;
+  const isRebuyLimitedByShopDailyCap =
+    Boolean(userOpeningLimitsQuery.data?.hasActiveSplit) &&
+    opening?.seriesCode === activeSplitSeriesCode &&
+    (userOpeningLimitsQuery.data?.shopRemainingToday ?? 5) <= 0;
 
   /* Build sorted card entries: low rarity → high rarity for dramatic reveal */
   const cards: CardEntry[] = useMemo(() => {
@@ -446,6 +453,13 @@ export function BoosterPage() {
       return;
     }
 
+    if (isRebuyLimitedByShopDailyCap) {
+      setRebuyError(
+        "Limite atteinte: 5 achats de boosters de la série en cours par jour.",
+      );
+      return;
+    }
+
     if (rebuyCostPc > 0 && currentPcBalance < rebuyCostPc) {
       setRebuyError(
         `PC insuffisants: il faut ${rebuyCostPc} PC pour ré-acheter ce booster.`,
@@ -487,6 +501,9 @@ export function BoosterPage() {
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["user-opening-limits", user.id],
+        }),
         refreshProfile(),
       ]).catch(() => undefined);
     } catch (error) {
@@ -502,6 +519,7 @@ export function BoosterPage() {
     shopBoosterId,
     user,
     isRebuying,
+    isRebuyLimitedByShopDailyCap,
     rebuyCostPc,
     currentPcBalance,
     navigate,
@@ -802,9 +820,16 @@ export function BoosterPage() {
                     onClick={() => {
                       void onRebuy();
                     }}
-                    disabled={!user || isRebuying || !canAffordRebuy}
+                    disabled={
+                      !user ||
+                      isRebuying ||
+                      !canAffordRebuy ||
+                      isRebuyLimitedByShopDailyCap
+                    }
                     title={
-                      canAffordRebuy
+                      isRebuyLimitedByShopDailyCap
+                        ? "Limite quotidienne atteinte pour la série en cours"
+                        : canAffordRebuy
                         ? `Ré-acheter pour ${rebuyCostPc} PC`
                         : `PC insuffisants (${rebuyCostPc} requis)`
                     }
@@ -815,6 +840,8 @@ export function BoosterPage() {
                         <LoaderCircle className="h-4 w-4 animate-spin" />
                         Ré-achat...
                       </>
+                    ) : isRebuyLimitedByShopDailyCap ? (
+                      "Limite atteinte"
                     ) : !canAffordRebuy ? (
                       "PC insuffisants"
                     ) : (
