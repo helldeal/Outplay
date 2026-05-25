@@ -17,6 +17,7 @@ import {
   openBoosterRpc,
   useCardCompleterOfferQuery,
   useShopBoostersQuery,
+  useUserOpeningLimitsQuery,
 } from "../query/booster";
 import type { ShopBoosterWithSeries } from "../query/booster";
 import { useSeriesSplitQuery } from "../query/series-split";
@@ -39,6 +40,7 @@ export function ShopPage() {
   const navigate = useNavigate();
   const boostersQuery = useShopBoostersQuery();
   const cardCompleterOfferQuery = useCardCompleterOfferQuery(user?.id);
+  const userOpeningLimitsQuery = useUserOpeningLimitsQuery(user?.id);
   const seriesSplitQuery = useSeriesSplitQuery(user?.id);
   const [openingError, setOpeningError] = useState<string | null>(null);
   const [openingBoosterId, setOpeningBoosterId] = useState<string | null>(null);
@@ -71,7 +73,12 @@ export function ShopPage() {
     [boostersQuery.data],
   );
   const cardCompleterOffer = cardCompleterOfferQuery.data;
-  const activeSplitSeriesCode = seriesSplitQuery.data?.seriesCode ?? null;
+  const openingLimits = userOpeningLimitsQuery.data;
+  const activeSplitSeriesCode =
+    openingLimits?.activeSplitCode ?? seriesSplitQuery.data?.seriesCode ?? null;
+  const shopRemainingToday = openingLimits?.shopRemainingToday ?? 5;
+  const hasReachedShopLimit =
+    Boolean(openingLimits?.hasActiveSplit) && shopRemainingToday <= 0;
   const orderedBoosters = useMemo(() => {
     if (!activeSplitSeriesCode) {
       return boosters;
@@ -210,6 +217,13 @@ export function ShopPage() {
       return;
     }
 
+    if (booster.series.code === activeSplitSeriesCode && hasReachedShopLimit) {
+      setOpeningError(
+        "Limite atteinte: 5 achats de boosters de la série en cours par jour.",
+      );
+      return;
+    }
+
     const currentPcBalance = profile?.pc_balance ?? 0;
     if (booster.price_pc > currentPcBalance) {
       setOpeningError(
@@ -252,6 +266,9 @@ export function ShopPage() {
         queryClient.invalidateQueries({ queryKey: ["collection", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
         queryClient.invalidateQueries({ queryKey: ["series-split", user.id] }),
+        queryClient.invalidateQueries({
+          queryKey: ["user-opening-limits", user.id],
+        }),
         refreshProfile(),
       ]).catch(() => undefined);
     } catch (error) {
@@ -401,6 +418,11 @@ export function ShopPage() {
                         Split en cours
                       </Link>
                     ) : null}
+                    {entry.code === activeSplitSeriesCode ? (
+                      <span className="rounded-full border border-amber-300/50 bg-amber-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-amber-100">
+                        {shopRemainingToday}/5 achats restants aujourd&apos;hui
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -411,6 +433,9 @@ export function ShopPage() {
                       booster.image_url ?? entry.coverImage ?? "";
                     const canAfford =
                       (profile?.pc_balance ?? 0) >= booster.price_pc;
+                    const isLimitedByShopDailyCap =
+                      booster.series.code === activeSplitSeriesCode &&
+                      hasReachedShopLimit;
 
                     return (
                       <article
@@ -455,10 +480,15 @@ export function ShopPage() {
                                 void openShopBooster(booster);
                               }}
                               disabled={
-                                !user || openingBoosterId !== null || !canAfford
+                                !user ||
+                                openingBoosterId !== null ||
+                                !canAfford ||
+                                isLimitedByShopDailyCap
                               }
                               title={
-                                canAfford
+                                isLimitedByShopDailyCap
+                                  ? "Limite quotidienne atteinte pour la série en cours"
+                                  : canAfford
                                   ? "Ouvrir ce booster"
                                   : `PC insuffisants (${booster.price_pc} requis)`
                               }
@@ -472,7 +502,11 @@ export function ShopPage() {
                               ) : (
                                 <>
                                   <Gift className="h-4 w-4" />
-                                  {canAfford ? "Acheter" : "PC insuffisants"}
+                                  {isLimitedByShopDailyCap
+                                    ? "Limite atteinte"
+                                    : canAfford
+                                      ? "Acheter"
+                                      : "PC insuffisants"}
                                 </>
                               )}
                             </button>
