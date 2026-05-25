@@ -64,6 +64,13 @@ export interface ShopBoosterWithSeries {
   series: Pick<Series, "id" | "name" | "slug" | "code" | "coverImage">;
 }
 
+export interface UserOpeningLimits {
+  hasActiveSplit: boolean;
+  activeSplitCode: string | null;
+  shopOpeningsToday: number;
+  shopRemainingToday: number;
+}
+
 export async function openBoosterRpc(
   boosterId: string,
   userId: string,
@@ -80,6 +87,25 @@ export async function openBoosterRpc(
   }
 
   return data as OpenBoosterResponse;
+}
+
+export async function getUserOpeningLimitsRpc(userId: string) {
+  const { data, error } = await supabase.rpc("get_user_opening_limits", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const row = (data ?? {}) as Partial<UserOpeningLimits>;
+  return {
+    hasActiveSplit: Boolean(row.hasActiveSplit),
+    activeSplitCode:
+      typeof row.activeSplitCode === "string" ? row.activeSplitCode : null,
+    shopOpeningsToday: Number(row.shopOpeningsToday ?? 0),
+    shopRemainingToday: Number(row.shopRemainingToday ?? 5),
+  } as UserOpeningLimits;
 }
 
 export async function getCardCompleterOfferRpc(userId: string) {
@@ -353,6 +379,14 @@ export function useShopBoostersQuery() {
   return useQuery({
     queryKey: ["shop-boosters"],
     queryFn: fetchShopBoosters,
+  });
+}
+
+export function useUserOpeningLimitsQuery(userId?: string) {
+  return useQuery({
+    queryKey: ["user-opening-limits", userId],
+    enabled: Boolean(userId),
+    queryFn: () => getUserOpeningLimitsRpc(userId!),
   });
 }
 
