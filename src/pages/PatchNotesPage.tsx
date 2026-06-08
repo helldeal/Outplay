@@ -7,11 +7,19 @@ export const milestones = [
     title: "à venir",
     tone: "border-slate-300/35 bg-slate-400/10 text-slate-100",
     updates: [
-      "Saison 5: This is Rocket League",
       "Ajouts d'autres animations et améliorations visuelles.",
       "Responsivité mobile améliorée pour une expérience optimale sur tous les appareils.",
-      "Système de pickup de cartes: possibilité de choisir une carte parmi les boosters ouverts.",
       "Et bien plus encore...",
+    ],
+  },
+  {
+    version: "v1.4",
+    date: "26 mai 2026",
+    title: "Sortie de la S5 - This is Rocket League",
+    tone: "border-emerald-300/35 bg-emerald-400/10 text-emerald-100",
+    updates: [
+      "Lancement de la série S5: This is Rocket League.",
+      "Limitation journalière de l'ouverture de boosters de la boutique pour encourager une progression plus régulière et équilibrée.",
     ],
   },
   {
@@ -22,9 +30,9 @@ export const milestones = [
     updates: [
       "Lancement de la série S4: Rift Makers.",
       "Ajout des cartes prestige avec les doublons:",
-      "1★ = x1.25",
-      "2★ = x1.75",
-      "3★ = x3",
+      "1★ = 2x la carte = x1.25 score",
+      "2★ = 5x la carte = x1.75 score",
+      "3★ = 10x la carte = x3 score",
       "Ajout du compléteur de cartes: tirage aléatoire d'une carte manquante de la collection à partir des stats d'un premium booster.",
     ],
   },
